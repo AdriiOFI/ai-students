@@ -1,65 +1,90 @@
 <!DOCTYPE html>
-<html lang="ca">
+<html lang="ca" id="app-html" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIStudents - AIBugLab amb Groq AI</title>
+    <title>AIStudents - Tutor & AIBugLab</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SweetAlert2 per a alertes maques -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Mermaid.js per generar esquemes i diagrames tècnics automàtics -->
+    <!-- Mermaid.js -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col items-center justify-start p-4 md:p-8">
+<body id="app-body" class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col items-center justify-start p-2 md:p-6 transition-colors duration-200">
 
-    <!-- CONTENIDOR GENERAL -->
-    <div class="w-full max-w-6xl bg-slate-800 shadow-2xl rounded-3xl border border-slate-700 overflow-hidden flex flex-col md:flex-row">
+    <div class="w-full max-w-7xl bg-slate-800 dark:bg-slate-800 dark:text-slate-100 shadow-2xl rounded-3xl border border-slate-700 overflow-hidden flex flex-col md:flex-row h-[90vh]">
         
-        <!-- 📁 MENÚ LATERAL -->
-        <aside class="w-full md:w-80 bg-slate-900/90 border-r border-slate-700 flex flex-col p-6">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="bg-indigo-600 text-white p-2.5 rounded-2xl font-bold text-lg shadow-lg shadow-indigo-600/30">AI</div>
-                <div>
-                    <span class="text-lg font-bold tracking-tight text-white block">AIStudents</span>
-                    <span class="text-xs text-indigo-400 font-medium">AIBugLab Sandbox</span>
+        <!-- 📁 BARRA LATERAL: Chats & Configuració -->
+        <aside class="w-full md:w-80 bg-slate-900 border-r border-slate-700 flex flex-col justify-between p-5 h-full">
+            <div>
+                <!-- Capçalera Logo -->
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-indigo-600 text-white p-2.5 rounded-2xl font-bold text-lg shadow-lg shadow-indigo-600/30">AI</div>
+                    <div>
+                        <span class="text-lg font-bold tracking-tight text-white block">AIStudents</span>
+                        <span class="text-xs text-indigo-400 font-medium">Tutor & Sandbox</span>
+                    </div>
+                </div>
+
+                <!-- Botons de Mòduls -->
+                <div class="space-y-2 mb-6">
+                    <button onclick="switchTab('planner')" id="btn-planner" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md">📅 Planificador & Diagnòstic</button>
+                    <button onclick="switchTab('sandbox')" id="btn-sandbox" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">💻 Glitch Sandbox (Bugs)</button>
+                </div>
+
+                <!-- CHATS AMB LA IA (Estil Gemini) -->
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Converses amb la IA</h2>
+                    <button onclick="newChat()" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold">+ Nou Chat</button>
+                </div>
+                
+                <div id="chat-list" class="space-y-2 overflow-y-auto max-h-[220px] pr-1">
+                    <div onclick="selectChat(1)" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer text-xs flex items-center gap-2 border border-slate-700">
+                        💬 <span>Dubtes de Permisos Linux</span>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Configuració de la API Key de Groq -->
-            <div class="mb-6 bg-slate-800 p-3 rounded-2xl border border-slate-700">
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Groq API Key</label>
-                <input type="password" id="groq-api-key" placeholder="gsk_..." class="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            </div>
 
-            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Mòduls</h2>
-            <div class="space-y-2 mb-6">
-                <button onclick="switchTab('planner')" id="btn-planner" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md">📅 Planificador d'Estudi</button>
-                <button onclick="switchTab('sandbox')" id="btn-sandbox" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">💻 Glitch Sandbox (Auditoria IA)</button>
-            </div>
-
-            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Historial Plans</h2>
-            <div id="history-list" class="space-y-2.5 flex-1 overflow-y-auto max-h-[200px] pr-1">
-                <div class="p-3 bg-slate-800 border border-slate-700 rounded-2xl text-xs text-slate-400 text-center">Encara no hi ha plans.</div>
+            <!-- BOTÓ DE CONFIGURACIÓ A BAIX A L'ESQUERRA -->
+            <div class="pt-4 border-t border-slate-800">
+                <button onclick="openConfigModal()" class="w-full flex items-center justify-between p-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold text-slate-300 transition">
+                    <span class="flex items-center gap-2">⚙️ Configuració</span>
+                    <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-400">Personalitzar</span>
+                </button>
             </div>
         </aside>
 
         <!-- 🖥️ CONTINGUT PRINCIPAL -->
-        <main class="flex-1 p-6 md:p-10 overflow-y-auto bg-slate-800">
+        <main class="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-800/90">
             
-            <!-- VISTA 1: PLANIFICADOR -->
+            <!-- VISTA 1: PLANIFICADOR & TEST DE 5 PREGUNTES -->
             <div id="view-planner">
-                <header class="mb-8 border-b border-slate-700 pb-5">
-                    <h1 class="text-2xl font-black text-white tracking-tight">Nou Pla d'Estudi Intelligent</h1>
-                    <p class="text-sm text-slate-400 mt-1">Organitza el teu temari i prepara't per auditar les fallades de la IA.</p>
+                <header class="mb-6 border-b border-slate-700 pb-4">
+                    <h1 class="text-2xl font-black text-white tracking-tight">Pla d'Estudi i Diagnòstic de Nivell</h1>
+                    <p class="text-sm text-slate-400 mt-1">Insereix la data d'examen i el temari per rebre 5 preguntes d'avaluació inicial.</p>
                 </header>
 
-                <form id="study-form" class="space-y-6">
+                <form id="study-form" class="space-y-5">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="md:col-span-2">
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Títol del Temari</label>
-                            <input type="text" id="subject-title" required placeholder="Ex: Xarxes Locals i Subxarxes - M03" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white text-sm">
+                            <input type="text" id="subject-title" required placeholder="Ex: Permisos Linux i Subxarxes - M02/M03" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Matèria</label>
@@ -71,38 +96,51 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/60 p-5 rounded-2xl border border-slate-700/60">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-700/60">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Data de l'Examen</label>
                             <input type="date" id="exam-date" required class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white text-sm">
                         </div>
                         <div class="flex flex-col justify-center items-center text-center bg-slate-800 border border-slate-700 rounded-xl p-3">
-                            <span class="text-xs text-slate-400 uppercase font-bold">Dies disponibles</span>
+                            <span class="text-xs text-slate-400 uppercase font-bold">Dies restants</span>
                             <span id="days-counter" class="text-2xl font-black text-indigo-400 mt-0.5">-- dies</span>
                         </div>
                     </div>
 
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Comentaris extra o temari en text</label>
+                        <textarea id="extra-comments" rows="2" placeholder="Afegeix conceptes clau o informació del PDF per al test..." class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white text-sm"></textarea>
+                    </div>
+
                     <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg text-sm">
-                        Desar Pla d'Estudi 🚀
+                        Generar Test de Diagnòstic (5 Preguntes) 🚀
                     </button>
                 </form>
+
+                <!-- CONTENIDOR DEL TEST DE DIAGNÒSTIC -->
+                <div id="quiz-container" class="mt-8 hidden space-y-6 bg-slate-900 p-6 rounded-2xl border border-slate-700">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">🎯 Test d'Avaluació de Nivell (5 Preguntes)</h2>
+                    <div id="quiz-questions" class="space-y-6"></div>
+                    <button onclick="evaluateQuiz()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs">
+                        Corregir i Avaluar Nivell 📊
+                    </button>
+                </div>
             </div>
 
-            <!-- VISTA 2: GLITCH SANDBOX (AMB IA REAL I ESQUEMES) -->
+            <!-- VISTA 2: GLITCH SANDBOX -->
             <div id="view-sandbox" class="hidden">
-                <header class="mb-6 border-b border-slate-700 pb-5 flex justify-between items-center">
+                <header class="mb-6 border-b border-slate-700 pb-4 flex justify-between items-center">
                     <div>
                         <h1 class="text-2xl font-black text-white tracking-tight">The Glitch Sandbox</h1>
-                        <p class="text-sm text-slate-400 mt-1">La IA genera un cas real amb un bug o esquema erroni perquè l'auditis.</p>
+                        <p class="text-sm text-slate-400 mt-1">Troba la pifia introduïda per la IA i demostra el teu criteri.</p>
                     </div>
                     <button onclick="generateAIBugChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">
-                        ⚡ Generar Nou Repte amb IA
+                        ⚡ Generar Repte
                     </button>
                 </header>
 
                 <div id="sandbox-content" class="space-y-4">
                     <div class="bg-slate-900 p-8 rounded-2xl border border-slate-700 text-center py-12">
-                        <p class="text-slate-400 text-sm mb-4">Introdueix la teva API Key de Groq a la barra lateral i fes clic per començar.</p>
                         <button onclick="generateAIBugChallenge()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm">
                             Començar Auditoria IA 🎯
                         </button>
@@ -113,162 +151,187 @@
         </main>
     </div>
 
-    <!-- SCRIPT DE LÒGICA I IA -->
+    <!-- SCRIPT DE LÒGICA, IA I CONFIGURACIÓ -->
     <script>
-        // CANVI DE PESTANYES
+        let quizData = [];
+
         function switchTab(tab) {
-            const plannerView = document.getElementById('view-planner');
-            const sandboxView = document.getElementById('view-sandbox');
-            if (tab === 'planner') {
-                plannerView.classList.remove('hidden');
-                sandboxView.classList.add('hidden');
-            } else {
-                plannerView.classList.add('hidden');
-                sandboxView.classList.remove('hidden');
-            }
+            document.getElementById('view-planner').classList.toggle('hidden', tab !== 'planner');
+            document.getElementById('view-sandbox').classList.toggle('hidden', tab !== 'sandbox');
         }
 
-        // CONTROL D'HISTORIAL I DIES
         const examDateInput = document.getElementById('exam-date');
         const daysCounter = document.getElementById('days-counter');
         const studyForm = document.getElementById('study-form');
-        const historyList = document.getElementById('history-list');
-
-        let plans = JSON.parse(localStorage.getItem('ai_students_plans')) || [];
-        renderHistory();
 
         examDateInput.addEventListener('change', () => {
             const diffDays = Math.ceil((new Date(examDateInput.value) - new Date()) / (1000 * 60 * 60 * 24));
             daysCounter.textContent = diffDays >= 0 ? `${diffDays} dies` : `0 dies`;
         });
 
-        studyForm.addEventListener('submit', (e) => {
+        // GENERAR TEST DE 5 PREGUNTES EN ENVIAR
+        studyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const title = document.getElementById('subject-title').value;
             const category = document.getElementById('subject-category').value;
-            const date = examDateInput.value;
-            const diffDays = Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24));
+            const comments = document.getElementById('extra-comments').value;
 
-            plans.unshift({ id: Date.now(), title, category, date, days: diffDays >= 0 ? diffDays : 0 });
-            localStorage.setItem('ai_students_plans', JSON.stringify(plans));
-            renderHistory();
-            studyForm.reset();
-            daysCounter.textContent = '-- dies';
-            Swal.fire('Excel·lent!', 'Pla desat!', 'success');
-        });
-
-        function renderHistory() {
-            if (plans.length === 0) return;
-            historyList.innerHTML = '';
-            plans.forEach(plan => {
-                const item = document.createElement('div');
-                item.className = "p-3 bg-slate-800 border border-slate-700 rounded-2xl text-xs";
-                item.innerHTML = `<span class="text-indigo-400 font-bold">${plan.category}</span> - <span class="text-slate-200">${plan.title}</span>`;
-                historyList.appendChild(item);
+            Swal.fire({
+                title: 'Generant Test...',
+                text: 'La IA està analitzant el temari per crear 5 preguntes d\'avaluació.',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
             });
-        }
-
-        // ==========================================
-        // 🤖 INTEGRACIÓ AMB LA API DE GROQ & SYSTEM PROMPT
-        // ==========================================
-        async function generateAIBugChallenge() {
-            const apiKey = document.getElementById('groq-api-key').value.trim();
-            if (!apiKey) {
-                Swal.fire('Atenció', 'Si us plau, introdueix la teva API Key de Groq a la barra lateral.', 'warning');
-                return;
-            }
-
-            const container = document.getElementById('sandbox-content');
-            container.innerHTML = `
-                <div class="bg-slate-900 p-10 rounded-2xl border border-slate-700 text-center">
-                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                    <p class="text-slate-300 text-sm">La IA està dissenyant el repte d'auditoria i l'esquema tècnic...</p>
-                </div>
-            `;
-
-            // EL SYSTEM PROMPT: El pots modificar aquí quan vulguis afegir noves regles o assignatures!
-            const SYSTEM_PROMPT = `Ets el motor d'AIBugLab. Has de generar un cas pràctic tècnic de SMX (sistemes, xarxes, Linux) introduint UN error o bug deliberat i greu.
-            Respon NOMÉS en format JSON pur (sense markdown ni barres innecessàries) amb aquesta estructura exacta:
-            {
-              "titol": "Títol del repte",
-              "enunciat": "Descripció del problema on la IA ha fallat",
-              "codi_o_configuracio": "El text, script o configuració amb l'error",
-              "solucio_correcta": "La comanda o text exacte per solucionar-ho",
-              "mermaid_code": "graph TD; A[Client] -->|Error IP| B[Router];"
-            }`;
 
             try {
-                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                const response = await fetch("/api/generate", {
                     method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${apiKey}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [
-                            { role: "system", content: SYSTEM_PROMPT },
-                            { role: "user", content: "Genera un nou repte tècnic aleatori de SMX amb un bug de configuració o xarxa." }
-                        ],
-                        response_format: { type: "json_object" }
-                    })
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ mode: 'quiz', subjectCategory: category, title, comments })
                 });
 
                 const data = await response.json();
-                const challenge = JSON.parse(data.choices[0].message.content);
+                quizData = data.preguntes || [];
+                renderQuiz();
+                Swal.close();
 
-                // PINTAR EL REPTE A LA WEB
+            } catch (err) {
+                Swal.fire('Error', 'No s\'ha pogut generar el test amb la IA.', 'error');
+            }
+        });
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-questions');
+            const quizBox = document.getElementById('quiz-container');
+            container.innerHTML = '';
+
+            quizData.forEach((q, index) => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-slate-800 rounded-xl border border-slate-700 space-y-2";
+                div.innerHTML = `
+                    <p class="text-xs font-bold text-indigo-400">Pregunta ${index + 1}: ${q.pregunta}</p>
+                    <div class="space-y-1">
+                        ${q.opcions.map((opt, i) => `
+                            <label class="flex items-center gap-2 text-xs text-slate-300 p-2 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-950">
+                                <input type="radio" name="q${index}" value="${opt[0]}" class="text-indigo-600">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            quizBox.classList.remove('hidden');
+        }
+
+        function evaluateQuiz() {
+            let correctCount = 0;
+            quizData.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                if (selected && selected.value === q.resposta_correcta) {
+                    correctCount++;
+                }
+            });
+
+            Swal.fire({
+                title: `Avaluació: ${correctCount} / 5 encerts`,
+                text: correctCount >= 3 ? 'Tens un bon nivell de partida!' : 'Cal repassar més aquest temari.',
+                icon: correctCount >= 3 ? 'success' : 'warning'
+            });
+        }
+
+        // GENERAR REPTE GLITCH SANDBOX
+        async function generateAIBugChallenge() {
+            const container = document.getElementById('sandbox-content');
+            const category = document.getElementById('subject-category').value || 'SMX';
+
+            container.innerHTML = `
+                <div class="bg-slate-900 p-10 rounded-2xl border border-slate-700 text-center">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                    <p class="text-slate-300 text-sm">Carregant repte d'auditoria...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch("/api/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ mode: 'bug', subjectCategory: category })
+                });
+
+                const challenge = await response.json();
+
                 container.innerHTML = `
                     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold px-3 py-1 rounded-full">⚡ ${challenge.titol}</span>
-                            <span class="text-xs text-slate-400">Mode Auditoria Actiu</span>
-                        </div>
-                        
+                        <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold px-3 py-1 rounded-full">⚡ ${challenge.titol}</span>
                         <p class="text-xs text-slate-300">${challenge.enunciat}</p>
-                        
-                        <!-- Esquema generat automàticament per la IA (Mermaid) -->
-                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-center">
-                            <div class="mermaid">
-                                ${challenge.mermaid_code}
-                            </div>
-                        </div>
-
-                        <div class="bg-black/50 p-4 rounded-xl font-mono text-xs text-emerald-400 border border-slate-800 overflow-x-auto">
-                            <pre>${challenge.codi_o_configuracio}</pre>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Escriu la correcció tècnica per validar:</label>
-                            <input type="text" id="user-fix" placeholder="Introdueix la correcció..." class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-
-                        <button onclick="validateGroqFix('${encodeURIComponent(challenge.solucio_correcta)}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs">
-                            Validar amb la IA 🔍
-                        </button>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-center"><div class="mermaid">${challenge.mermaid_code}</div></div>
+                        <div class="bg-black/50 p-4 rounded-xl font-mono text-xs text-emerald-400 border border-slate-800"><pre>${challenge.codi_o_configuracio}</pre></div>
+                        <input type="text" id="user-fix" placeholder="Introdueix la comanda o resposta..." class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white text-xs font-mono">
+                        <button onclick="validateFix('${encodeURIComponent(challenge.solucio_correcta)}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs">Validar Correcció 🔍</button>
                     </div>
                 `;
-                mermaid.init(); // Renderitzar l'esquema nou
-
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = `
-                    <div class="bg-red-500/10 border border-red-500/30 p-6 rounded-2xl text-center text-red-400 text-xs">
-                        Error al connectar amb la IA o format invàlid. Comprova la teva API Key de Groq.
-                    </div>
-                `;
+                mermaid.init();
+            } catch (err) {
+                container.innerHTML = `<div class="text-red-400 text-xs text-center">Error al carregar el bug.</div>`;
             }
         }
 
-        function validateGroqFix(correctSolutionEncoded) {
+        function validateFix(correctSolutionEncoded) {
             const correctSolution = decodeURIComponent(correctSolutionEncoded).toLowerCase();
             const userFix = document.getElementById('user-fix').value.toLowerCase().trim();
-
-            if (userFix.length > 3 && correctSolution.includes(userFix)) {
-                Swal.fire('Molt bé, Auditor!', 'Has corregit correctament el bug introduït per la IA!', 'success');
+            if (userFix.length > 2 && correctSolution.includes(userFix)) {
+                Swal.fire('Molt bé!', 'Has corregit el bug amb èxit!', 'success');
             } else {
-                Swal.fire('Error', `La correcció no és del tot exacta. Pista: revisa els paràmetres tècnics.`, 'error');
+                Swal.fire('Revisa la resposta', 'Aquesta correcció no és del tot exacta.', 'error');
             }
+        }
+
+        // CHAT NOU ESTIL GEMINI
+        function newChat() {
+            const chatList = document.getElementById('chat-list');
+            const chatName = prompt("Nom del nou chat d'estudi:");
+            if (chatName) {
+                const div = document.createElement('div');
+                div.className = "p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer text-xs flex items-center gap-2 border border-slate-700";
+                div.innerHTML = `💬 <span>${chatName}</span>`;
+                chatList.appendChild(div);
+            }
+        }
+
+        // MODAL DE CONFIGURACIÓ
+        function openConfigModal() {
+            Swal.fire({
+                title: '⚙️ Configuració Personalitzada',
+                html: `
+                    <div class="text-left space-y-4 text-xs">
+                        <div>
+                            <label class="font-bold text-slate-300 block mb-1">Tema Visual</label>
+                            <select id="theme-select" class="w-full p-2 bg-slate-800 border border-slate-700 rounded text-white">
+                                <option value="dark">Mode Fosc</option>
+                                <option value="light">Mode Clar</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-300 block mb-1">Tipus de Lletra</label>
+                            <select id="font-select" class="w-full p-2 bg-slate-800 border border-slate-700 rounded text-white">
+                                <option value="font-sans">Sans-serif (Modern)</option>
+                                <option value="font-serif">Serif (Lectura)</option>
+                                <option value="font-mono">Monospace (Codi)</option>
+                            </select>
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: 'Aplicar',
+                preConfirm: () => {
+                    const theme = document.getElementById('theme-select').value;
+                    const font = document.getElementById('font-select').value;
+                    
+                    document.documentElement.classList.toggle('dark', theme === 'dark');
+                    document.body.className = `${font} bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-start p-2 md:p-6 transition-colors duration-200`;
+                }
+            });
         }
     </script>
 </body>
