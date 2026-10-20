@@ -3,208 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIStudents - Laboratori d'Auditoria i Estudi</title>
+    <title>AIStudents - AIBugLab Sandbox</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Llibreria per a alertes maques -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col items-center justify-start p-4 md:p-8">
+<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col items-center justify-start p-4 md:p-8">
 
     <!-- CONTENEDOR GENERAL CENTRAT -->
-    <div class="w-full max-w-5xl bg-white shadow-xl rounded-3xl border border-slate-200 overflow-hidden flex flex-col md:flex-row">
+    <div class="w-full max-w-5xl bg-slate-800 shadow-2xl rounded-3xl border border-slate-700 overflow-hidden flex flex-col md:flex-row">
         
-        <!-- 📁 MENÚ LATERAL: Planificacions Fetes -->
-        <aside class="w-full md:w-80 bg-slate-50 border-r border-slate-200 flex flex-col p-6">
+        <!-- 📁 MENÚ LATERAL: Historial i Navegació -->
+        <aside class="w-full md:w-80 bg-slate-900/80 border-r border-slate-700 flex flex-col p-6">
             <div class="flex items-center gap-3 mb-6">
-                <div class="bg-indigo-600 text-white p-2.5 rounded-2xl font-bold text-lg shadow-sm">AI</div>
+                <div class="bg-indigo-600 text-white p-2.5 rounded-2xl font-bold text-lg shadow-lg shadow-indigo-600/30">AI</div>
                 <div>
-                    <span class="text-lg font-bold tracking-tight text-slate-900 block">AIStudents</span>
-                    <span class="text-xs text-indigo-600 font-medium">AIBugLab Sandbox</span>
+                    <span class="text-lg font-bold tracking-tight text-white block">AIStudents</span>
+                    <span class="text-xs text-indigo-400 font-medium">AIBugLab Auditor</span>
                 </div>
             </div>
             
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Mòduls Actius</h2>
+            
+            <div class="space-y-2 mb-6">
+                <button onclick="switchTab('planner')" id="btn-planner" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md">📅 Planificador d'Estudi</button>
+                <button onclick="switchTab('sandbox')" id="btn-sandbox" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">💻 Glitch Sandbox (Caça de Bugs)</button>
+            </div>
+
             <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Planificacions Fetes</h2>
-            
-            <!-- Llista de planificacions emmagatzemades -->
-            <div id="history-list" class="space-y-2.5 flex-1 overflow-y-auto max-h-[350px] md:max-h-[500px] pr-1">
-                <div class="p-3 bg-white border border-slate-200/80 rounded-2xl text-xs text-slate-400 text-center shadow-2xs">
-                    Encara no hi ha planificacions desades.
+            <div id="history-list" class="space-y-2.5 flex-1 overflow-y-auto max-h-[250px] pr-1">
+                <div class="p-3 bg-slate-800 border border-slate-700 rounded-2xl text-xs text-slate-400 text-center">
+                    Encara no hi ha planificacions.
                 </div>
             </div>
             
-            <div class="pt-4 border-t border-slate-200 text-xs text-slate-400 text-center mt-4">
-                AIStudents v1.0 — MVP Projecte SMX
+            <div class="pt-4 border-t border-slate-800 text-xs text-slate-500 text-center mt-4">
+                AIStudents — MVP Sense Raspberry
             </div>
         </aside>
 
         <!-- 🖥️ CONTINGUT PRINCIPAL -->
-        <main class="flex-1 p-6 md:p-10 overflow-y-auto bg-white">
-            <header class="mb-8 border-b border-slate-100 pb-5">
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Nou Pla d'Estudi Intelligent</h1>
-                <p class="text-sm text-slate-500 mt-1">Puja els teus materials, tria l'assignatura i genera un entorn lliure de copy-paste.</p>
-            </header>
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto bg-slate-800">
+            
+            <!-- VISTA 1: PLANIFICADOR -->
+            <div id="view-planner">
+                <header class="mb-8 border-b border-slate-700 pb-5">
+                    <h1 class="text-2xl font-black text-white tracking-tight">Nou Pla d'Estudi Intelligent</h1>
+                    <p class="text-sm text-slate-400 mt-1">Organitza el teu temari i prepara't per auditar les fallades de la IA.</p>
+                </header>
 
-            <form id="study-form" class="space-y-6">
-                
-                <!-- Selecció de categoria i Títol -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Títol del Temari</label>
-                        <input type="text" id="subject-title" required placeholder="Ex: Xarxes locals i Subxarxes - M03" class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-slate-50/50 transition">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Àmbit / Matèria</label>
-                        <select id="subject-category" class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-slate-50/50 transition font-medium text-slate-700">
-                            <option value="SMX">SMX (Informàtica)</option>
-                            <option value="Ciències">Ciències (Física/Bio)</option>
-                            <option value="Humanitats">Humanitats (Hist/Llengua)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Data d'examen i Comptador de dies -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Data de l'Examen</label>
-                        <input type="date" id="exam-date" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-white">
-                    </div>
-                    <div class="flex flex-col justify-center items-center text-center bg-white border border-slate-200/80 rounded-xl p-3 shadow-2xs">
-                        <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Dies disponibles</span>
-                        <span id="days-counter" class="text-2xl font-black text-indigo-600 mt-0.5">-- dies</span>
-                    </div>
-                </div>
-
-                <!-- Temari / PDFs amb llista de fitxers pujats -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Temari (PDFs, apunts...)</label>
-                    <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:border-indigo-500 transition bg-slate-50/50 cursor-pointer relative">
-                        <input type="file" id="syllabus-files" multiple accept=".pdf,.txt,.docx" class="absolute inset-0 opacity-0 cursor-pointer">
-                        <div class="pointer-events-none">
-                            <p class="text-sm text-slate-700 font-semibold">Arrossega els fitxers aquí o <span class="text-indigo-600 underline">examina</span></p>
-                            <p class="text-xs text-slate-400 mt-1">PDFs, documents de text o apunts de classe</p>
+                <form id="study-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Títol del Temari</label>
+                            <input type="text" id="subject-title" required placeholder="Ex: Permisos i comandes a Linux - M02" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Àmbit / Matèria</label>
+                            <select id="subject-category" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm transition font-medium">
+                                <option value="SMX">SMX (Sistemes/Xarxes)</option>
+                                <option value="Ciències">Ciències (Física/Bio)</option>
+                                <option value="Humanitats">Humanitats (Hist/Llengua)</option>
+                            </select>
                         </div>
                     </div>
-                    <!-- Contenidor per mostrar els arxius seleccionats -->
-                    <div id="file-list" class="mt-3 space-y-1.5 hidden">
-                        <p class="text-xs font-bold text-slate-500">Fitxers seleccionats:</p>
-                        <div id="file-names-container" class="flex flex-wrap gap-2"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/60 p-5 rounded-2xl border border-slate-700/60">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Data de l'Examen</label>
+                            <input type="date" id="exam-date" required class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                        </div>
+                        <div class="flex flex-col justify-center items-center text-center bg-slate-800 border border-slate-700 rounded-xl p-3 shadow-inner">
+                            <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Dies disponibles</span>
+                            <span id="days-counter" class="text-2xl font-black text-indigo-400 mt-0.5">-- dies</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Capçalera per comentaris extra</label>
+                        <textarea id="extra-comments" rows="2" placeholder="Ex: Vull prioritzar la pràctica de permisos chmod o subxarxes..." class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg shadow-indigo-600/30 text-sm tracking-wide">
+                        Desar Pla d'Estudi 🚀
+                    </button>
+                </form>
+            </div>
+
+            <!-- VISTA 2: GLITCH SANDBOX (CAÇA DE BUGS AMB IA) -->
+            <div id="view-sandbox" class="hidden">
+                <header class="mb-6 border-b border-slate-700 pb-5 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-black text-white tracking-tight">The Glitch Sandbox</h1>
+                        <p class="text-sm text-slate-400 mt-1">La IA ha generat un cas pràctic amb un error greu. Troba'l i corregeix-l'ho!</p>
+                    </div>
+                    <button onclick="generateBugChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">
+                        🔄 Generar Nou Bug
+                    </button>
+                </header>
+
+                <div id="sandbox-content" class="space-y-4">
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 text-center py-12">
+                        <p class="text-slate-400 text-sm mb-4">Fes clic al botó superior per carregar el teu primer repte d'auditoria amb IA.</p>
+                        <button onclick="generateBugChallenge()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm">
+                            Començar Caça de Bugs 🎯
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Comentaris extra -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Capçalera per comentaris extra</label>
-                    <textarea id="extra-comments" rows="2" placeholder="Ex: Vull prioritzar la pràctica de permisos a Linux i subxarxes..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm bg-slate-50/50 transition"></textarea>
-                </div>
-
-                <!-- Botó d'acció -->
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-2xl transition shadow-lg shadow-indigo-200 text-sm tracking-wide">
-                    Generar Planificació i Ret de Bugs amb IA 🚀
-                </button>
-
-            </form>
         </main>
     </div>
 
-    <!-- JavaScript per gestionar la lògica visual, fitxers i localStorage -->
+    <!-- JavaScript lògic -->
     <script>
+        // Gestió de pestanyes
+        function switchTab(tab) {
+            const plannerView = document.getElementById('view-planner');
+            const sandboxView = document.getElementById('view-sandbox');
+            const btnPlanner = document.getElementById('btn-planner');
+            const btnSandbox = document.getElementById('btn-sandbox');
+
+            if (tab === 'planner') {
+                plannerView.classList.remove('hidden');
+                sandboxView.classList.add('hidden');
+                btnPlanner.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md";
+                btnSandbox.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+            } else {
+                plannerView.classList.add('hidden');
+                sandboxView.classList.remove('hidden');
+                btnSandbox.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md";
+                btnPlanner.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+            }
+        }
+
+        // Elements del formulari
         const examDateInput = document.getElementById('exam-date');
         const daysCounter = document.getElementById('days-counter');
         const studyForm = document.getElementById('study-form');
         const historyList = document.getElementById('history-list');
-        const fileInput = document.getElementById('syllabus-files');
-        const fileListContainer = document.getElementById('file-list');
-        const fileNamesContainer = document.getElementById('file-names-container');
 
         let plans = JSON.parse(localStorage.getItem('ai_students_plans')) || [];
         renderHistory();
 
-        // Mostrar fitxers seleccionats visualment
-        fileInput.addEventListener('change', (e) => {
-            const files = e.target.files;
-            if (files.length > 0) {
-                fileListContainer.classList.remove('hidden');
-                fileNamesContainer.innerHTML = '';
-                for (let i = 0; i < files.length; i++) {
-                    const badge = document.createElement('span');
-                    badge.className = "bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-medium px-3 py-1 rounded-full flex items-center gap-1";
-                    badge.textContent = `📄 ${files[i].name}`;
-                    fileNamesContainer.appendChild(badge);
-                }
-            } else {
-                fileListContainer.classList.add('hidden');
-            }
-        });
-
-        // Calcular dies restants en temps real
         examDateInput.addEventListener('change', () => {
             const selectedDate = new Date(examDateInput.value);
             const today = new Date();
             const diffTime = selectedDate - today;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays >= 0) {
-                daysCounter.textContent = `${diffDays} dies`;
-            } else {
-                daysCounter.textContent = `0 dies`;
-            }
+            daysCounter.textContent = diffDays >= 0 ? `${diffDays} dies` : `0 dies`;
         });
 
-        // Guardar planificació
         studyForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
             const title = document.getElementById('subject-title').value;
             const category = document.getElementById('subject-category').value;
             const date = examDateInput.value;
             const comments = document.getElementById('extra-comments').value;
 
             const selectedDate = new Date(date);
-            const today = new Date();
-            const diffDays = Math.ceil((selectedDate - today) / (1000 * 60 * 60 * 24));
+            const diffDays = Math.ceil((selectedDate - new Date()) / (1000 * 60 * 60 * 24));
 
-            const newPlan = {
-                id: Date.now(),
-                title,
-                category,
-                date,
-                days: diffDays >= 0 ? diffDays : 0,
-                comments
-            };
-
-            plans.unshift(newPlan);
+            plans.unshift({ id: Date.now(), title, category, date, days: diffDays >= 0 ? diffDays : 0, comments });
             localStorage.setItem('ai_students_plans', JSON.stringify(plans));
             
             renderHistory();
             studyForm.reset();
-            fileListContainer.classList.add('hidden');
             daysCounter.textContent = '-- dies';
-            alert('¡Planificació generada correctament amb l\'entorn Sandbox!');
+            Swal.fire('Excel·lent!', 'Planificació desada correctament.', 'success');
         });
 
-        // Renderitzar historial al menú lateral
         function renderHistory() {
             if (plans.length === 0) {
-                historyList.innerHTML = `
-                    <div class="p-3 bg-white border border-slate-200/80 rounded-2xl text-xs text-slate-400 text-center shadow-2xs">
-                        Encara no hi ha planificacions desades.
-                    </div>
-                `;
+                historyList.innerHTML = `<div class="p-3 bg-slate-800 border border-slate-700 rounded-2xl text-xs text-slate-400 text-center">Encara no hi ha planificacions.</div>`;
                 return;
             }
-
             historyList.innerHTML = '';
             plans.forEach(plan => {
                 const item = document.createElement('div');
-                item.className = "p-3 bg-white border border-slate-200 rounded-2xl cursor-pointer transition hover:border-indigo-300 hover:shadow-xs group";
+                item.className = "p-3 bg-slate-800 border border-slate-700 rounded-2xl cursor-pointer transition hover:border-indigo-500 group";
                 item.innerHTML = `
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600">${plan.category}</span>
-                        <span class="text-xs text-slate-400">Examen en ${plan.days}d</span>
+                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400">${plan.category}</span>
+                        <span class="text-xs text-slate-500">Examen en ${plan.days}d</span>
                     </div>
-                    <p class="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition truncate">${plan.title}</p>
+                    <p class="text-xs font-bold text-slate-200 group-hover:text-indigo-400 transition truncate">${plan.title}</p>
                 `;
                 historyList.appendChild(item);
             });
+        }
+
+        // SIMULADOR DE GENERACIÓ DE BUGS AMB IA (Es pot connectar a Groq API o simular per a la demo)
+        async function generateBugChallenge() {
+            const container = document.getElementById('sandbox-content');
+            container.innerHTML = `
+                <div class="bg-slate-900 p-8 rounded-2xl border border-slate-700 text-center">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                    <p class="text-slate-300 text-sm">La IA està generant un entorn amb un bug deliberat...</p>
+                </div>
+            `;
+
+            // Simulació d'alta velocitat (equivalent a cridar a Groq API)
+            setTimeout(() => {
+                container.innerHTML = `
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-3 py-1 rounded-full">⚠️ Bug Actiu detectat al sistema</span>
+                            <span class="text-xs text-slate-400">Temps límit: 45s (Anti-Copy-Paste)</span>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Mòdul: Seguretat i Permisos Linux (SMX)</h3>
+                        <p class="text-xs text-slate-300">La IA ha configurat un script de desplegament d'un servidor SSH, però ha introduit un error crític de permisos. Quin és el problema i com el solucionaries?</p>
+                        
+                        <div class="bg-black/50 p-4 rounded-xl font-mono text-xs text-emerald-400 border border-slate-800">
+                            # Script generat per la IA<br>
+                            sudo chown -R root:root /etc/ssh/sshd_config<br>
+                            sudo chmod <span class="text-red-400 font-bold underline">777</span> /etc/ssh/sshd_config<br>
+                            echo "Servidor configurat correctament."
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Escriu la correcció tècnica:</label>
+                            <input type="text" id="user-fix" placeholder="Ex: chmod 600 /etc/ssh/sshd_config" class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 text-xs font-mono">
+                        </div>
+
+                        <button onclick="validateBugFix()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs">
+                            Validar Correcció amb IA 🔍
+                        </button>
+                    </div>
+                `;
+            }, 1200);
+        }
+
+        function validateBugFix() {
+            const fix = document.getElementById('user-fix').value.toLowerCase();
+            if (fix.includes('600') || fix.includes('chmod 600')) {
+                Swal.fire('Correcte!', 'Has detectat que donar permisos 777 a un fitxer de configuració SSH era una bretxa crítica i l\'has corregit a 600!', 'success');
+            } else {
+                Swal.fire('Error al bug', 'Aquesta no és la comanda correcta per arreglar el problema de permisos de SSH. Torna-ho a provar!', 'error');
+            }
         }
     </script>
 </body>
