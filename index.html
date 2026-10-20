@@ -3,43 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIStudents - AIBugLab Sandbox</title>
-    <!-- Tailwind CSS CDN -->
+    <title>AIStudents - AIBugLab amb Groq AI</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Llibreria per a alertes maques -->
+    <!-- SweetAlert2 per a alertes maques -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Mermaid.js per generar esquemes i diagrames tècnics automàtics -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col items-center justify-start p-4 md:p-8">
 
-    <!-- CONTENEDOR GENERAL CENTRAT -->
-    <div class="w-full max-w-5xl bg-slate-800 shadow-2xl rounded-3xl border border-slate-700 overflow-hidden flex flex-col md:flex-row">
+    <!-- CONTENIDOR GENERAL -->
+    <div class="w-full max-w-6xl bg-slate-800 shadow-2xl rounded-3xl border border-slate-700 overflow-hidden flex flex-col md:flex-row">
         
-        <!-- 📁 MENÚ LATERAL: Historial i Navegació -->
-        <aside class="w-full md:w-80 bg-slate-900/80 border-r border-slate-700 flex flex-col p-6">
+        <!-- 📁 MENÚ LATERAL -->
+        <aside class="w-full md:w-80 bg-slate-900/90 border-r border-slate-700 flex flex-col p-6">
             <div class="flex items-center gap-3 mb-6">
                 <div class="bg-indigo-600 text-white p-2.5 rounded-2xl font-bold text-lg shadow-lg shadow-indigo-600/30">AI</div>
                 <div>
                     <span class="text-lg font-bold tracking-tight text-white block">AIStudents</span>
-                    <span class="text-xs text-indigo-400 font-medium">AIBugLab Auditor</span>
+                    <span class="text-xs text-indigo-400 font-medium">AIBugLab Sandbox</span>
                 </div>
             </div>
             
-            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Mòduls Actius</h2>
-            
-            <div class="space-y-2 mb-6">
-                <button onclick="switchTab('planner')" id="btn-planner" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md">📅 Planificador d'Estudi</button>
-                <button onclick="switchTab('sandbox')" id="btn-sandbox" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">💻 Glitch Sandbox (Caça de Bugs)</button>
+            <!-- Configuració de la API Key de Groq -->
+            <div class="mb-6 bg-slate-800 p-3 rounded-2xl border border-slate-700">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Groq API Key</label>
+                <input type="password" id="groq-api-key" placeholder="gsk_..." class="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
             </div>
 
-            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Planificacions Fetes</h2>
-            <div id="history-list" class="space-y-2.5 flex-1 overflow-y-auto max-h-[250px] pr-1">
-                <div class="p-3 bg-slate-800 border border-slate-700 rounded-2xl text-xs text-slate-400 text-center">
-                    Encara no hi ha planificacions.
-                </div>
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Mòduls</h2>
+            <div class="space-y-2 mb-6">
+                <button onclick="switchTab('planner')" id="btn-planner" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md">📅 Planificador d'Estudi</button>
+                <button onclick="switchTab('sandbox')" id="btn-sandbox" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">💻 Glitch Sandbox (Auditoria IA)</button>
             </div>
-            
-            <div class="pt-4 border-t border-slate-800 text-xs text-slate-500 text-center mt-4">
-                AIStudents — MVP Sense Raspberry
+
+            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Historial Plans</h2>
+            <div id="history-list" class="space-y-2.5 flex-1 overflow-y-auto max-h-[200px] pr-1">
+                <div class="p-3 bg-slate-800 border border-slate-700 rounded-2xl text-xs text-slate-400 text-center">Encara no hi ha plans.</div>
             </div>
         </aside>
 
@@ -57,14 +59,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="md:col-span-2">
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Títol del Temari</label>
-                            <input type="text" id="subject-title" required placeholder="Ex: Permisos i comandes a Linux - M02" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm transition">
+                            <input type="text" id="subject-title" required placeholder="Ex: Xarxes Locals i Subxarxes - M03" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Àmbit / Matèria</label>
-                            <select id="subject-category" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm transition font-medium">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Matèria</label>
+                            <select id="subject-category" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white text-sm font-medium">
                                 <option value="SMX">SMX (Sistemes/Xarxes)</option>
                                 <option value="Ciències">Ciències (Física/Bio)</option>
-                                <option value="Humanitats">Humanitats (Hist/Llengua)</option>
+                                <option value="Humanitats">Humanitats (Història)</option>
                             </select>
                         </div>
                     </div>
@@ -72,42 +74,37 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/60 p-5 rounded-2xl border border-slate-700/60">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Data de l'Examen</label>
-                            <input type="date" id="exam-date" required class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                            <input type="date" id="exam-date" required class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white text-sm">
                         </div>
-                        <div class="flex flex-col justify-center items-center text-center bg-slate-800 border border-slate-700 rounded-xl p-3 shadow-inner">
-                            <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Dies disponibles</span>
+                        <div class="flex flex-col justify-center items-center text-center bg-slate-800 border border-slate-700 rounded-xl p-3">
+                            <span class="text-xs text-slate-400 uppercase font-bold">Dies disponibles</span>
                             <span id="days-counter" class="text-2xl font-black text-indigo-400 mt-0.5">-- dies</span>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Capçalera per comentaris extra</label>
-                        <textarea id="extra-comments" rows="2" placeholder="Ex: Vull prioritzar la pràctica de permisos chmod o subxarxes..." class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"></textarea>
-                    </div>
-
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg shadow-indigo-600/30 text-sm tracking-wide">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg text-sm">
                         Desar Pla d'Estudi 🚀
                     </button>
                 </form>
             </div>
 
-            <!-- VISTA 2: GLITCH SANDBOX (CAÇA DE BUGS AMB IA) -->
+            <!-- VISTA 2: GLITCH SANDBOX (AMB IA REAL I ESQUEMES) -->
             <div id="view-sandbox" class="hidden">
                 <header class="mb-6 border-b border-slate-700 pb-5 flex justify-between items-center">
                     <div>
                         <h1 class="text-2xl font-black text-white tracking-tight">The Glitch Sandbox</h1>
-                        <p class="text-sm text-slate-400 mt-1">La IA ha generat un cas pràctic amb un error greu. Troba'l i corregeix-l'ho!</p>
+                        <p class="text-sm text-slate-400 mt-1">La IA genera un cas real amb un bug o esquema erroni perquè l'auditis.</p>
                     </div>
-                    <button onclick="generateBugChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">
-                        🔄 Generar Nou Bug
+                    <button onclick="generateAIBugChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">
+                        ⚡ Generar Nou Repte amb IA
                     </button>
                 </header>
 
                 <div id="sandbox-content" class="space-y-4">
-                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 text-center py-12">
-                        <p class="text-slate-400 text-sm mb-4">Fes clic al botó superior per carregar el teu primer repte d'auditoria amb IA.</p>
-                        <button onclick="generateBugChallenge()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm">
-                            Començar Caça de Bugs 🎯
+                    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-700 text-center py-12">
+                        <p class="text-slate-400 text-sm mb-4">Introdueix la teva API Key de Groq a la barra lateral i fes clic per començar.</p>
+                        <button onclick="generateAIBugChallenge()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm">
+                            Començar Auditoria IA 🎯
                         </button>
                     </div>
                 </div>
@@ -116,29 +113,22 @@
         </main>
     </div>
 
-    <!-- JavaScript lògic -->
+    <!-- SCRIPT DE LÒGICA I IA -->
     <script>
-        // Gestió de pestanyes
+        // CANVI DE PESTANYES
         function switchTab(tab) {
             const plannerView = document.getElementById('view-planner');
             const sandboxView = document.getElementById('view-sandbox');
-            const btnPlanner = document.getElementById('btn-planner');
-            const btnSandbox = document.getElementById('btn-sandbox');
-
             if (tab === 'planner') {
                 plannerView.classList.remove('hidden');
                 sandboxView.classList.add('hidden');
-                btnPlanner.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md";
-                btnSandbox.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
             } else {
                 plannerView.classList.add('hidden');
                 sandboxView.classList.remove('hidden');
-                btnSandbox.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md";
-                btnPlanner.className = "w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
             }
         }
 
-        // Elements del formulari
+        // CONTROL D'HISTORIAL I DIES
         const examDateInput = document.getElementById('exam-date');
         const daysCounter = document.getElementById('days-counter');
         const studyForm = document.getElementById('study-form');
@@ -148,10 +138,7 @@
         renderHistory();
 
         examDateInput.addEventListener('change', () => {
-            const selectedDate = new Date(examDateInput.value);
-            const today = new Date();
-            const diffTime = selectedDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffDays = Math.ceil((new Date(examDateInput.value) - new Date()) / (1000 * 60 * 60 * 24));
             daysCounter.textContent = diffDays >= 0 ? `${diffDays} dies` : `0 dies`;
         });
 
@@ -160,87 +147,127 @@
             const title = document.getElementById('subject-title').value;
             const category = document.getElementById('subject-category').value;
             const date = examDateInput.value;
-            const comments = document.getElementById('extra-comments').value;
+            const diffDays = Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24));
 
-            const selectedDate = new Date(date);
-            const diffDays = Math.ceil((selectedDate - new Date()) / (1000 * 60 * 60 * 24));
-
-            plans.unshift({ id: Date.now(), title, category, date, days: diffDays >= 0 ? diffDays : 0, comments });
+            plans.unshift({ id: Date.now(), title, category, date, days: diffDays >= 0 ? diffDays : 0 });
             localStorage.setItem('ai_students_plans', JSON.stringify(plans));
-            
             renderHistory();
             studyForm.reset();
             daysCounter.textContent = '-- dies';
-            Swal.fire('Excel·lent!', 'Planificació desada correctament.', 'success');
+            Swal.fire('Excel·lent!', 'Pla desat!', 'success');
         });
 
         function renderHistory() {
-            if (plans.length === 0) {
-                historyList.innerHTML = `<div class="p-3 bg-slate-800 border border-slate-700 rounded-2xl text-xs text-slate-400 text-center">Encara no hi ha planificacions.</div>`;
-                return;
-            }
+            if (plans.length === 0) return;
             historyList.innerHTML = '';
             plans.forEach(plan => {
                 const item = document.createElement('div');
-                item.className = "p-3 bg-slate-800 border border-slate-700 rounded-2xl cursor-pointer transition hover:border-indigo-500 group";
-                item.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-400">${plan.category}</span>
-                        <span class="text-xs text-slate-500">Examen en ${plan.days}d</span>
-                    </div>
-                    <p class="text-xs font-bold text-slate-200 group-hover:text-indigo-400 transition truncate">${plan.title}</p>
-                `;
+                item.className = "p-3 bg-slate-800 border border-slate-700 rounded-2xl text-xs";
+                item.innerHTML = `<span class="text-indigo-400 font-bold">${plan.category}</span> - <span class="text-slate-200">${plan.title}</span>`;
                 historyList.appendChild(item);
             });
         }
 
-        // SIMULADOR DE GENERACIÓ DE BUGS AMB IA (Es pot connectar a Groq API o simular per a la demo)
-        async function generateBugChallenge() {
+        // ==========================================
+        // 🤖 INTEGRACIÓ AMB LA API DE GROQ & SYSTEM PROMPT
+        // ==========================================
+        async function generateAIBugChallenge() {
+            const apiKey = document.getElementById('groq-api-key').value.trim();
+            if (!apiKey) {
+                Swal.fire('Atenció', 'Si us plau, introdueix la teva API Key de Groq a la barra lateral.', 'warning');
+                return;
+            }
+
             const container = document.getElementById('sandbox-content');
             container.innerHTML = `
-                <div class="bg-slate-900 p-8 rounded-2xl border border-slate-700 text-center">
+                <div class="bg-slate-900 p-10 rounded-2xl border border-slate-700 text-center">
                     <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                    <p class="text-slate-300 text-sm">La IA està generant un entorn amb un bug deliberat...</p>
+                    <p class="text-slate-300 text-sm">La IA està dissenyant el repte d'auditoria i l'esquema tècnic...</p>
                 </div>
             `;
 
-            // Simulació d'alta velocitat (equivalent a cridar a Groq API)
-            setTimeout(() => {
+            // EL SYSTEM PROMPT: El pots modificar aquí quan vulguis afegir noves regles o assignatures!
+            const SYSTEM_PROMPT = `Ets el motor d'AIBugLab. Has de generar un cas pràctic tècnic de SMX (sistemes, xarxes, Linux) introduint UN error o bug deliberat i greu.
+            Respon NOMÉS en format JSON pur (sense markdown ni barres innecessàries) amb aquesta estructura exacta:
+            {
+              "titol": "Títol del repte",
+              "enunciat": "Descripció del problema on la IA ha fallat",
+              "codi_o_configuracio": "El text, script o configuració amb l'error",
+              "solucio_correcta": "La comanda o text exacte per solucionar-ho",
+              "mermaid_code": "graph TD; A[Client] -->|Error IP| B[Router];"
+            }`;
+
+            try {
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            { role: "system", content: SYSTEM_PROMPT },
+                            { role: "user", content: "Genera un nou repte tècnic aleatori de SMX amb un bug de configuració o xarxa." }
+                        ],
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                const data = await response.json();
+                const challenge = JSON.parse(data.choices[0].message.content);
+
+                // PINTAR EL REPTE A LA WEB
                 container.innerHTML = `
                     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 space-y-4">
                         <div class="flex justify-between items-center">
-                            <span class="bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-3 py-1 rounded-full">⚠️ Bug Actiu detectat al sistema</span>
-                            <span class="text-xs text-slate-400">Temps límit: 45s (Anti-Copy-Paste)</span>
+                            <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold px-3 py-1 rounded-full">⚡ ${challenge.titol}</span>
+                            <span class="text-xs text-slate-400">Mode Auditoria Actiu</span>
                         </div>
-                        <h3 class="text-base font-bold text-white">Mòdul: Seguretat i Permisos Linux (SMX)</h3>
-                        <p class="text-xs text-slate-300">La IA ha configurat un script de desplegament d'un servidor SSH, però ha introduit un error crític de permisos. Quin és el problema i com el solucionaries?</p>
                         
-                        <div class="bg-black/50 p-4 rounded-xl font-mono text-xs text-emerald-400 border border-slate-800">
-                            # Script generat per la IA<br>
-                            sudo chown -R root:root /etc/ssh/sshd_config<br>
-                            sudo chmod <span class="text-red-400 font-bold underline">777</span> /etc/ssh/sshd_config<br>
-                            echo "Servidor configurat correctament."
+                        <p class="text-xs text-slate-300">${challenge.enunciat}</p>
+                        
+                        <!-- Esquema generat automàticament per la IA (Mermaid) -->
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-center">
+                            <div class="mermaid">
+                                ${challenge.mermaid_code}
+                            </div>
+                        </div>
+
+                        <div class="bg-black/50 p-4 rounded-xl font-mono text-xs text-emerald-400 border border-slate-800 overflow-x-auto">
+                            <pre>${challenge.codi_o_configuracio}</pre>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Escriu la correcció tècnica:</label>
-                            <input type="text" id="user-fix" placeholder="Ex: chmod 600 /etc/ssh/sshd_config" class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-indigo-500 text-xs font-mono">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Escriu la correcció tècnica per validar:</label>
+                            <input type="text" id="user-fix" placeholder="Introdueix la correcció..." class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
 
-                        <button onclick="validateBugFix()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs">
-                            Validar Correcció amb IA 🔍
+                        <button onclick="validateGroqFix('${encodeURIComponent(challenge.solucio_correcta)}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs">
+                            Validar amb la IA 🔍
                         </button>
                     </div>
                 `;
-            }, 1200);
+                mermaid.init(); // Renderitzar l'esquema nou
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `
+                    <div class="bg-red-500/10 border border-red-500/30 p-6 rounded-2xl text-center text-red-400 text-xs">
+                        Error al connectar amb la IA o format invàlid. Comprova la teva API Key de Groq.
+                    </div>
+                `;
+            }
         }
 
-        function validateBugFix() {
-            const fix = document.getElementById('user-fix').value.toLowerCase();
-            if (fix.includes('600') || fix.includes('chmod 600')) {
-                Swal.fire('Correcte!', 'Has detectat que donar permisos 777 a un fitxer de configuració SSH era una bretxa crítica i l\'has corregit a 600!', 'success');
+        function validateGroqFix(correctSolutionEncoded) {
+            const correctSolution = decodeURIComponent(correctSolutionEncoded).toLowerCase();
+            const userFix = document.getElementById('user-fix').value.toLowerCase().trim();
+
+            if (userFix.length > 3 && correctSolution.includes(userFix)) {
+                Swal.fire('Molt bé, Auditor!', 'Has corregit correctament el bug introduït per la IA!', 'success');
             } else {
-                Swal.fire('Error al bug', 'Aquesta no és la comanda correcta per arreglar el problema de permisos de SSH. Torna-ho a provar!', 'error');
+                Swal.fire('Error', `La correcció no és del tot exacta. Pista: revisa els paràmetres tècnics.`, 'error');
             }
         }
     </script>
