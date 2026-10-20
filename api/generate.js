@@ -5,60 +5,51 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-        return res.status(500).json({ error: 'La clau GROQ_API_KEY no està configurada a Vercel.' });
+        return res.status(500).json({ error: 'La clau API no està configurada.' });
     }
 
-    const { action, prompt, title, subjectCategory, comments, pdfContent, chatHistory } = req.body;
+    const { action, userPrompt, targetConcept } = req.body;
 
-    let messages = [];
+    let systemPrompt = "";
+    let userMessage = "";
 
-    if (action === 'chat') {
-        const systemPrompt = `Ets AIStudents, un tutor d'intel·ligència artificial especialitzat en l'acompanyament escolar i tècnic. 
-        El teu objectiu és ajudar a estudiar, explicar conceptes de manera clara i resoldre dubtes sobre els apunts. Manté un estil proper, clar i pedagògic.`;
-
-        messages = [
-            { role: "system", content: systemPrompt },
-            ...(chatHistory || []),
-            { role: "user", content: prompt }
-        ];
-
-    } else if (action === 'quiz') {
-        const systemPrompt = `Ets el tutor d'AIStudents. Genera un test de diagnòstic inicial de 5 preguntes clau d'avaluació de nivell per al temari "${title}" (${subjectCategory}).
-        Respon ÚNICAMENT en format JSON pur (sense blocs de codi markdown \`\`\`json) amb aquesta estructura exactament:
+    // Configuración del System Prompt según la mecánica elegida
+    if (action === 'glitch') {
+        systemPrompt = `Ets el motor d'AIStudents Lab. Genera un repte pràctic de Linux (ex: permisos, usuaris, directoris) on s'ha comès un ERROR de sintaxi o concepte greu.
+        Has de retornar ÚNICAMENT un objecte JSON amb aquesta estructura, sense markdown extra:
         {
-          "preguntes": [
-            {
-              "id": 1,
-              "pregunta": "Text de la pregunta 1...",
-              "opcions": ["A) opció 1", "B) opció 2", "C) opció 3", "D) opció 4"],
-              "resposta_correcta": "A"
-            }
-          ]
+          "titol": "Títol de la fallada",
+          "context": "Breu explicació del que l'usuari intentava fer (ex: Crear un usuari amb shell nul·la)",
+          "codi_amb_error": "La comanda de terminal que conté l'error (ex: useradd -s /bin/bash admin)",
+          "solucio_comanda": "La comanda exacta i única que soluciona l'error"
         }`;
-
-        // Limitem el contingut del PDF a uns 3000 caràcters per evitar superar límits
-        const contextText = (pdfContent || comments || title).substring(0, 3000);
-
-        messages = [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Prepara el test de 5 preguntes basant-te en aquest temari/PDF: ${contextText}` }
-        ];
-
-    } else if (action === 'bug') {
-        const systemPrompt = `Ets el motor d'AIBugLab. Genera un cas pràctic tècnic de ${subjectCategory || 'SMX'} introduint UN error o bug deliberat i greu.
-        Respon ÚNICAMENT en format JSON pur amb aquesta estructura:
+        userMessage = "Genera un bug de terminal Linux de nivell intermedi per a SMX.";
+    
+    } else if (action === 'radar') {
+        systemPrompt = `Genera 3 afirmacions tècniques relacionades amb xarxes o administració Linux.
+        IMPORTANT: Dues afirmacions deuen ser completament REALS i correctes. Una afirmació deu ser una AL·LUCINACIÓ (mentida que sembla molt tècnica i real).
+        Has de retornar ÚNICAMENT un objecte JSON amb aquesta estructura:
         {
-          "titol": "Títol del repte",
-          "enunciat": "Descripció del problema on la IA ha fallat",
-          "codi_o_configuracio": "El text o comanda amb l'error",
-          "solucio_correcta": "La comanda o text exacte per solucionar-ho",
-          "mermaid_code": "graph TD; A[Client] -->|Error IP| B[Router];"
+          "afirmacions": [
+            {"id": 1, "text": "...", "es_falsa": false},
+            {"id": 2, "text": "...", "es_falsa": true},
+            {"id": 3, "text": "...", "es_falsa": false}
+          ],
+          "explicacio_falsa": "Explicació tècnica de per què l'afirmació falsa és mentida."
         }`;
-
-        messages = [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: "Genera un nou repte tècnic aleatori amb un bug de configuració." }
-        ];
+        userMessage = "Genera un Radar d'Al·lucinacions tècnic.";
+    
+    } else if (action === 'reverse') {
+        systemPrompt = `Ets un auditor de Prompts. Avalua si l'usuari ha escrit un bon prompt per aconseguir el següent resultat: "${targetConcept}".
+        El prompt escrit per l'usuari és: "${userPrompt}".
+        La teva tasca és avaluar-ho del 1 al 10 basant-te en la claredat i precisió tècnica.
+        Has de retornar ÚNICAMENT un objecte JSON amb aquesta estructura:
+        {
+          "puntuacio": 8,
+          "feedback": "Anàlisi curta d'1 línia sobre si el prompt és perillós, poc clar o perfecte",
+          "prompt_ideal": "El text exacte del prompt tècnic ideal que hauria d'haver escrit."
+        }`;
+        userMessage = "Avalua el meu prompt de seguretat en Linux.";
     }
 
     try {
@@ -70,20 +61,20 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 model: "llama-3.3-70b-versatile",
-                messages: messages,
-                response_format: (action === 'quiz' || action === 'bug') ? { type: "json_object" } : undefined
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userMessage }
+                ],
+                // Forzar JSON puro asegura que no se rompa el Frontend
+                response_format: { type: "json_object" } 
             })
         });
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.error?.message || 'Error a la IA');
 
-        if (action === 'chat') {
-            return res.status(200).json({ reply: data.choices[0].message.content });
-        } else {
-            const result = JSON.parse(data.choices[0].message.content);
-            return res.status(200).json(result);
-        }
+        const result = JSON.parse(data.choices[0].message.content);
+        return res.status(200).json(result);
 
     } catch (error) {
         console.error("Error al backend:", error);
