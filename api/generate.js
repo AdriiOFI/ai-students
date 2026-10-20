@@ -5,18 +5,16 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-        return res.status(500).json({ error: 'Error intern: La clau de la IA no està configurada al servidor.' });
+        return res.status(500).json({ error: 'La clau GROQ_API_KEY no està configurada a Vercel.' });
     }
 
-    const { action, prompt, title, subjectCategory, comments, chatHistory } = req.body;
+    const { action, prompt, title, subjectCategory, comments, pdfContent, chatHistory } = req.body;
 
     let messages = [];
 
     if (action === 'chat') {
-        // Mode Xat continu estil Gemini
-        const systemPrompt = `Ets AIStudents, un tutor d'intel·ligència artificial especialitzat en l'acompanyament escolar i tècnic (especialment en SMX, ciències i humanitats). 
-        El teu objectiu és ajudar a estudiar, explicar conceptes de manera clara, fer preguntes de repàs i resoldre dubtes sobre els apunts o PDFs. 
-        Manté un estil proper, clar, pedagògic i adaptat a qualsevol edat. Mai donis només les respostes fetes; fomenta que l'estudiant raoni.`;
+        const systemPrompt = `Ets AIStudents, un tutor d'intel·ligència artificial especialitzat en l'acompanyament escolar i tècnic. 
+        El teu objectiu és ajudar a estudiar, explicar conceptes de manera clara i resoldre dubtes sobre els apunts. Manté un estil proper, clar i pedagògic.`;
 
         messages = [
             { role: "system", content: systemPrompt },
@@ -25,27 +23,28 @@ export default async function handler(req, res) {
         ];
 
     } else if (action === 'quiz') {
-        // Generació del test inicial de 5 preguntes
         const systemPrompt = `Ets el tutor d'AIStudents. Genera un test de diagnòstic inicial de 5 preguntes clau d'avaluació de nivell per al temari "${title}" (${subjectCategory}).
-        Respon ÚNICAMENT en format JSON pur (sense blocs de codi markdown \`\`\`json) amb aquesta estructura:
+        Respon ÚNICAMENT en format JSON pur (sense blocs de codi markdown \`\`\`json) amb aquesta estructura exactament:
         {
           "preguntes": [
             {
               "id": 1,
               "pregunta": "Text de la pregunta 1...",
-              "opcions": ["A) opcio 1", "B) opcio 2", "C) opcio 3", "D) opcio 4"],
+              "opcions": ["A) opció 1", "B) opció 2", "C) opció 3", "D) opció 4"],
               "resposta_correcta": "A"
             }
           ]
         }`;
 
+        // Limitem el contingut del PDF a uns 3000 caràcters per evitar superar límits
+        const contextText = (pdfContent || comments || title).substring(0, 3000);
+
         messages = [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `Prepara les 5 preguntes basant-te en aquests apunts/comentaris: ${comments || title}` }
+            { role: "user", content: `Prepara el test de 5 preguntes basant-te en aquest temari/PDF: ${contextText}` }
         ];
 
     } else if (action === 'bug') {
-        // Mode Glitch Sandbox
         const systemPrompt = `Ets el motor d'AIBugLab. Genera un cas pràctic tècnic de ${subjectCategory || 'SMX'} introduint UN error o bug deliberat i greu.
         Respon ÚNICAMENT en format JSON pur amb aquesta estructura:
         {
