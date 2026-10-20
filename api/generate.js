@@ -1,5 +1,3 @@
-// api/generate.js
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Mètode no permès' });
@@ -7,40 +5,61 @@ export default async function handler(req, res) {
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-        return res.status(500).json({ error: 'La clau GROQ_API_KEY no està configurada a Vercel.' });
+        return res.status(500).json({ error: 'Error intern: La clau de la IA no està configurada al servidor.' });
     }
 
-    const { mode, subjectCategory, title, comments } = req.body;
+    const { action, prompt, title, subjectCategory, comments, chatHistory } = req.body;
 
-    let systemPrompt = "";
-    let userPrompt = "";
+    let messages = [];
 
-    if (mode === 'quiz') {
-        systemPrompt = `Ets el tutor d'intel·ligència artificial d'AIStudents. L'estudiant està preparant l'examen de "${title}" (${subjectCategory}).
-        Has de generar 5 preguntes clau d'avaluació de nivell sobre aquest tema.
-        Respon NOMÉS en format JSON pur (sense markdown) amb aquesta estructura:
+    if (action === 'chat') {
+        // Mode Xat continu estil Gemini
+        const systemPrompt = `Ets AIStudents, un tutor d'intel·ligència artificial especialitzat en l'acompanyament escolar i tècnic (especialment en SMX, ciències i humanitats). 
+        El teu objectiu és ajudar a estudiar, explicar conceptes de manera clara, fer preguntes de repàs i resoldre dubtes sobre els apunts o PDFs. 
+        Manté un estil proper, clar, pedagògic i adaptat a qualsevol edat. Mai donis només les respostes fetes; fomenta que l'estudiant raoni.`;
+
+        messages = [
+            { role: "system", content: systemPrompt },
+            ...(chatHistory || []),
+            { role: "user", content: prompt }
+        ];
+
+    } else if (action === 'quiz') {
+        // Generació del test inicial de 5 preguntes
+        const systemPrompt = `Ets el tutor d'AIStudents. Genera un test de diagnòstic inicial de 5 preguntes clau d'avaluació de nivell per al temari "${title}" (${subjectCategory}).
+        Respon ÚNICAMENT en format JSON pur (sense blocs de codi markdown \`\`\`json) amb aquesta estructura:
         {
           "preguntes": [
             {
               "id": 1,
               "pregunta": "Text de la pregunta 1...",
-              "opcions": ["A) ...", "B) ...", "C) ...", "D) ..."],
+              "opcions": ["A) opcio 1", "B) opcio 2", "C) opcio 3", "D) opcio 4"],
               "resposta_correcta": "A"
             }
           ]
         }`;
-        userPrompt = `Genera un test de 5 preguntes de nivell basat en aquests comentaris/temari: ${comments || title}`;
-    } else {
-        systemPrompt = `Ets el motor d'AIBugLab. La teva feina és generar un cas pràctic tècnic de ${subjectCategory || 'SMX'} introduint UN error o bug deliberat i greu.
-        Respon NOMÉS en format JSON pur amb aquesta estructura:
+
+        messages = [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Prepara les 5 preguntes basant-te en aquests apunts/comentaris: ${comments || title}` }
+        ];
+
+    } else if (action === 'bug') {
+        // Mode Glitch Sandbox
+        const systemPrompt = `Ets el motor d'AIBugLab. Genera un cas pràctic tècnic de ${subjectCategory || 'SMX'} introduint UN error o bug deliberat i greu.
+        Respon ÚNICAMENT en format JSON pur amb aquesta estructura:
         {
           "titol": "Títol del repte",
           "enunciat": "Descripció del problema on la IA ha fallat",
-          "codi_o_configuracio": "El text, script o configuració amb l'error",
+          "codi_o_configuracio": "El text o comanda amb l'error",
           "solucio_correcta": "La comanda o text exacte per solucionar-ho",
           "mermaid_code": "graph TD; A[Client] -->|Error IP| B[Router];"
         }`;
-        userPrompt = "Genera un nou repte tècnic aleatori amb un bug de configuració o xarxa.";
+
+        messages = [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: "Genera un nou repte tècnic aleatori amb un bug de configuració." }
+        ];
     }
 
     try {
@@ -52,22 +71,23 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 model: "llama-3.3-70b-versatile",
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
-                ],
-                response_format: { type: "json_object" }
+                messages: messages,
+                response_format: (action === 'quiz' || action === 'bug') ? { type: "json_object" } : undefined
             })
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error?.message || 'Error a Groq');
+        if (!response.ok) throw new Error(data.error?.message || 'Error a la IA');
 
-        const result = JSON.parse(data.choices[0].message.content);
-        return res.status(200).json(result);
+        if (action === 'chat') {
+            return res.status(200).json({ reply: data.choices[0].message.content });
+        } else {
+            const result = JSON.parse(data.choices[0].message.content);
+            return res.status(200).json(result);
+        }
 
     } catch (error) {
         console.error("Error al backend:", error);
-        return res.status(500).json({ error: "Error intern en generar la resposta amb la IA" });
+        return res.status(500).json({ error: "Error en processar la petició amb la IA." });
     }
 }
