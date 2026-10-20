@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIStudents - Tutor & AIBugLab</title>
-    <!-- Tailwind CSS -->
+    <title>AIStudents - Tutor Intel·ligent</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,8 +12,8 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Merriweather', 'serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Georgia', 'serif'],
                         mono: ['Fira Code', 'monospace']
                     }
                 }
@@ -26,123 +26,156 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
 </head>
-<body id="app-body" class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col items-center justify-start p-2 md:p-6 transition-colors duration-200">
+<body id="app-body" class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex items-center justify-center p-2 md:p-4">
 
-    <div class="w-full max-w-7xl bg-slate-800 dark:bg-slate-800 dark:text-slate-100 shadow-2xl rounded-3xl border border-slate-700 overflow-hidden flex flex-col md:flex-row h-[90vh]">
+    <!-- CONTENEDOR PRINCIPAL ESTIL GEMINI -->
+    <div class="w-full max-w-7xl bg-slate-900 shadow-2xl rounded-3xl border border-slate-800 overflow-hidden flex flex-col md:flex-row h-[92vh]">
         
-        <!-- 📁 BARRA LATERAL: Chats & Configuració -->
-        <aside class="w-full md:w-80 bg-slate-900 border-r border-slate-700 flex flex-col justify-between p-5 h-full">
-            <div>
-                <!-- Capçalera Logo -->
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="bg-indigo-600 text-white p-2.5 rounded-2xl font-bold text-lg shadow-lg shadow-indigo-600/30">AI</div>
+        <!-- 📁 BARRA LATERAL (Historial de Chats i Configuració) -->
+        <aside class="w-full md:w-80 bg-slate-950 border-r border-slate-800/80 flex flex-col justify-between p-4 h-full">
+            <div class="flex flex-col h-full overflow-hidden">
+                <!-- Logo i Títol -->
+                <div class="flex items-center gap-3 mb-6 px-2">
+                    <div class="bg-indigo-600 text-white p-2.5 rounded-2xl font-black text-lg shadow-lg shadow-indigo-600/30">AI</div>
                     <div>
-                        <span class="text-lg font-bold tracking-tight text-white block">AIStudents</span>
-                        <span class="text-xs text-indigo-400 font-medium">Tutor & Sandbox</span>
+                        <span class="text-base font-bold tracking-tight text-white block">AIStudents</span>
+                        <span class="text-xs text-indigo-400 font-medium">Plataforma d'Estudi</span>
                     </div>
                 </div>
 
-                <!-- Botons de Mòduls -->
-                <div class="space-y-2 mb-6">
-                    <button onclick="switchTab('planner')" id="btn-planner" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition shadow-md">📅 Planificador & Diagnòstic</button>
-                    <button onclick="switchTab('sandbox')" id="btn-sandbox" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">💻 Glitch Sandbox (Bugs)</button>
+                <!-- Botó d'Inici / Nou Pla -->
+                <button onclick="showSection('planner')" class="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-2xl transition mb-4 text-xs shadow-md">
+                    <span>➕ Nou Pla / Diagnòstic</span>
+                </button>
+
+                <!-- Menú de Seccions -->
+                <div class="space-y-1 mb-4">
+                    <button onclick="showSection('chat')" id="nav-chat" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-900 transition flex items-center gap-2">
+                        💬 <span>Xat d'Estudi (Gemini)</span>
+                    </button>
+                    <button onclick="showSection('sandbox')" id="nav-sandbox" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-900 transition flex items-center gap-2">
+                        💻 <span>Glitch Sandbox (Bugs)</span>
+                    </button>
                 </div>
 
-                <!-- CHATS AMB LA IA (Estil Gemini) -->
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Converses amb la IA</h2>
-                    <button onclick="newChat()" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold">+ Nou Chat</button>
-                </div>
-                
-                <div id="chat-list" class="space-y-2 overflow-y-auto max-h-[220px] pr-1">
-                    <div onclick="selectChat(1)" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer text-xs flex items-center gap-2 border border-slate-700">
-                        💬 <span>Dubtes de Permisos Linux</span>
+                <!-- HISTORIAL DE CHATS -->
+                <h2 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Historial de Converses</h2>
+                <div id="chat-history-list" class="space-y-1.5 flex-1 overflow-y-auto pr-1">
+                    <div class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs text-slate-400 text-center">
+                        Sense converses guardades.
                     </div>
                 </div>
             </div>
 
-            <!-- BOTÓ DE CONFIGURACIÓ A BAIX A L'ESQUERRA -->
-            <div class="pt-4 border-t border-slate-800">
-                <button onclick="openConfigModal()" class="w-full flex items-center justify-between p-3 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold text-slate-300 transition">
+            <!-- BOTÓ DE CONFIGURACIÓ (A BAIX A L'ESQUERRA) -->
+            <div class="pt-3 border-t border-slate-800/80 mt-2">
+                <button onclick="openConfigModal()" class="w-full flex items-center justify-between p-3 bg-slate-900 hover:bg-slate-800 rounded-2xl text-xs font-bold text-slate-300 transition border border-slate-800">
                     <span class="flex items-center gap-2">⚙️ Configuració</span>
-                    <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-400">Personalitzar</span>
+                    <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">Ajustos</span>
                 </button>
             </div>
         </aside>
 
-        <!-- 🖥️ CONTINGUT PRINCIPAL -->
-        <main class="flex-1 p-6 md:p-8 overflow-y-auto bg-slate-800/90">
+        <!-- 🖥️ ÀREA DE CONTINGUT PRINCIPAL -->
+        <main class="flex-1 bg-slate-900/50 flex flex-col h-full overflow-hidden">
             
-            <!-- VISTA 1: PLANIFICADOR & TEST DE 5 PREGUNTES -->
-            <div id="view-planner">
-                <header class="mb-6 border-b border-slate-700 pb-4">
-                    <h1 class="text-2xl font-black text-white tracking-tight">Pla d'Estudi i Diagnòstic de Nivell</h1>
-                    <p class="text-sm text-slate-400 mt-1">Insereix la data d'examen i el temari per rebre 5 preguntes d'avaluació inicial.</p>
+            <!-- VISTA 1: FORMULARI D'INICI I TEST DE DIAGNÒSTIC -->
+            <div id="section-planner" class="p-6 md:p-8 overflow-y-auto flex-1">
+                <header class="mb-6 border-b border-slate-800 pb-4">
+                    <h1 class="text-2xl font-black text-white">Inicia la teva Sessió d'Estudi</h1>
+                    <p class="text-xs text-slate-400 mt-1">Introdueix la data de l'examen i els apunts per generar un test de diagnòstic inicial de 5 preguntes.</p>
                 </header>
 
-                <form id="study-form" class="space-y-5">
+                <form id="study-setup-form" class="space-y-5 max-w-3xl">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Títol del Temari</label>
-                            <input type="text" id="subject-title" required placeholder="Ex: Permisos Linux i Subxarxes - M02/M03" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white text-sm">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Títol del Temari o Assignatura</label>
+                            <input type="text" id="subject-title" required placeholder="Ex: Sistemes Operatius i Permisos Linux - M02" class="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Matèria</label>
-                            <select id="subject-category" class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white text-sm font-medium">
-                                <option value="SMX">SMX (Sistemes/Xarxes)</option>
+                            <select id="subject-category" class="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950 text-white text-xs font-medium">
+                                <option value="SMX">SMX (Informàtica/Xarxes)</option>
                                 <option value="Ciències">Ciències (Física/Bio)</option>
-                                <option value="Humanitats">Humanitats (Història)</option>
+                                <option value="Humanitats">Humanitats (Història/Llengua)</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-700/60">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Data de l'Examen</label>
-                            <input type="date" id="exam-date" required class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white text-sm">
+                            <input type="date" id="exam-date" required class="w-full px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-900 text-white text-xs">
                         </div>
-                        <div class="flex flex-col justify-center items-center text-center bg-slate-800 border border-slate-700 rounded-xl p-3">
-                            <span class="text-xs text-slate-400 uppercase font-bold">Dies restants</span>
-                            <span id="days-counter" class="text-2xl font-black text-indigo-400 mt-0.5">-- dies</span>
+                        <div class="flex flex-col justify-center items-center text-center bg-slate-900 border border-slate-800 rounded-xl p-2">
+                            <span class="text-[10px] text-slate-400 uppercase font-bold">Dies disponibles</span>
+                            <span id="days-counter" class="text-xl font-black text-indigo-400">-- dies</span>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Comentaris extra o temari en text</label>
-                        <textarea id="extra-comments" rows="2" placeholder="Afegeix conceptes clau o informació del PDF per al test..." class="w-full px-4 py-3 rounded-2xl border border-slate-700 bg-slate-900 text-white text-sm"></textarea>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Comentaris extra o resum dels apunts (PDF)</label>
+                        <textarea id="extra-comments" rows="3" placeholder="Enganxa un resum dels teus apunts o indicacions específiques per a la IA..." class="w-full px-4 py-3 rounded-2xl border border-slate-800 bg-slate-950 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
                     </div>
 
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg text-sm">
-                        Generar Test de Diagnòstic (5 Preguntes) 🚀
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-2xl transition text-xs shadow-lg shadow-indigo-600/20">
+                        Generar Test de Diagnòstic de Nivell (5 Preguntes) 🚀
                     </button>
                 </form>
 
-                <!-- CONTENIDOR DEL TEST DE DIAGNÒSTIC -->
-                <div id="quiz-container" class="mt-8 hidden space-y-6 bg-slate-900 p-6 rounded-2xl border border-slate-700">
-                    <h2 class="text-lg font-bold text-white flex items-center gap-2">🎯 Test d'Avaluació de Nivell (5 Preguntes)</h2>
-                    <div id="quiz-questions" class="space-y-6"></div>
+                <!-- CONTENIDOR DEL TEST DE 5 PREGUNTES -->
+                <div id="quiz-container" class="mt-8 hidden space-y-5 bg-slate-950 p-6 rounded-2xl border border-slate-800 max-w-3xl">
+                    <h2 class="text-sm font-bold text-white flex items-center gap-2">🎯 Test d'Avaluació Inicial (5 Preguntes)</h2>
+                    <div id="quiz-questions-list" class="space-y-4"></div>
                     <button onclick="evaluateQuiz()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs">
-                        Corregir i Avaluar Nivell 📊
+                        Abaluar i Començar Xat d'Estudi 📊
                     </button>
                 </div>
             </div>
 
-            <!-- VISTA 2: GLITCH SANDBOX -->
-            <div id="view-sandbox" class="hidden">
-                <header class="mb-6 border-b border-slate-700 pb-4 flex justify-between items-center">
+            <!-- VISTA 2: CHAT ESTIL GEMINI / CHATGPT -->
+            <div id="section-chat" class="hidden flex-col h-full">
+                <header class="p-4 border-b border-slate-800 bg-slate-950/50 flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl font-black text-white tracking-tight">The Glitch Sandbox</h1>
-                        <p class="text-sm text-slate-400 mt-1">Troba la pifia introduïda per la IA i demostra el teu criteri.</p>
+                        <h2 id="chat-title" class="text-sm font-bold text-white">Xat d'Estudi Actiu</h2>
+                        <p class="text-[10px] text-slate-400">Inicia una conversa amb la IA per repassar dubtes o continguts</p>
                     </div>
-                    <button onclick="generateAIBugChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-md">
-                        ⚡ Generar Repte
+                </header>
+
+                <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 text-xs">
+                    <div class="bg-slate-800/60 p-4 rounded-2xl border border-slate-800 max-w-2xl">
+                        <p class="font-bold text-indigo-400 mb-1">🤖 AIStudents</p>
+                        <p class="text-slate-200">Hola! Soc la teva IA d'estudi. Com et puc ajudar avui amb els teus apunts o la preparació de l'examen?</p>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-slate-800 bg-slate-950/80">
+                    <form id="chat-form" class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Fes una pregunta a la IA sobre el temari..." class="flex-1 px-4 py-3 rounded-2xl border border-slate-800 bg-slate-900 text-white text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-3 rounded-2xl transition text-xs">
+                            Enviar
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- VISTA 3: GLITCH SANDBOX (Bugs) -->
+            <div id="section-sandbox" class="hidden p-6 md:p-8 overflow-y-auto flex-1">
+                <header class="mb-6 border-b border-slate-800 pb-4 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-black text-white">The Glitch Sandbox</h1>
+                        <p class="text-xs text-slate-400">Detecta i corregeix l'error introduït per la IA.</p>
+                    </div>
+                    <button onclick="generateBugChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
+                        ⚡ Generar Nou Bug
                     </button>
                 </header>
 
-                <div id="sandbox-content" class="space-y-4">
-                    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-700 text-center py-12">
-                        <button onclick="generateAIBugChallenge()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm">
-                            Començar Auditoria IA 🎯
+                <div id="sandbox-box" class="space-y-4 max-w-3xl">
+                    <div class="bg-slate-950 p-8 rounded-2xl border border-slate-800 text-center">
+                        <p class="text-slate-400 text-xs mb-4">Fes clic per generar un repte pràctic amb un bug ocult.</p>
+                        <button onclick="generateBugChallenge()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-2.5 rounded-xl transition text-xs">
+                            Començar Repte 🎯
                         </button>
                     </div>
                 </div>
@@ -151,69 +184,78 @@
         </main>
     </div>
 
-    <!-- SCRIPT DE LÒGICA, IA I CONFIGURACIÓ -->
+    <!-- SCRIPT JS PRINCIPAL -->
     <script>
-        let quizData = [];
+        let currentQuiz = [];
+        let chatHistory = [];
 
-        function switchTab(tab) {
-            document.getElementById('view-planner').classList.toggle('hidden', tab !== 'planner');
-            document.getElementById('view-sandbox').classList.toggle('hidden', tab !== 'sandbox');
+        // CANVI DE SECCIONS
+        function showSection(sec) {
+            document.getElementById('section-planner').classList.toggle('hidden', sec !== 'planner');
+            document.getElementById('section-chat').classList.toggle('hidden', sec !== 'chat');
+            document.getElementById('section-sandbox').classList.toggle('hidden', sec !== 'sandbox');
+
+            if (sec === 'chat') {
+                document.getElementById('section-chat').classList.add('flex');
+            } else {
+                document.getElementById('section-chat').classList.remove('flex');
+            }
         }
 
-        const examDateInput = document.getElementById('exam-date');
-        const daysCounter = document.getElementById('days-counter');
-        const studyForm = document.getElementById('study-form');
-
-        examDateInput.addEventListener('change', () => {
-            const diffDays = Math.ceil((new Date(examDateInput.value) - new Date()) / (1000 * 60 * 60 * 24));
-            daysCounter.textContent = diffDays >= 0 ? `${diffDays} dies` : `0 dies`;
+        // COMPTADOR DE DIES
+        const examInput = document.getElementById('exam-date');
+        examInput.addEventListener('change', () => {
+            const diff = Math.ceil((new Date(examInput.value) - new Date()) / (1000 * 60 * 60 * 24));
+            document.getElementById('days-counter').textContent = diff >= 0 ? `${diff} dies` : '0 dies';
         });
 
-        // GENERAR TEST DE 5 PREGUNTES EN ENVIAR
-        studyForm.addEventListener('submit', async (e) => {
+        // GENERAR TEST DE DIAGNÒSTIC (5 PREGUNTES)
+        document.getElementById('study-setup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const title = document.getElementById('subject-title').value;
             const category = document.getElementById('subject-category').value;
             const comments = document.getElementById('extra-comments').value;
 
             Swal.fire({
-                title: 'Generant Test...',
-                text: 'La IA està analitzant el temari per crear 5 preguntes d\'avaluació.',
+                title: 'Analitzant temari...',
+                text: 'La IA està generant les 5 preguntes d\'avaluació inicial.',
                 allowOutsideClick: false,
                 didOpen: () => Swal.showLoading()
             });
 
             try {
-                const response = await fetch("/api/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ mode: 'quiz', subjectCategory: category, title, comments })
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'quiz', title, subjectCategory: category, comments })
                 });
 
-                const data = await response.json();
-                quizData = data.preguntes || [];
+                const data = await res.json();
+                currentQuiz = data.preguntes || [];
                 renderQuiz();
                 Swal.close();
 
+                // Guardar a l'historial
+                saveChatToHistory(title);
+
             } catch (err) {
-                Swal.fire('Error', 'No s\'ha pogut generar el test amb la IA.', 'error');
+                Swal.fire('Error', 'No s\'ha pogut connectar amb la IA.', 'error');
             }
         });
 
         function renderQuiz() {
-            const container = document.getElementById('quiz-questions');
-            const quizBox = document.getElementById('quiz-container');
+            const container = document.getElementById('quiz-questions-list');
             container.innerHTML = '';
 
-            quizData.forEach((q, index) => {
+            currentQuiz.forEach((q, idx) => {
                 const div = document.createElement('div');
-                div.className = "p-4 bg-slate-800 rounded-xl border border-slate-700 space-y-2";
+                div.className = "p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-2";
                 div.innerHTML = `
-                    <p class="text-xs font-bold text-indigo-400">Pregunta ${index + 1}: ${q.pregunta}</p>
+                    <p class="text-xs font-bold text-indigo-400">${idx + 1}. ${q.pregunta}</p>
                     <div class="space-y-1">
-                        ${q.opcions.map((opt, i) => `
-                            <label class="flex items-center gap-2 text-xs text-slate-300 p-2 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-950">
-                                <input type="radio" name="q${index}" value="${opt[0]}" class="text-indigo-600">
+                        ${q.opcions.map((opt) => `
+                            <label class="flex items-center gap-2 text-xs text-slate-300 p-2 bg-slate-950 rounded-lg cursor-pointer hover:bg-slate-800">
+                                <input type="radio" name="q_${idx}" value="${opt[0]}">
                                 <span>${opt}</span>
                             </label>
                         `).join('')}
@@ -222,114 +264,151 @@
                 container.appendChild(div);
             });
 
-            quizBox.classList.remove('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
         }
 
         function evaluateQuiz() {
-            let correctCount = 0;
-            quizData.forEach((q, index) => {
-                const selected = document.querySelector(`input[name="q${index}"]:checked`);
-                if (selected && selected.value === q.resposta_correcta) {
-                    correctCount++;
-                }
+            let correct = 0;
+            currentQuiz.forEach((q, idx) => {
+                const sel = document.querySelector(`input[name="q_${idx}"]:checked`);
+                if (sel && sel.value === q.resposta_correcta) correct++;
             });
 
             Swal.fire({
-                title: `Avaluació: ${correctCount} / 5 encerts`,
-                text: correctCount >= 3 ? 'Tens un bon nivell de partida!' : 'Cal repassar més aquest temari.',
-                icon: correctCount >= 3 ? 'success' : 'warning'
+                title: `Avaluació: ${correct} / 5 Encerts`,
+                text: correct >= 3 ? 'Tens una bona base per començar!' : 'Et recomanem repassar la teoria amb el xat.',
+                icon: correct >= 3 ? 'success' : 'warning'
+            }).then(() => {
+                showSection('chat');
             });
         }
 
-        // GENERAR REPTE GLITCH SANDBOX
-        async function generateAIBugChallenge() {
-            const container = document.getElementById('sandbox-content');
-            const category = document.getElementById('subject-category').value || 'SMX';
+        // XAT INTERACTIU
+        document.getElementById('chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
 
-            container.innerHTML = `
-                <div class="bg-slate-900 p-10 rounded-2xl border border-slate-700 text-center">
-                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                    <p class="text-slate-300 text-sm">Carregant repte d'auditoria...</p>
-                </div>
-            `;
+            appendMessage('user', msg);
+            input.value = '';
 
             try {
-                const response = await fetch("/api/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ mode: 'bug', subjectCategory: category })
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'chat', prompt: msg, chatHistory })
                 });
 
-                const challenge = await response.json();
+                const data = await res.json();
+                appendMessage('ai', data.reply);
+                chatHistory.push({ role: 'user', content: msg });
+                chatHistory.push({ role: 'assistant', content: data.reply });
 
-                container.innerHTML = `
-                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-700 space-y-4">
-                        <span class="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold px-3 py-1 rounded-full">⚡ ${challenge.titol}</span>
+            } catch (err) {
+                appendMessage('ai', 'Error en rebre resposta de la IA.');
+            }
+        });
+
+        function appendMessage(sender, text) {
+            const box = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = sender === 'user' 
+                ? "bg-indigo-600/20 border border-indigo-500/30 p-3 rounded-2xl ml-auto max-w-xl text-right"
+                : "bg-slate-800/80 border border-slate-800 p-3 rounded-2xl max-w-xl";
+            
+            div.innerHTML = `
+                <p class="font-bold ${sender === 'user' ? 'text-indigo-300' : 'text-indigo-400'} mb-1">${sender === 'user' ? 'Tu' : '🤖 AIStudents'}</p>
+                <p class="text-slate-200">${text}</p>
+            `;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // GLITCH SANDBOX
+        async function generateBugChallenge() {
+            const box = document.getElementById('sandbox-box');
+            box.innerHTML = `<div class="p-8 text-center text-xs text-slate-400">Generant bug amb la IA...</div>`;
+
+            try {
+                const res = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'bug', subjectCategory: 'SMX' })
+                });
+
+                const challenge = await res.json();
+                box.innerHTML = `
+                    <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
+                        <span class="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">${challenge.titol}</span>
                         <p class="text-xs text-slate-300">${challenge.enunciat}</p>
-                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-center"><div class="mermaid">${challenge.mermaid_code}</div></div>
-                        <div class="bg-black/50 p-4 rounded-xl font-mono text-xs text-emerald-400 border border-slate-800"><pre>${challenge.codi_o_configuracio}</pre></div>
-                        <input type="text" id="user-fix" placeholder="Introdueix la comanda o resposta..." class="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 text-white text-xs font-mono">
-                        <button onclick="validateFix('${encodeURIComponent(challenge.solucio_correcta)}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs">Validar Correcció 🔍</button>
+                        <div class="bg-black/60 p-3 rounded-xl font-mono text-xs text-emerald-400"><pre>${challenge.codi_o_configuracio}</pre></div>
+                        <input type="text" id="bug-solution" placeholder="Escriu la comanda de correcció..." class="w-full p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs font-mono">
+                        <button onclick="validateBug('${encodeURIComponent(challenge.solucio_correcta)}')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs">Validar Correcció</button>
                     </div>
                 `;
-                mermaid.init();
             } catch (err) {
-                container.innerHTML = `<div class="text-red-400 text-xs text-center">Error al carregar el bug.</div>`;
+                box.innerHTML = `<div class="p-4 text-center text-xs text-red-400">Error en carregar el repte.</div>`;
             }
         }
 
-        function validateFix(correctSolutionEncoded) {
-            const correctSolution = decodeURIComponent(correctSolutionEncoded).toLowerCase();
-            const userFix = document.getElementById('user-fix').value.toLowerCase().trim();
-            if (userFix.length > 2 && correctSolution.includes(userFix)) {
-                Swal.fire('Molt bé!', 'Has corregit el bug amb èxit!', 'success');
+        function validateBug(sol) {
+            const correct = decodeURIComponent(sol).toLowerCase();
+            const val = document.getElementById('bug-solution').value.toLowerCase().trim();
+            if (val.length > 2 && correct.includes(val)) {
+                Swal.fire('Molt bé!', 'Has corregit el bug!', 'success');
             } else {
-                Swal.fire('Revisa la resposta', 'Aquesta correcció no és del tot exacta.', 'error');
+                Swal.fire('Incorrecte', 'Torna-ho a intentar.', 'error');
             }
         }
 
-        // CHAT NOU ESTIL GEMINI
-        function newChat() {
-            const chatList = document.getElementById('chat-list');
-            const chatName = prompt("Nom del nou chat d'estudi:");
-            if (chatName) {
-                const div = document.createElement('div');
-                div.className = "p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer text-xs flex items-center gap-2 border border-slate-700";
-                div.innerHTML = `💬 <span>${chatName}</span>`;
-                chatList.appendChild(div);
-            }
+        function saveChatToHistory(title) {
+            const list = document.getElementById('chat-history-list');
+            const div = document.createElement('div');
+            div.className = "p-2.5 bg-slate-900 hover:bg-slate-800 rounded-xl cursor-pointer text-xs flex items-center gap-2 border border-slate-800/80 transition";
+            div.innerHTML = `💬 <span class="truncate">${title}</span>`;
+            div.onclick = () => showSection('chat');
+            list.prepend(div);
         }
 
-        // MODAL DE CONFIGURACIÓ
+        // MODAL DE CONFIGURACIÓ REAL (TEMA, FONT, MIDA)
         function openConfigModal() {
             Swal.fire({
-                title: '⚙️ Configuració Personalitzada',
+                title: '⚙️ Configuració de la Interfície',
                 html: `
                     <div class="text-left space-y-4 text-xs">
                         <div>
                             <label class="font-bold text-slate-300 block mb-1">Tema Visual</label>
-                            <select id="theme-select" class="w-full p-2 bg-slate-800 border border-slate-700 rounded text-white">
-                                <option value="dark">Mode Fosc</option>
+                            <select id="cfg-theme" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                                <option value="dark">Mode Fosc (Per defecte)</option>
                                 <option value="light">Mode Clar</option>
                             </select>
                         </div>
                         <div>
                             <label class="font-bold text-slate-300 block mb-1">Tipus de Lletra</label>
-                            <select id="font-select" class="w-full p-2 bg-slate-800 border border-slate-700 rounded text-white">
-                                <option value="font-sans">Sans-serif (Modern)</option>
+                            <select id="cfg-font" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                                <option value="font-sans">Sans-serif (Moderna)</option>
                                 <option value="font-serif">Serif (Lectura)</option>
-                                <option value="font-mono">Monospace (Codi)</option>
+                                <option value="font-mono">Monospace (Tècnica)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-300 block mb-1">Mida del Text</label>
+                            <select id="cfg-size" class="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white">
+                                <option value="text-normal">Normal</option>
+                                <option value="text-lg">Gran</option>
                             </select>
                         </div>
                     </div>
                 `,
-                confirmButtonText: 'Aplicar',
+                confirmButtonText: 'Aplicar Canvis',
                 preConfirm: () => {
-                    const theme = document.getElementById('theme-select').value;
-                    const font = document.getElementById('font-select').value;
-                    
+                    const theme = document.getElementById('cfg-theme').value;
+                    const font = document.getElementById('cfg-font').value;
+                    const size = document.getElementById('cfg-size').value;
+
                     document.documentElement.classList.toggle('dark', theme === 'dark');
-                    document.body.className = `${font} bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-start p-2 md:p-6 transition-colors duration-200`;
+                    document.body.className = `${font} ${size === 'text-lg' ? 'text-base' : 'text-xs'} bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-2 md:p-4 transition-all`;
                 }
             });
         }
