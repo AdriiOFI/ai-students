@@ -19,12 +19,7 @@ module.exports = async function handler(req, res) {
             
             Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
             
-            REGLA CRÍTICA I ABSOLUTA: HAS DE RETORNAR ÚNICAMENT I EXCLUSIVAMENT UN OBJECTE JSON VÀLID.
-            - NO escriguis cap paraula abans ni després de les claus { }.
-            - NO utilitzis blocs de markdown (no posis \`\`\`json).
-            - Al camp "calendari_estudi", utilitza '\\n' per fer salts de línia, no facis salts de línia reals al codi.
-            
-            FORMAT EXACTE I OBLIGATORI:
+            RETORNA ÚNICAMENT UN OBJECTE JSON PUR. SENSE CAP TEXT ABANS NI DESPRÉS. FORMAT EXACTE:
             {
               "calendari_estudi": "Pla d'estudi dia a dia.\\nDia 1: Tema 1.\\nDia 2: Repàs.",
               "preguntes": [
@@ -41,8 +36,8 @@ module.exports = async function handler(req, res) {
                 headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
-                    messages: [ { role: "system", content: systemPrompt } ],
-                    response_format: { type: "json_object" }
+                    messages: [ { role: "system", content: systemPrompt } ]
+                    // HEM ELIMINAT EL response_format ESTRICTE
                 })
             });
 
@@ -52,8 +47,22 @@ module.exports = async function handler(req, res) {
             }
 
             const data = await response.json();
-            const result = JSON.parse(data.choices[0].message.content);
-            return res.status(200).json(result);
+            let rawContent = data.choices[0].message.content;
+            
+            // EL NOSTRE PROPI VALIDADOR: Busquem on comença i acaba el JSON per ignorar text extra
+            try {
+                const jsonStart = rawContent.indexOf('{');
+                const jsonEnd = rawContent.lastIndexOf('}');
+                
+                if (jsonStart !== -1 && jsonEnd !== -1) {
+                    rawContent = rawContent.substring(jsonStart, jsonEnd + 1);
+                }
+                
+                const result = JSON.parse(rawContent);
+                return res.status(200).json(result);
+            } catch (parseError) {
+                return res.status(200).json({ error: `La IA no ha generat un format vàlid. Això és el que ha dit: ${rawContent.substring(0, 100)}...` });
+            }
         }
 
         // ACCIÓ 2: XAT CONTINU AMB LA IA
@@ -63,10 +72,10 @@ module.exports = async function handler(req, res) {
                 content: `Ets AIStudents, un tutor d'intel·ligència artificial avançat. 
                 
                 DIRECTRIUS IMPORTANTS:
-                1. Context: En el teu primer "system prompt" amagat t'han donat el calendari d'estudi de l'alumne, els seus apunts i la nota inicial del test. Usa aquesta memòria. Adapta't a la seva nota (si és baixa, explica a poc a poc; si és alta, aprofundeix).
+                1. Context: Usa la teva memòria (calendari d'estudi, apunts i nota inicial del test). Adapta't a la nota de l'alumne.
                 2. Interacció: Fes preguntes per posar a prova l'alumne.
-                3. Visual: Utilitza blocs de codi (\`\`\`) per fer esquemes visuals o arbres conceptuals basats en text.
-                4. Kahoot: Si l'alumne demana jugar, inicia un joc de preguntes estil "Kahoot" amb opcions A, B, C, D donant-li punts per encert.
+                3. Visual: Utilitza blocs de codi (\`\`\`) per fer esquemes visuals o arbres conceptuals.
+                4. Kahoot: Si l'alumne demana jugar, inicia un joc de preguntes estil "Kahoot" amb opcions A, B, C, D donant-li punts.
                 
                 El teu to ha de ser empàtic, encoratjador i interactiu.`
             };
