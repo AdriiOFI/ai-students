@@ -77,7 +77,7 @@
                         <textarea id="extra-comments" rows="2" placeholder="De què tracta exactament?" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
                     </div>
 
-                    <button onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
+                    <button id="btn-start" onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
                         Començar Estudi
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
@@ -85,19 +85,30 @@
             </div>
         </div>
 
-        <!-- VISTA 2: TEST DE NIVELL -->
+        <!-- VISTA 2: CALENDARI I TEST DE NIVELL -->
         <div id="quiz-view" class="hidden flex-1 overflow-y-auto items-start justify-center p-6 py-10">
-            <div class="w-full max-w-3xl bg-white border border-slate-200 rounded-3xl shadow-xl p-8">
-                <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-end">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Test de Diagnòstic</h2>
-                        <p class="text-slate-500 text-sm mt-1">Respon aquestes 5 preguntes per establir el teu nivell inicial.</p>
+            <div class="w-full max-w-4xl space-y-6">
+                
+                <!-- Bloc del Calendari d'Estudi -->
+                <div class="bg-white border border-slate-200 rounded-3xl shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-2">📅 El teu Pla d'Estudi</h2>
+                    <div id="calendar-container" class="text-sm text-slate-700 leading-relaxed bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <!-- El calendari generat anirà aquí -->
                     </div>
                 </div>
-                <div id="quiz-container" class="space-y-6 mb-8"></div>
-                <button onclick="evaluateQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg">
-                    Avaluar i Començar el Xat
-                </button>
+
+                <!-- Bloc del Test -->
+                <div class="bg-white border border-slate-200 rounded-3xl shadow-lg p-8">
+                    <div class="border-b border-slate-100 pb-4 mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">Test de Diagnòstic</h2>
+                        <p class="text-slate-500 text-sm mt-1">Respon aquestes 5 preguntes per establir el teu nivell inicial i adaptar el xat.</p>
+                    </div>
+                    <div id="quiz-container" class="space-y-6 mb-8"></div>
+                    <button onclick="evaluateQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg">
+                        Avaluar i Començar el Xat
+                    </button>
+                </div>
+
             </div>
         </div>
 
@@ -121,8 +132,10 @@
         let extractedText = "";
         let chatHistory = [];
         let currentQuizData = [];
+        let generatedCalendar = "";
+        let studyDaysLeft = 0;
+        let isPdfProcessing = false;
 
-        // RECUPERAR SESSIÓ SI S'ACTUALITZA LA PÀGINA
         window.onload = () => {
             const savedSession = localStorage.getItem('aiStudentsSession');
             if (savedSession) {
@@ -151,9 +164,10 @@
 
         document.getElementById('exam-date').addEventListener('change', (e) => {
             const diffDays = Math.ceil((new Date(e.target.value) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
+            studyDaysLeft = diffDays;
             const marker = document.getElementById('days-left-marker');
             marker.classList.remove('hidden');
-            if (diffDays > 0) marker.innerHTML = `⏳ Et queden <span class="text-blue-600 font-bold">${diffDays} dies</span>.`;
+            if (diffDays > 0) marker.innerHTML = `⏳ Tens <span class="text-blue-600 font-bold">${diffDays} dies</span> disponibles per estudiar.`;
             else if (diffDays === 0) marker.innerHTML = `⚠️ <span class="text-orange-500 font-bold">L'examen és avui!</span>`;
             else marker.innerHTML = `❌ Data passada.`;
         });
@@ -161,8 +175,13 @@
         document.getElementById('pdf-upload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            isPdfProcessing = true;
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-start').classList.add('opacity-50');
+            
             const status = document.getElementById('pdf-status');
-            status.innerHTML = `<span class="text-blue-500">⏳ Processant: ${file.name}...</span>`;
+            status.innerHTML = `<span class="text-blue-500">⏳ Llegint text del PDF: ${file.name}...</span>`;
+            
             try {
                 const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
                 let fullText = "";
@@ -170,54 +189,76 @@
                     const textContent = await (await pdf.getPage(i)).getTextContent();
                     fullText += textContent.items.map(item => item.str).join(" ") + "\n";
                 }
-                extractedText = fullText;
-                status.innerHTML = `<span class="text-green-600 font-bold">✅ PDF Carregat!</span>`;
+                
+                extractedText = fullText.trim();
+                
+                if(extractedText.length < 50) {
+                    status.innerHTML = `<span class="text-orange-500 font-bold">⚠️ El PDF sembla buit o és una imatge (no es pot llegir el text).</span>`;
+                    extractedText = "";
+                } else {
+                    status.innerHTML = `<span class="text-green-600 font-bold">✅ PDF Carregat i llegit!</span>`;
+                }
             } catch (err) {
                 status.innerHTML = `<span class="text-red-500 font-bold">❌ Error en llegir el PDF.</span>`;
             }
+            
+            isPdfProcessing = false;
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-start').classList.remove('opacity-50');
         });
 
-        // LÒGICA CONDICIONAL: PDF O SENSE PDF
         async function proceedToNextStep() {
-            if (!extractedText.trim()) {
-                // SENSE PDF -> Saltem directe al xat
+            if (isPdfProcessing) return; // Evitar que avanci si el PDF s'està llegint
+
+            if (!extractedText) {
+                // FLUX SENSE PDF
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('chat-view').classList.remove('hidden');
                 document.getElementById('chat-view').classList.add('flex');
-
-                document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium">Estudi Obert</div>`;
+                document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium">Estudi Lliure</div>`;
 
                 const comments = document.getElementById('extra-comments').value;
-                const systemContext = `L'usuari no ha pujat cap PDF. Instruccions: ${comments || 'Cap'}. Avalua el seu coneixement fent preguntes interactives.`;
+                const systemContext = `L'usuari no ha pujat cap PDF. Temps fins l'examen: ${studyDaysLeft} dies. Instruccions: ${comments || 'Cap'}.`;
                 chatHistory.push({ role: "system", content: systemContext });
 
-                const initialMsg = "Veig que no has pujat cap PDF. **Escriu-me detalladament sobre què va el tema per poder ajudar-te a estudiar.**";
+                const initialMsg = "Veig que no has pujat cap PDF. **Escriu-me detalladament sobre què va el tema per poder fer-te un calendari d'estudi i ajudar-te.**";
                 appendMessage('ai', initialMsg);
                 chatHistory.push({ role: 'assistant', content: initialMsg });
                 saveSession();
             } else {
-                // AMB PDF -> Generar Test
-                generateQuiz();
+                // FLUX AMB PDF (Calendari + Test)
+                generatePlanAndQuiz();
             }
         }
 
-        async function generateQuiz() {
-            Swal.fire({ title: 'Llegint apunts...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        async function generatePlanAndQuiz() {
+            Swal.fire({ title: 'Planificant Estudi...', text: 'Creant el teu calendari i test de nivell...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch('/api/generate', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'quiz', pdfText: extractedText.substring(0, 4000), instructions: document.getElementById('extra-comments').value })
+                    body: JSON.stringify({ 
+                        action: 'prepare_study', 
+                        pdfText: extractedText.substring(0, 4000), 
+                        instructions: document.getElementById('extra-comments').value,
+                        daysLeft: studyDaysLeft
+                    })
                 });
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
                 
+                generatedCalendar = data.calendari_estudi;
                 currentQuizData = data.preguntes;
+                
+                // Mostrar Calendari
+                document.getElementById('calendar-container').innerHTML = formatMessage(generatedCalendar);
+                
+                // Mostrar Preguntes
                 renderQuiz();
                 
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('quiz-view').classList.remove('hidden');
                 document.getElementById('quiz-view').classList.add('flex');
-                document.getElementById('history-placeholder').innerText = "Test en curs...";
+                document.getElementById('history-placeholder').innerText = "Test i Planificació";
                 Swal.close();
             } catch (err) {
                 Swal.fire('Error', err.message, 'error');
@@ -264,10 +305,16 @@
 
             document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium">Nivell: ${score}/5</div>`;
 
-            const systemContext = `L'usuari ha tret un ${score} sobre 5 (${level}). Ajusta el nivell de l'explicació. Apunts: ${extractedText ? extractedText.substring(0, 3000) : ''}`;
+            // Afegim tota la memòria: El PDF, el Calendari generat, i la Nota.
+            const systemContext = `Memòria de l'alumne:
+            - Dies per l'examen: ${studyDaysLeft} dies.
+            - Calendari d'estudi proposat: ${generatedCalendar}
+            - Nivell demostrat al test: ${score} sobre 5 (${level}). Ajusta la dificultat de les explicacions a aquest nivell.
+            - Temari/Apunts: ${extractedText ? extractedText.substring(0, 3000) : 'No hi ha PDF'}`;
+            
             chatHistory.push({ role: "system", content: systemContext });
 
-            const initialMsg = `He analitzat el teu test i veig que tens un **${level}** (${score}/5). Ja tinc els teus apunts preparats. Què vols repassar? Si vols podem jugar a un repàs ràpid tipus Kahoot o et puc fer esquemes visuals.`;
+            const initialMsg = `He desat el teu **Calendari d'Estudi** a la meva memòria. Pel que fa al test, tens un **${level}** (${score}/5). Ja estic a punt! Per quin concepte vols que comencem a repassar? Puc fer-te esquemes, preguntes ràpides o un joc Kahoot per practicar.`;
             appendMessage('ai', initialMsg);
             chatHistory.push({ role: 'assistant', content: initialMsg });
             saveSession();
@@ -307,7 +354,7 @@
             }
         });
 
-        // FORMATEJADOR DE MISSATGES (Markdown per llistes, esquemes, negretes)
+        // FORMATEJADOR DE MISSATGES (Markdown)
         function formatMessage(text) {
             return text
                 .replace(/```([\s\S]*?)```/g, '<pre class="bg-slate-800 text-emerald-400 p-4 rounded-xl text-xs overflow-x-auto my-3 font-mono">$1</pre>')
