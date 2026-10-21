@@ -19,14 +19,19 @@ module.exports = async function handler(req, res) {
             
             Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
             
-            RETORNA ÚNICAMENT UN OBJECTE JSON PUR. SENSE MARKDOWN EXTERIOR. FORMAT EXACTE:
+            REGLA CRÍTICA I ABSOLUTA: HAS DE RETORNAR ÚNICAMENT I EXCLUSIVAMENT UN OBJECTE JSON VÀLID.
+            - NO escriguis cap paraula abans ni després de les claus { }.
+            - NO utilitzis blocs de markdown (no posis \`\`\`json).
+            - Al camp "calendari_estudi", utilitza '\\n' per fer salts de línia, no facis salts de línia reals al codi.
+            
+            FORMAT EXACTE I OBLIGATORI:
             {
-              "calendari_estudi": "El pla d'estudi dia a dia o setmana a setmana resumit (en format markdown interior amb negretes i llistes).",
+              "calendari_estudi": "Pla d'estudi dia a dia.\\nDia 1: Tema 1.\\nDia 2: Repàs.",
               "preguntes": [
                 {
                   "pregunta": "Text de la pregunta?",
-                  "opcions": ["A) opció", "B) opció", "C) opció", "D) opció"],
-                  "resposta_correcta": "A) opció"
+                  "opcions": ["A) opció 1", "B) opció 2", "C) opció 3", "D) opció 4"],
+                  "resposta_correcta": "A) opció 1"
                 }
               ]
             }`;
