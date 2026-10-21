@@ -9,21 +9,24 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ error: 'Falta la clau GROQ_API_KEY a Vercel.' });
         }
 
-        const { action, pdfText, instructions, chatHistory, daysLeft } = req.body;
+        const { action, pdfText, instructions, chatHistory, daysLeft, currentDate } = req.body;
 
-        // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST ALHORA
+        // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
         if (action === 'prepare_study') {
             const systemPrompt = `Ets un tutor d'estudi. La teva missió és doble:
-            1. Crear un calendari d'estudi resumit per l'alumne basant-te en els dies que li queden (${daysLeft} dies).
+            1. Crear un calendari d'estudi resumit per l'alumne basant-te en els dies que li queden (${daysLeft} dies). Avui és ${currentDate}.
             2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari.
             
             Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
             
-            RETORNA ÚNICAMENT UN OBJECTE JSON. REGLA: Utilitza SEMPRE cometes dobles (") per les claus i valors, MAI cometes simples ('). Els salts de línia s'han d'escriure com \\n.
+            RETORNA ÚNICAMENT UN OBJECTE JSON. Utilitza SEMPRE cometes dobles (") per les claus i valors. Els salts de línia s'han d'escriure com \\n.
             
-            FORMAT ESPERAT:
+            FORMAT EXACTE I ESPERAT:
             {
-              "calendari_estudi": "Dia 1: Tema 1.\\nDia 2: Repàs.",
+              "calendari_estudi": [
+                { "dia": 1, "tema": "Títol del que toca estudiar aquest dia" },
+                { "dia": 2, "tema": "Títol del dia 2..." }
+              ],
               "preguntes": [
                 {
                   "pregunta": "Quina és la capital?",
@@ -39,7 +42,7 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
                     messages: [ { role: "system", content: systemPrompt } ],
-                    temperature: 0.2, // Baixem la temperatura perquè obeeixi millor el format
+                    temperature: 0.2,
                     max_tokens: 3000
                 })
             });
@@ -54,8 +57,6 @@ module.exports = async function handler(req, res) {
             
             try {
                 if (!rawContent) throw new Error("La resposta està buida.");
-
-                // Netejar markdown i localitzar les claus
                 let cleanedContent = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
                 const jsonStart = cleanedContent.indexOf('{');
                 const jsonEnd = cleanedContent.lastIndexOf('}');
@@ -66,19 +67,13 @@ module.exports = async function handler(req, res) {
 
                 let result;
                 try {
-                    // 1. Intent normal de parsejar JSON estricte
                     result = JSON.parse(cleanedContent);
                 } catch (strictError) {
-                    // 2. TENTATIVA RELAXADA: Si la IA ha usat cometes simples o salts de línia trencats
-                    // Substituïm els salts de línia reals per la seqüència segura \n per no trencar l'evaluació
                     let safeJS = cleanedContent.replace(/\n/g, "\\n").replace(/\r/g, "");
-                    // Utilitzem el constructor de funcions per llegir l'objecte com si fos JavaScript pur
                     result = new Function("return " + safeJS)();
                 }
                 
-                // Si arribem aquí, ha funcionat
                 return res.status(200).json(result);
-
             } catch (parseError) {
                 return res.status(200).json({ 
                     error: `El format de la IA no és compatible. <br>Error de lectura: ${parseError.message}<br><br><pre style="text-align:left; white-space:pre-wrap; background:#1e293b; padding:10px; border-radius:8px; margin-top:10px; font-size:10px;">${rawContent}</pre>` 
@@ -90,13 +85,21 @@ module.exports = async function handler(req, res) {
         if (action === 'chat') {
             const masterSystemPrompt = {
                 role: "system",
-                content: `Ets AIStudents, un tutor d'intel·ligència artificial avançat. 
+                content: `Ets AIStudents, un tutor d'intel·ligència artificial. 
                 
                 DIRECTRIUS:
-                1. Tens la memòria de l'alumne als missatges anteriors (test, calendari, apunts). Usa-ho.
-                2. Fes preguntes interactives, no donis només sermons llargs.
-                3. Utilitza blocs de codi (\`\`\`) per fer esquemes visuals quan calgui resumir.
-                4. Si l'alumne demana jugar, fes un joc tipus Kahoot (A, B, C, D) anomenant els punts.`
+                1. Tens la memòria de l'alumne als missatges anteriors. Adapta la dificultat.
+                2. Utilitza blocs de codi (\`\`\`) per fer esquemes visuals.
+                3. JOC KAHOOT: Si l'alumne et demana un joc Kahoot o preguntes ràpides, HAS DE FORMATAR LA PREGUNTA EXACTAMENT AIXÍ perquè el sistema dibuixi els botons:
+                
+                \`\`\`kahoot
+                {
+                  "pregunta": "Escriu aquí la pregunta",
+                  "opcions": ["Opció 1", "Opció 2", "Opció 3", "Opció 4"],
+                  "correcta": 0
+                }
+                \`\`\`
+                (El camp 'correcta' és l'índex de la resposta bona, de 0 a 3). Pots afegir text normal abans o després del bloc kahoot.`
             };
 
             const messagesToSend = [masterSystemPrompt, ...chatHistory];
