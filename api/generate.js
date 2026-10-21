@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Mètode no permès' });
     }
@@ -65,7 +65,6 @@ export default async function handler(req, res) {
                     { role: "system", content: systemPrompt },
                     { role: "user", content: userMessage }
                 ],
-                // Forzar JSON puro asegura que no se rompa el Frontend
                 response_format: { type: "json_object" } 
             })
         });
