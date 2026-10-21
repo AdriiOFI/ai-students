@@ -132,7 +132,7 @@
     </main>
 
     <script>
-        let uploadedPDFs = []; // Array per guardar { id, name, text }
+        let uploadedPDFs = []; 
         let extractedText = "";
         let chatHistory = [];
         let currentQuizData = [];
@@ -192,7 +192,8 @@
                 try {
                     const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
                     let fullText = "";
-                    for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+                    // Pillem fins a 20 pàgines per document per estar segurs
+                    for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
                         const textContent = await (await pdf.getPage(i)).getTextContent();
                         fullText += textContent.items.map(item => item.str).join(" ") + "\n";
                     }
@@ -214,7 +215,6 @@
             isPdfProcessing = false;
             document.getElementById('btn-start').disabled = false;
             document.getElementById('btn-start').classList.remove('opacity-50');
-            // Buidar l'input perquè permeti pujar el mateix fitxer si s'ha esborrat
             e.target.value = ''; 
         });
 
@@ -235,7 +235,6 @@
                 `;
             });
             
-            // Juntar tot el text de tots els PDFs
             extractedText = uploadedPDFs.map(p => p.text).join("\n\n--- NOU DOCUMENT ---\n\n");
         }
 
@@ -263,7 +262,7 @@
                 chatHistory.push({ role: 'assistant', content: initialMsg });
                 saveSession();
             } else {
-                // FLUX AMB PDF (Calendari + Test)
+                // FLUX AMB PDF
                 generatePlanAndQuiz();
             }
         }
@@ -275,7 +274,7 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         action: 'prepare_study', 
-                        pdfText: extractedText.substring(0, 4000), // Limitat a 4000 caràcters pel context
+                        pdfText: extractedText.substring(0, 4000), // Protecció de tokens
                         instructions: document.getElementById('extra-comments').value,
                         daysLeft: studyDaysLeft
                     })
@@ -286,10 +285,7 @@
                 generatedCalendar = data.calendari_estudi;
                 currentQuizData = data.preguntes;
                 
-                // Mostrar Calendari
                 document.getElementById('calendar-container').innerHTML = formatMessage(generatedCalendar);
-                
-                // Mostrar Preguntes
                 renderQuiz();
                 
                 document.getElementById('setup-view').classList.add('hidden');
