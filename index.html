@@ -4,118 +4,119 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIStudents - Tutor Intel·ligent</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- PDF.js per llegir fitxers PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } }
     </script>
     <style>
-        /* Estils per a un scroll net */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-white text-slate-800 h-screen flex overflow-hidden antialiased font-sans">
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden antialiased font-sans">
 
-    <!-- BARRA LATERAL (Historial de Xats) -->
-    <aside class="w-72 bg-slate-50 border-r border-slate-200 flex flex-col">
-        <div class="p-4">
-            <button onclick="location.reload()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition shadow-sm">
+    <!-- BARRA LATERAL -->
+    <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-10 shadow-sm">
+        <div class="p-4 border-b border-slate-100">
+            <button onclick="location.reload()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                 Nova Sessió
             </button>
         </div>
         
         <div class="flex-1 overflow-y-auto p-3 space-y-1" id="chat-history">
-            <h3 class="text-xs font-semibold text-slate-400 px-3 mb-2 uppercase tracking-wider">Avui</h3>
-            <!-- Aquí s'afegiran els historials -->
-            <div class="text-sm text-slate-500 italic px-3 py-2">Cap xat anterior...</div>
+            <h3 class="text-xs font-semibold text-slate-400 px-3 mb-2 uppercase tracking-wider mt-2">Sessió Actual</h3>
+            <div id="history-placeholder" class="text-sm text-slate-500 italic px-3 py-2">Pendent de configurar...</div>
         </div>
 
-        <div class="p-4 border-t border-slate-200 flex items-center gap-3">
+        <div class="p-4 border-t border-slate-100 flex items-center gap-3 bg-slate-50/50">
             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md">AI</div>
             <div class="flex flex-col">
-                <span class="text-sm font-semibold text-slate-700">AIStudents</span>
-                <span class="text-[10px] text-slate-500">Tutor d'Estudi</span>
+                <span class="text-sm font-semibold text-slate-700">AIStudents Tutor</span>
+                <span class="text-[10px] text-green-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> En línia</span>
             </div>
         </div>
     </aside>
 
     <!-- CONTINGUT PRINCIPAL -->
-    <main class="flex-1 flex flex-col relative bg-white">
+    <main class="flex-1 flex flex-col relative bg-slate-50/50">
         
-        <!-- VISTA 1: FORMULARI DE CONFIGURACIÓ INICIAL -->
+        <!-- VISTA 1: CONFIGURACIÓ -->
         <div id="setup-view" class="flex-1 overflow-y-auto flex items-center justify-center p-6">
             <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-xl p-8 md:p-12">
                 <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-slate-800 mb-2">Què anem a estudiar avui?</h1>
-                    <p class="text-slate-500 text-sm">Configura la teva sessió perquè la IA s'adapti a les teves necessitats.</p>
+                    <h1 class="text-3xl font-bold text-slate-800 mb-2">Preparació de l'Estudi</h1>
+                    <p class="text-slate-500 text-sm">Carrega el temari. Farem un test de nivell abans de començar.</p>
                 </div>
 
                 <div class="space-y-6">
-                    <!-- 1. Data d'examen i Marcador de dies -->
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">📅 Data de l'examen</label>
                         <input type="date" id="exam-date" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                         <div id="days-left-marker" class="text-sm font-medium text-slate-500 mt-2 hidden"></div>
                     </div>
 
-                    <!-- 2. Temari (PDFs) -->
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">📚 Temari (Puja el teu PDF)</label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">📚 Temari (PDF)</label>
                         <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition relative cursor-pointer group">
                             <input type="file" id="pdf-upload" accept=".pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                             <div class="flex flex-col items-center gap-2 pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-400 group-hover:text-blue-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                <span id="pdf-status" class="text-sm font-medium text-slate-600">Arrossega el teu fitxer PDF o fes clic aquí</span>
+                                <span id="pdf-status" class="text-sm font-medium text-slate-600">Arrossega el PDF o fes clic</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3. Comentaris extra -->
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">✍️ Comentaris o instruccions per a la IA</label>
-                        <textarea id="extra-comments" rows="3" placeholder="Ex: Pregunta'm conceptes clau, fes-me un resum, o sigues estricte corregint..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"></textarea>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">✍️ Instruccions per a la IA</label>
+                        <textarea id="extra-comments" rows="2" placeholder="De què tracta exactament?" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
                     </div>
 
-                    <button onclick="startStudySession()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
-                        Començar Sessió d'Estudi
+                    <button onclick="generateQuiz()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
+                        Generar Test de Nivell
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA 2: XAT NET DE LA IA (Ocult a l'inici) -->
-        <div id="chat-view" class="hidden flex-1 flex-col h-full">
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6">
-                <!-- Missatge de Benvinguda -->
-            </div>
+        <!-- VISTA 2: TEST DE NIVELL -->
+        <div id="quiz-view" class="hidden flex-1 overflow-y-auto items-start justify-center p-6 py-10">
+            <div class="w-full max-w-3xl bg-white border border-slate-200 rounded-3xl shadow-xl p-8">
+                <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Test de Diagnòstic</h2>
+                        <p class="text-slate-500 text-sm mt-1">Respon aquestes 5 preguntes per establir el teu nivell inicial.</p>
+                    </div>
+                    <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">5 Preguntes</span>
+                </div>
+                
+                <div id="quiz-container" class="space-y-6 mb-8">
+                    <!-- Preguntes generades aquí -->
+                </div>
 
-            <!-- Caixa d'input al fons -->
-            <div class="p-4 bg-white border-t border-slate-100">
+                <button onclick="evaluateQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-blue-200 text-lg">
+                    Avaluar i Començar el Xat
+                </button>
+            </div>
+        </div>
+
+        <!-- VISTA 3: XAT DE LA IA -->
+        <div id="chat-view" class="hidden flex-1 flex-col h-full bg-white">
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6"></div>
+
+            <div class="p-4 bg-white border-t border-slate-100 relative shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
                 <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center">
-                    <input type="text" id="chat-input" placeholder="Escriu la teva pregunta al tutor..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
+                    <input type="text" id="chat-input" placeholder="Pregunta al tutor qualsevol dubte sobre el temari..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
                     <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
                 </form>
-                <div class="text-center mt-2">
-                    <span class="text-[10px] text-slate-400">La IA pot cometre errors. Revisa la informació important amb els teus apunts.</span>
-                </div>
             </div>
         </div>
 
@@ -124,89 +125,147 @@
     <script>
         let extractedText = "";
         let chatHistory = [];
+        let currentQuizData = [];
 
-        // Lògica del marcador de dies
+        // Data de l'examen
         document.getElementById('exam-date').addEventListener('change', (e) => {
-            const examDate = new Date(e.target.value);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            
-            const diffTime = examDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
+            const diffDays = Math.ceil((new Date(e.target.value) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
             const marker = document.getElementById('days-left-marker');
             marker.classList.remove('hidden');
-            
-            if (diffDays > 0) {
-                marker.innerHTML = `⏳ Et queden <span class="text-blue-600 font-bold">${diffDays} dies</span> per preparar-te. Temps de sobres!`;
-            } else if (diffDays === 0) {
-                marker.innerHTML = `⚠️ <span class="text-orange-500 font-bold">L'examen és avui!</span> Últim repàs ràpid.`;
-            } else {
-                marker.innerHTML = `❌ <span class="text-red-500 font-bold">Aquesta data ja ha passat.</span>`;
-            }
+            if (diffDays > 0) marker.innerHTML = `⏳ Et queden <span class="text-blue-600 font-bold">${diffDays} dies</span>.`;
+            else if (diffDays === 0) marker.innerHTML = `⚠️ <span class="text-orange-500 font-bold">L'examen és avui!</span>`;
+            else marker.innerHTML = `❌ Data passada.`;
         });
 
-        // Lògica d'extracció del PDF
+        // PDF Extraction
         document.getElementById('pdf-upload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const status = document.getElementById('pdf-status');
             status.innerHTML = `<span class="text-blue-500">⏳ Processant: ${file.name}...</span>`;
-
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
                 let fullText = "";
-
-                // Limitem l'extracció a les primeres 10 pàgines per no saturar la IA
-                const pagesToRead = Math.min(pdf.numPages, 10); 
-                for (let i = 1; i <= pagesToRead; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
+                for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
+                    const textContent = await (await pdf.getPage(i)).getTextContent();
                     fullText += textContent.items.map(item => item.str).join(" ") + "\n";
                 }
-
                 extractedText = fullText;
-                status.innerHTML = `<span class="text-green-600 font-bold">✅ ${file.name} carregat amb èxit!</span>`;
+                status.innerHTML = `<span class="text-green-600 font-bold">✅ PDF Carregat!</span>`;
             } catch (err) {
-                console.error(err);
                 status.innerHTML = `<span class="text-red-500 font-bold">❌ Error en llegir el PDF.</span>`;
             }
         });
 
-        // Començar la sessió i passar a la vista del xat
-        async function startStudySession() {
-            const examDate = document.getElementById('exam-date').value;
-            const comments = document.getElementById('extra-comments').value;
+        // Generar Test
+        async function generateQuiz() {
+            Swal.fire({ title: 'Llegint apunts...', text: 'La IA està analitzant el temari per crear un test personalitzat.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                const res = await fetch('/api/generate', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'quiz', 
+                        pdfText: extractedText.substring(0, 4000), 
+                        instructions: document.getElementById('extra-comments').value 
+                    })
+                });
+                
+                const data = await res.json();
+                if(data.error) throw new Error(data.error);
+                
+                currentQuizData = data.preguntes;
+                renderQuiz();
+                
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('quiz-view').classList.remove('hidden');
+                document.getElementById('quiz-view').classList.add('flex');
+                
+                document.getElementById('history-placeholder').innerText = "Test en curs...";
+                Swal.close();
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
 
-            document.getElementById('setup-view').classList.add('hidden');
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            
+            currentQuizData.forEach((q, idx) => {
+                container.innerHTML += `
+                    <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <h3 class="font-bold text-slate-800 mb-3"><span class="text-blue-600">${idx + 1}.</span> ${q.pregunta}</h3>
+                        <div class="space-y-2">
+                            ${q.opcions.map((opt) => `
+                                <label class="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition group">
+                                    <input type="radio" name="q_${idx}" value="${opt}" class="mt-1 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm text-slate-700 group-hover:text-slate-900">${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Avaluar Test i passar al Xat
+        function evaluateQuiz() {
+            let correct = 0;
+            currentQuizData.forEach((q, idx) => {
+                const sel = document.querySelector(`input[name="q_${idx}"]:checked`);
+                // Comparació laxa per si hi ha espais
+                if (sel && sel.value.trim() === q.resposta_correcta.trim()) correct++;
+            });
+
+            let level = "";
+            if (correct <= 2) level = "Nivell Inicial (Necessita repàs intensiu)";
+            else if (correct <= 4) level = "Nivell Intermedi (Bona base, falten detalls)";
+            else level = "Nivell Avançat (Domini del tema)";
+
+            Swal.fire({
+                title: `Nota: ${correct}/5`,
+                text: `S'ha determinat que tens un: ${level}`,
+                icon: correct >= 3 ? 'success' : 'warning',
+                confirmButtonText: 'Anar al Xat',
+                confirmButtonColor: '#2563eb'
+            }).then(() => {
+                startChatPhase(correct, level);
+            });
+        }
+
+        async function startChatPhase(score, level) {
+            document.getElementById('quiz-view').classList.remove('flex');
+            document.getElementById('quiz-view').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
 
-            // Afegir historial visual a la barra lateral
-            const historyList = document.getElementById('chat-history');
-            historyList.innerHTML = `
-                <div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium cursor-pointer flex items-center gap-2 border border-blue-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Sessió Actual
+            document.getElementById('history-placeholder').innerHTML = `
+                <div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium flex flex-col gap-1 border border-blue-100">
+                    <span>Sessió d'Estudi</span>
+                    <span class="text-xs font-bold text-blue-500">Nivell: ${score}/5</span>
                 </div>
             `;
 
-            // Missatge intern de configuració per a la IA
+            const examDate = document.getElementById('exam-date').value;
+            const comments = document.getElementById('extra-comments').value;
+
+            // Context ocult per a la IA
             const systemContext = `
                 L'usuari està estudiant per un examen el dia: ${examDate || 'No especificat'}.
                 Instruccions de l'usuari: ${comments || 'Cap instrucció extra.'}.
-                Text extret dels apunts/PDF: ${extractedText ? extractedText.substring(0, 3000) : 'Cap PDF pujat.'}
+                RESULTAT DEL TEST DE DIAGNÒSTIC: L'usuari ha tret un ${score} sobre 5 (${level}). 
+                Adapta les teves respostes i explicacions a aquest nivell. Si ha tret mala nota, explica les coses de forma més bàsica. Si ha tret bona nota, sigues més tècnic.
+                Apunts: ${extractedText ? extractedText.substring(0, 3000) : 'Cap PDF pujat.'}
             `;
             
             chatHistory.push({ role: "system", content: systemContext });
 
-            // Mostrar missatge de benvinguda de la IA
-            appendMessage('ai', "Hola! He rebut la configuració de la teva sessió. Tinc els teus apunts i instruccions llestes. Què t'agradaria repassar primer?");
+            // Primer missatge visual per a l'usuari
+            appendMessage('ai', `Hola! He analitzat el teu test i veig que tens un **${level}** (${score}/5 correctes). Ja tinc els teus apunts preparats. Per quin concepte vols que comencem a repassar?`);
         }
 
-        // Enviar missatges al xat
+        // Lògica del Xat (mateixa que l'anterior)
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = document.getElementById('chat-input');
@@ -215,54 +274,44 @@
 
             appendMessage('user', msg);
             input.value = '';
-
-            // Afegim la pregunta al'historial intern
             chatHistory.push({ role: 'user', content: msg });
 
-            // Mostrem estat de càrrega
             const loadingId = 'loading-' + Date.now();
             appendLoading(loadingId);
 
             try {
                 const res = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'chat', chatHistory: chatHistory })
                 });
 
                 document.getElementById(loadingId).remove();
-                
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
 
                 appendMessage('ai', data.reply);
                 chatHistory.push({ role: 'assistant', content: data.reply });
-
             } catch (err) {
                 document.getElementById(loadingId).remove();
-                appendMessage('ai', 'Error tècnic en rebre la resposta: ' + err.message);
+                appendMessage('ai', 'Error: ' + err.message);
             }
         });
 
-        // Funcions per dibuixar els missatges
         function appendMessage(sender, text) {
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
             
+            // Markdown simple per negretes
+            const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
             if (sender === 'user') {
                 div.className = "flex justify-end";
-                div.innerHTML = `
-                    <div class="bg-blue-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm max-w-2xl text-sm shadow-sm">
-                        ${text}
-                    </div>
-                `;
+                div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm max-w-2xl text-sm shadow-sm">${formattedText}</div>`;
             } else {
                 div.className = "flex justify-start gap-3";
                 div.innerHTML = `
                     <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">AI</div>
-                    <div class="bg-white border border-slate-100 text-slate-700 px-5 py-3.5 rounded-2xl rounded-tl-sm max-w-3xl text-sm shadow-sm leading-relaxed">
-                        ${text.replace(/\n/g, '<br>')}
-                    </div>
+                    <div class="bg-white border border-slate-200 text-slate-700 px-5 py-4 rounded-2xl rounded-tl-sm max-w-3xl text-sm shadow-sm leading-relaxed">${formattedText}</div>
                 `;
             }
             box.appendChild(div);
@@ -276,10 +325,10 @@
             div.className = "flex justify-start gap-3";
             div.innerHTML = `
                 <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">AI</div>
-                <div class="bg-white border border-slate-100 px-5 py-4 rounded-2xl rounded-tl-sm flex gap-1 shadow-sm">
-                    <div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
-                    <div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                    <div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                <div class="bg-white border border-slate-200 px-5 py-4 rounded-2xl rounded-tl-sm flex gap-1 shadow-sm">
+                    <div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
+                    <div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                    <div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
                 </div>
             `;
             box.appendChild(div);
