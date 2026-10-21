@@ -11,29 +11,24 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory, daysLeft } = req.body;
 
-    // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST ALHORA
+        // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST ALHORA
         if (action === 'prepare_study') {
             const systemPrompt = `Ets un tutor d'estudi. La teva missió és doble:
-            1. Crear un calendari d'estudi per l'alumne basant-te en els dies que li queden (${daysLeft} dies). Fes un resum si són molts dies.
-            2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari per saber el seu nivell inicial.
+            1. Crear un calendari d'estudi resumit per l'alumne basant-te en els dies que li queden (${daysLeft} dies).
+            2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari.
             
             Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
             
-            REGLA CRÍTICA I ABSOLUTA: HAS DE RETORNAR ÚNICAMENT UN OBJECTE JSON VÀLID.
-            - NO escriguis cap paraula abans ni després del JSON.
-            - OBLIGATORI: Utilitza COMETES DOBLES (") per a totes les claus i tots els valors de text del JSON. No facis servir cometes simples (') per definir l'estructura.
-            - Si has d'usar cometes simples (') dins del text d'una pregunta, fes-ho normalment (ex: l'operador).
-            - Si has d'usar cometes dobles (") dins del text, escapa-les amb una barra invertida (\\").
-            - NO facis salts de línia reals a dins dels valors de text. Utilitza '\\n' si vols separar línies.
+            RETORNA ÚNICAMENT UN OBJECTE JSON. REGLA: Utilitza SEMPRE cometes dobles (") per les claus i valors, MAI cometes simples ('). Els salts de línia s'han d'escriure com \\n.
             
-            FORMAT EXACTE:
+            FORMAT ESPERAT:
             {
-              "calendari_estudi": "Pla d'estudi resumit.\\nDia 1: Tema 1.\\nDia 2: Repàs.",
+              "calendari_estudi": "Dia 1: Tema 1.\\nDia 2: Repàs.",
               "preguntes": [
                 {
-                  "pregunta": "Text de la pregunta?",
-                  "opcions": ["A) opció 1", "B) opció 2", "C) opció 3", "D) opció 4"],
-                  "resposta_correcta": "A) opció 1"
+                  "pregunta": "Quina és la capital?",
+                  "opcions": ["A) Roma", "B) París", "C) Madrid", "D) Londres"],
+                  "resposta_correcta": "A) Roma"
                 }
               ]
             }`;
@@ -44,43 +39,49 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
                     messages: [ { role: "system", content: systemPrompt } ],
-                    max_tokens: 2500 // AFEGIT PER EVITAR QUE ES TALLI
+                    temperature: 0.2, // Baixem la temperatura perquè obeeixi millor el format
+                    max_tokens: 3000
                 })
             });
 
             if (!response.ok) {
                 const errText = await response.text();
-                return res.status(200).json({ error: `Falla a Groq (Prepare): ${errText}` });
+                return res.status(200).json({ error: `Falla a l'API (Prepare): ${errText}` });
             }
 
             const data = await response.json();
             let rawContent = data.choices?.[0]?.message?.content || "";
             
-            // EL NOSTRE PROPI VALIDADOR A PROVA DE BALES
             try {
-                if (!rawContent) throw new Error("La resposta de la IA està completament buida.");
+                if (!rawContent) throw new Error("La resposta està buida.");
 
-                // 1. Forçar la neteja de qualsevol etiqueta markdown que la IA hagi colat
+                // Netejar markdown i localitzar les claus
                 let cleanedContent = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
-                
-                // 2. Buscar exactament on comença i acaba el diccionari
                 const jsonStart = cleanedContent.indexOf('{');
                 const jsonEnd = cleanedContent.lastIndexOf('}');
                 
                 if (jsonStart !== -1 && jsonEnd !== -1) {
                     cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
-                } else {
-                    throw new Error("No s'han trobat les claus de JSON a la resposta.");
+                }
+
+                let result;
+                try {
+                    // 1. Intent normal de parsejar JSON estricte
+                    result = JSON.parse(cleanedContent);
+                } catch (strictError) {
+                    // 2. TENTATIVA RELAXADA: Si la IA ha usat cometes simples o salts de línia trencats
+                    // Substituïm els salts de línia reals per la seqüència segura \n per no trencar l'evaluació
+                    let safeJS = cleanedContent.replace(/\n/g, "\\n").replace(/\r/g, "");
+                    // Utilitzem el constructor de funcions per llegir l'objecte com si fos JavaScript pur
+                    result = new Function("return " + safeJS)();
                 }
                 
-                // 3. Convertir a JSON pur
-                const result = JSON.parse(cleanedContent);
+                // Si arribem aquí, ha funcionat
                 return res.status(200).json(result);
 
             } catch (parseError) {
-                // SI FALLA, MOSTRAREM L'ERROR I EL CONTINGUT BRUT
                 return res.status(200).json({ 
-                    error: `El format JSON de la IA ha fallat.<br><strong>Error intern:</strong> ${parseError.message}<br><br><strong>El que ha generat la IA:</strong><br><pre style="text-align:left; white-space:pre-wrap; background:#1e293b; padding:10px; border-radius:8px; margin-top:10px;">${rawContent || "[RESPOSTA BUIDA]"}</pre>` 
+                    error: `El format de la IA no és compatible. <br>Error de lectura: ${parseError.message}<br><br><pre style="text-align:left; white-space:pre-wrap; background:#1e293b; padding:10px; border-radius:8px; margin-top:10px; font-size:10px;">${rawContent}</pre>` 
                 });
             }
         }
@@ -91,13 +92,11 @@ module.exports = async function handler(req, res) {
                 role: "system",
                 content: `Ets AIStudents, un tutor d'intel·ligència artificial avançat. 
                 
-                DIRECTRIUS IMPORTANTS:
-                1. Context: Usa la teva memòria (calendari d'estudi, apunts i nota inicial del test). Adapta't a la nota de l'alumne.
-                2. Interacció: Fes preguntes per posar a prova l'alumne.
-                3. Visual: Utilitza blocs de codi (\`\`\`) per fer esquemes visuals o arbres conceptuals.
-                4. Kahoot: Si l'alumne demana jugar, inicia un joc de preguntes estil "Kahoot" amb opcions A, B, C, D donant-li punts.
-                
-                El teu to ha de ser empàtic, encoratjador i interactiu.`
+                DIRECTRIUS:
+                1. Tens la memòria de l'alumne als missatges anteriors (test, calendari, apunts). Usa-ho.
+                2. Fes preguntes interactives, no donis només sermons llargs.
+                3. Utilitza blocs de codi (\`\`\`) per fer esquemes visuals quan calgui resumir.
+                4. Si l'alumne demana jugar, fes un joc tipus Kahoot (A, B, C, D) anomenant els punts.`
             };
 
             const messagesToSend = [masterSystemPrompt, ...chatHistory];
@@ -107,13 +106,14 @@ module.exports = async function handler(req, res) {
                 headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
-                    messages: messagesToSend
+                    messages: messagesToSend,
+                    max_tokens: 2000
                 })
             });
 
             if (!response.ok) {
                 const errText = await response.text();
-                return res.status(200).json({ error: `Falla a Groq (Xat): ${errText}` });
+                return res.status(200).json({ error: `Falla a l'API (Xat): ${errText}` });
             }
 
             const data = await response.json();
@@ -123,6 +123,6 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ error: 'Acció no reconeguda.' });
 
     } catch (error) {
-        return res.status(200).json({ error: `Error intern del servidor: ${error.message}` });
+        return res.status(200).json({ error: `Error intern: ${error.message}` });
     }
 }
