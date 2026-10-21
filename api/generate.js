@@ -9,15 +9,19 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ error: 'Falta la clau GROQ_API_KEY a Vercel.' });
         }
 
-        const { action, pdfText, instructions, chatHistory } = req.body;
+        const { action, pdfText, instructions, chatHistory, daysLeft } = req.body;
 
-        if (action === 'quiz') {
-            const systemPrompt = `Ets un professor universitari estricte però just. Genera un test de diagnòstic de 5 preguntes tipus test basat ÚNICAMENT en el següent temari. 
+        // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST ALHORA
+        if (action === 'prepare_study') {
+            const systemPrompt = `Ets un tutor d'estudi. La teva missió és doble:
+            1. Crear un calendari d'estudi per l'alumne basant-te en els dies que li queden (${daysLeft} dies).
+            2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari per saber el seu nivell inicial.
             
             Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
             
-            RETORNA ÚNICAMENT UN OBJECTE JSON PUR. SENSE MARKDOWN. FORMAT EXACTE:
+            RETORNA ÚNICAMENT UN OBJECTE JSON PUR. SENSE MARKDOWN EXTERIOR. FORMAT EXACTE:
             {
+              "calendari_estudi": "El pla d'estudi dia a dia o setmana a setmana resumit (en format markdown interior amb negretes i llistes).",
               "preguntes": [
                 {
                   "pregunta": "Text de la pregunta?",
@@ -39,7 +43,7 @@ module.exports = async function handler(req, res) {
 
             if (!response.ok) {
                 const errText = await response.text();
-                return res.status(200).json({ error: `Falla a Groq (Quiz): ${errText}` });
+                return res.status(200).json({ error: `Falla a Groq (Prepare): ${errText}` });
             }
 
             const data = await response.json();
@@ -47,18 +51,19 @@ module.exports = async function handler(req, res) {
             return res.status(200).json(result);
         }
 
+        // ACCIÓ 2: XAT CONTINU AMB LA IA
         if (action === 'chat') {
             const masterSystemPrompt = {
                 role: "system",
-                content: `Ets AIStudents, un tutor d'intel·ligència artificial avançat. La teva missió és ajudar l'alumne a estudiar perquè retingui la informació.
+                content: `Ets AIStudents, un tutor d'intel·ligència artificial avançat. 
                 
                 DIRECTRIUS IMPORTANTS:
-                1. Manté el fil de la conversa: Recorda tot el que s'ha parlat abans en aquest xat i utilitza aquesta informació.
-                2. Sigues Proactiu: Fes preguntes a l'alumne per posar a prova els seus coneixements en lloc de donar només la resposta llarga.
-                3. Utilitza Recursos Visuals: Si cal resumir o organitzar idees, utilitza estructures de blocs de codi (\`\`\`) per fer esquemes visuals o arbres conceptuals basats en text.
-                4. Gamificació (Kahoot): Si l'alumne ho demana o si ho veus necessari, inicia un joc de preguntes i respostes ràpides estil "Kahoot" amb opcions A, B, C, D per fer l'estudi divertit. Anota els seus punts.
+                1. Context: En el teu primer "system prompt" amagat t'han donat el calendari d'estudi de l'alumne, els seus apunts i la nota inicial del test. Usa aquesta memòria. Adapta't a la seva nota (si és baixa, explica a poc a poc; si és alta, aprofundeix).
+                2. Interacció: Fes preguntes per posar a prova l'alumne.
+                3. Visual: Utilitza blocs de codi (\`\`\`) per fer esquemes visuals o arbres conceptuals basats en text.
+                4. Kahoot: Si l'alumne demana jugar, inicia un joc de preguntes estil "Kahoot" amb opcions A, B, C, D donant-li punts per encert.
                 
-                El teu to ha de ser empàtic, encoratjador i molt interactiu.`
+                El teu to ha de ser empàtic, encoratjador i interactiu.`
             };
 
             const messagesToSend = [masterSystemPrompt, ...chatHistory];
