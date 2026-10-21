@@ -19,7 +19,12 @@ module.exports = async function handler(req, res) {
             
             Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
             
-            RETORNA ÚNICAMENT UN OBJECTE JSON PUR. SENSE CAP TEXT ABANS NI DESPRÉS. FORMAT EXACTE:
+            REGLA CRÍTICA I ABSOLUTA: HAS DE RETORNAR ÚNICAMENT UN OBJECTE JSON VÀLID.
+            - NO escriguis cap paraula abans ni després del JSON.
+            - NO utilitzis cometes dobles (") a dins dels textos, fes servir només cometes simples (').
+            - NO facis salts de línia reals a dins dels valors de text. Utilitza '\\n' si vols separar línies.
+            
+            FORMAT EXACTE:
             {
               "calendari_estudi": "Pla d'estudi dia a dia.\\nDia 1: Tema 1.\\nDia 2: Repàs.",
               "preguntes": [
@@ -37,7 +42,6 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
                     messages: [ { role: "system", content: systemPrompt } ]
-                    // HEM ELIMINAT EL response_format ESTRICTE
                 })
             });
 
@@ -61,7 +65,8 @@ module.exports = async function handler(req, res) {
                 const result = JSON.parse(rawContent);
                 return res.status(200).json(result);
             } catch (parseError) {
-                return res.status(200).json({ error: `La IA no ha generat un format vàlid. Això és el que ha dit: ${rawContent.substring(0, 100)}...` });
+                // ARA MOSTRAREM TOTA LA RESPOSTA DE LA IA PER VEURE L'ERROR
+                return res.status(200).json({ error: `El format JSON de la IA ha fallat. Això és el que ha generat exactament: <br><br> <pre style="text-align:left; white-space:pre-wrap;">${data.choices[0].message.content}</pre>` });
             }
         }
 
