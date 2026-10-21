@@ -54,22 +54,34 @@ module.exports = async function handler(req, res) {
             }
 
             const data = await response.json();
-            let rawContent = data.choices[0].message.content;
+            let rawContent = data.choices?.[0]?.message?.content || "";
             
-            // EL NOSTRE PROPI VALIDADOR: Busquem on comença i acaba el JSON per ignorar text extra
+            // EL NOSTRE PROPI VALIDADOR A PROVA DE BALES
             try {
-                const jsonStart = rawContent.indexOf('{');
-                const jsonEnd = rawContent.lastIndexOf('}');
+                if (!rawContent) throw new Error("La resposta de la IA està completament buida.");
+
+                // 1. Forçar la neteja de qualsevol etiqueta markdown que la IA hagi colat
+                let cleanedContent = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
+                
+                // 2. Buscar exactament on comença i acaba el diccionari
+                const jsonStart = cleanedContent.indexOf('{');
+                const jsonEnd = cleanedContent.lastIndexOf('}');
                 
                 if (jsonStart !== -1 && jsonEnd !== -1) {
-                    rawContent = rawContent.substring(jsonStart, jsonEnd + 1);
+                    cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
+                } else {
+                    throw new Error("No s'han trobat les claus de JSON a la resposta.");
                 }
                 
-                const result = JSON.parse(rawContent);
+                // 3. Convertir a JSON pur
+                const result = JSON.parse(cleanedContent);
                 return res.status(200).json(result);
+
             } catch (parseError) {
-                // ARA MOSTRAREM TOTA LA RESPOSTA DE LA IA PER VEURE L'ERROR
-                return res.status(200).json({ error: `El format JSON de la IA ha fallat. Això és el que ha generat exactament: <br><br> <pre style="text-align:left; white-space:pre-wrap;">${data.choices[0].message.content}</pre>` });
+                // SI FALLA, MOSTRAREM L'ERROR I EL CONTINGUT BRUT
+                return res.status(200).json({ 
+                    error: `El format JSON de la IA ha fallat.<br><strong>Error intern:</strong> ${parseError.message}<br><br><strong>El que ha generat la IA:</strong><br><pre style="text-align:left; white-space:pre-wrap; background:#1e293b; padding:10px; border-radius:8px; margin-top:10px;">${rawContent || "[RESPOSTA BUIDA]"}</pre>` 
+                });
             }
         }
 
