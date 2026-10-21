@@ -11,22 +11,24 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory, daysLeft } = req.body;
 
-        // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST ALHORA
+    // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST ALHORA
         if (action === 'prepare_study') {
             const systemPrompt = `Ets un tutor d'estudi. La teva missió és doble:
-            1. Crear un calendari d'estudi per l'alumne basant-te en els dies que li queden (${daysLeft} dies).
+            1. Crear un calendari d'estudi per l'alumne basant-te en els dies que li queden (${daysLeft} dies). Fes un resum si són molts dies.
             2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari per saber el seu nivell inicial.
             
             Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
             
             REGLA CRÍTICA I ABSOLUTA: HAS DE RETORNAR ÚNICAMENT UN OBJECTE JSON VÀLID.
             - NO escriguis cap paraula abans ni després del JSON.
-            - NO utilitzis cometes dobles (") a dins dels textos, fes servir només cometes simples (').
+            - OBLIGATORI: Utilitza COMETES DOBLES (") per a totes les claus i tots els valors de text del JSON. No facis servir cometes simples (') per definir l'estructura.
+            - Si has d'usar cometes simples (') dins del text d'una pregunta, fes-ho normalment (ex: l'operador).
+            - Si has d'usar cometes dobles (") dins del text, escapa-les amb una barra invertida (\\").
             - NO facis salts de línia reals a dins dels valors de text. Utilitza '\\n' si vols separar línies.
             
             FORMAT EXACTE:
             {
-              "calendari_estudi": "Pla d'estudi dia a dia.\\nDia 1: Tema 1.\\nDia 2: Repàs.",
+              "calendari_estudi": "Pla d'estudi resumit.\\nDia 1: Tema 1.\\nDia 2: Repàs.",
               "preguntes": [
                 {
                   "pregunta": "Text de la pregunta?",
@@ -41,7 +43,8 @@ module.exports = async function handler(req, res) {
                 headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
-                    messages: [ { role: "system", content: systemPrompt } ]
+                    messages: [ { role: "system", content: systemPrompt } ],
+                    max_tokens: 2500 // AFEGIT PER EVITAR QUE ES TALLI
                 })
             });
 
