@@ -23,7 +23,7 @@
     <!-- BARRA LATERAL -->
     <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-10 shadow-sm">
         <div class="p-4 border-b border-slate-100">
-            <button onclick="location.reload()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition shadow-sm">
+            <button onclick="newSession()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                 Nova Sessió
             </button>
@@ -38,7 +38,7 @@
             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md">AI</div>
             <div class="flex flex-col">
                 <span class="text-sm font-semibold text-slate-700">AIStudents Tutor</span>
-                <span class="text-[10px] text-green-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> En línia</span>
+                <span class="text-[10px] text-green-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Memòria Activa</span>
             </div>
         </div>
     </aside>
@@ -51,23 +51,23 @@
             <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-xl p-8 md:p-12">
                 <div class="text-center mb-8">
                     <h1 class="text-3xl font-bold text-slate-800 mb-2">Preparació de l'Estudi</h1>
-                    <p class="text-slate-500 text-sm">Carrega el temari. Farem un test de nivell abans de començar.</p>
+                    <p class="text-slate-500 text-sm">Configura el temari per començar.</p>
                 </div>
 
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">📅 Data de l'examen</label>
-                        <input type="date" id="exam-date" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <input type="date" id="exam-date" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
                         <div id="days-left-marker" class="text-sm font-medium text-slate-500 mt-2 hidden"></div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">📚 Temari (PDF)</label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">📚 Temari (Opcional: Puja el teu PDF)</label>
                         <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition relative cursor-pointer group">
                             <input type="file" id="pdf-upload" accept=".pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                             <div class="flex flex-col items-center gap-2 pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-400 group-hover:text-blue-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                <span id="pdf-status" class="text-sm font-medium text-slate-600">Arrossega el PDF o fes clic</span>
+                                <span id="pdf-status" class="text-sm font-medium text-slate-600">Arrossega el PDF o fes clic (Si no en tens, pots saltar-ho)</span>
                             </div>
                         </div>
                     </div>
@@ -77,8 +77,8 @@
                         <textarea id="extra-comments" rows="2" placeholder="De què tracta exactament?" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
                     </div>
 
-                    <button onclick="generateQuiz()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
-                        Generar Test de Nivell
+                    <button onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
+                        Començar Estudi
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
                 </div>
@@ -93,14 +93,9 @@
                         <h2 class="text-2xl font-bold text-slate-800">Test de Diagnòstic</h2>
                         <p class="text-slate-500 text-sm mt-1">Respon aquestes 5 preguntes per establir el teu nivell inicial.</p>
                     </div>
-                    <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">5 Preguntes</span>
                 </div>
-                
-                <div id="quiz-container" class="space-y-6 mb-8">
-                    <!-- Preguntes generades aquí -->
-                </div>
-
-                <button onclick="evaluateQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-blue-200 text-lg">
+                <div id="quiz-container" class="space-y-6 mb-8"></div>
+                <button onclick="evaluateQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg">
                     Avaluar i Començar el Xat
                 </button>
             </div>
@@ -112,7 +107,7 @@
 
             <div class="p-4 bg-white border-t border-slate-100 relative shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
                 <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center">
-                    <input type="text" id="chat-input" placeholder="Pregunta al tutor qualsevol dubte sobre el temari..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
+                    <input type="text" id="chat-input" placeholder="Pregunta, demana un esquema o un joc Kahoot..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
                     <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -127,7 +122,33 @@
         let chatHistory = [];
         let currentQuizData = [];
 
-        // Data de l'examen
+        // RECUPERAR SESSIÓ SI S'ACTUALITZA LA PÀGINA
+        window.onload = () => {
+            const savedSession = localStorage.getItem('aiStudentsSession');
+            if (savedSession) {
+                const data = JSON.parse(savedSession);
+                chatHistory = data.history;
+                document.getElementById('chat-messages').innerHTML = data.html;
+                
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('chat-view').classList.remove('hidden');
+                document.getElementById('chat-view').classList.add('flex');
+                document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium">Sessió Recuperada</div>`;
+            }
+        };
+
+        function newSession() {
+            localStorage.removeItem('aiStudentsSession');
+            location.reload();
+        }
+
+        function saveSession() {
+            localStorage.setItem('aiStudentsSession', JSON.stringify({
+                history: chatHistory,
+                html: document.getElementById('chat-messages').innerHTML
+            }));
+        }
+
         document.getElementById('exam-date').addEventListener('change', (e) => {
             const diffDays = Math.ceil((new Date(e.target.value) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
             const marker = document.getElementById('days-left-marker');
@@ -137,7 +158,6 @@
             else marker.innerHTML = `❌ Data passada.`;
         });
 
-        // PDF Extraction
         document.getElementById('pdf-upload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -157,20 +177,37 @@
             }
         });
 
-        // Generar Test
+        // LÒGICA CONDICIONAL: PDF O SENSE PDF
+        async function proceedToNextStep() {
+            if (!extractedText.trim()) {
+                // SENSE PDF -> Saltem directe al xat
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('chat-view').classList.remove('hidden');
+                document.getElementById('chat-view').classList.add('flex');
+
+                document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium">Estudi Obert</div>`;
+
+                const comments = document.getElementById('extra-comments').value;
+                const systemContext = `L'usuari no ha pujat cap PDF. Instruccions: ${comments || 'Cap'}. Avalua el seu coneixement fent preguntes interactives.`;
+                chatHistory.push({ role: "system", content: systemContext });
+
+                const initialMsg = "Veig que no has pujat cap PDF. **Escriu-me detalladament sobre què va el tema per poder ajudar-te a estudiar.**";
+                appendMessage('ai', initialMsg);
+                chatHistory.push({ role: 'assistant', content: initialMsg });
+                saveSession();
+            } else {
+                // AMB PDF -> Generar Test
+                generateQuiz();
+            }
+        }
+
         async function generateQuiz() {
-            Swal.fire({ title: 'Llegint apunts...', text: 'La IA està analitzant el temari per crear un test personalitzat.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            
+            Swal.fire({ title: 'Llegint apunts...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch('/api/generate', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        action: 'quiz', 
-                        pdfText: extractedText.substring(0, 4000), 
-                        instructions: document.getElementById('extra-comments').value 
-                    })
+                    body: JSON.stringify({ action: 'quiz', pdfText: extractedText.substring(0, 4000), instructions: document.getElementById('extra-comments').value })
                 });
-                
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
                 
@@ -180,7 +217,6 @@
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('quiz-view').classList.remove('hidden');
                 document.getElementById('quiz-view').classList.add('flex');
-                
                 document.getElementById('history-placeholder').innerText = "Test en curs...";
                 Swal.close();
             } catch (err) {
@@ -191,7 +227,6 @@
         function renderQuiz() {
             const container = document.getElementById('quiz-container');
             container.innerHTML = '';
-            
             currentQuizData.forEach((q, idx) => {
                 container.innerHTML += `
                     <div class="p-5 bg-slate-50 border border-slate-200 rounded-2xl">
@@ -199,8 +234,8 @@
                         <div class="space-y-2">
                             ${q.opcions.map((opt) => `
                                 <label class="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition group">
-                                    <input type="radio" name="q_${idx}" value="${opt}" class="mt-1 text-blue-600 focus:ring-blue-500">
-                                    <span class="text-sm text-slate-700 group-hover:text-slate-900">${opt}</span>
+                                    <input type="radio" name="q_${idx}" value="${opt}" class="mt-1 text-blue-600">
+                                    <span class="text-sm text-slate-700">${opt}</span>
                                 </label>
                             `).join('')}
                         </div>
@@ -209,29 +244,16 @@
             });
         }
 
-        // Avaluar Test i passar al Xat
         function evaluateQuiz() {
             let correct = 0;
             currentQuizData.forEach((q, idx) => {
                 const sel = document.querySelector(`input[name="q_${idx}"]:checked`);
-                // Comparació laxa per si hi ha espais
                 if (sel && sel.value.trim() === q.resposta_correcta.trim()) correct++;
             });
 
-            let level = "";
-            if (correct <= 2) level = "Nivell Inicial (Necessita repàs intensiu)";
-            else if (correct <= 4) level = "Nivell Intermedi (Bona base, falten detalls)";
-            else level = "Nivell Avançat (Domini del tema)";
-
-            Swal.fire({
-                title: `Nota: ${correct}/5`,
-                text: `S'ha determinat que tens un: ${level}`,
-                icon: correct >= 3 ? 'success' : 'warning',
-                confirmButtonText: 'Anar al Xat',
-                confirmButtonColor: '#2563eb'
-            }).then(() => {
-                startChatPhase(correct, level);
-            });
+            let level = correct <= 2 ? "Nivell Inicial" : correct <= 4 ? "Nivell Intermedi" : "Nivell Avançat";
+            Swal.fire({ title: `Nota: ${correct}/5`, text: `Tens un: ${level}`, icon: correct >= 3 ? 'success' : 'warning' })
+            .then(() => startChatPhase(correct, level));
         }
 
         async function startChatPhase(score, level) {
@@ -240,32 +262,18 @@
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
 
-            document.getElementById('history-placeholder').innerHTML = `
-                <div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium flex flex-col gap-1 border border-blue-100">
-                    <span>Sessió d'Estudi</span>
-                    <span class="text-xs font-bold text-blue-500">Nivell: ${score}/5</span>
-                </div>
-            `;
+            document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium">Nivell: ${score}/5</div>`;
 
-            const examDate = document.getElementById('exam-date').value;
-            const comments = document.getElementById('extra-comments').value;
-
-            // Context ocult per a la IA
-            const systemContext = `
-                L'usuari està estudiant per un examen el dia: ${examDate || 'No especificat'}.
-                Instruccions de l'usuari: ${comments || 'Cap instrucció extra.'}.
-                RESULTAT DEL TEST DE DIAGNÒSTIC: L'usuari ha tret un ${score} sobre 5 (${level}). 
-                Adapta les teves respostes i explicacions a aquest nivell. Si ha tret mala nota, explica les coses de forma més bàsica. Si ha tret bona nota, sigues més tècnic.
-                Apunts: ${extractedText ? extractedText.substring(0, 3000) : 'Cap PDF pujat.'}
-            `;
-            
+            const systemContext = `L'usuari ha tret un ${score} sobre 5 (${level}). Ajusta el nivell de l'explicació. Apunts: ${extractedText ? extractedText.substring(0, 3000) : ''}`;
             chatHistory.push({ role: "system", content: systemContext });
 
-            // Primer missatge visual per a l'usuari
-            appendMessage('ai', `Hola! He analitzat el teu test i veig que tens un **${level}** (${score}/5 correctes). Ja tinc els teus apunts preparats. Per quin concepte vols que comencem a repassar?`);
+            const initialMsg = `He analitzat el teu test i veig que tens un **${level}** (${score}/5). Ja tinc els teus apunts preparats. Què vols repassar? Si vols podem jugar a un repàs ràpid tipus Kahoot o et puc fer esquemes visuals.`;
+            appendMessage('ai', initialMsg);
+            chatHistory.push({ role: 'assistant', content: initialMsg });
+            saveSession();
         }
 
-        // Lògica del Xat (mateixa que l'anterior)
+        // XAT
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = document.getElementById('chat-input');
@@ -275,6 +283,7 @@
             appendMessage('user', msg);
             input.value = '';
             chatHistory.push({ role: 'user', content: msg });
+            saveSession();
 
             const loadingId = 'loading-' + Date.now();
             appendLoading(loadingId);
@@ -291,27 +300,34 @@
 
                 appendMessage('ai', data.reply);
                 chatHistory.push({ role: 'assistant', content: data.reply });
+                saveSession();
             } catch (err) {
                 document.getElementById(loadingId).remove();
                 appendMessage('ai', 'Error: ' + err.message);
             }
         });
 
+        // FORMATEJADOR DE MISSATGES (Markdown per llistes, esquemes, negretes)
+        function formatMessage(text) {
+            return text
+                .replace(/```([\s\S]*?)```/g, '<pre class="bg-slate-800 text-emerald-400 p-4 rounded-xl text-xs overflow-x-auto my-3 font-mono">$1</pre>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
         function appendMessage(sender, text) {
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
             
-            // Markdown simple per negretes
-            const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-
             if (sender === 'user') {
                 div.className = "flex justify-end";
-                div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm max-w-2xl text-sm shadow-sm">${formattedText}</div>`;
+                div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm max-w-2xl text-sm shadow-sm">${formatMessage(text)}</div>`;
             } else {
                 div.className = "flex justify-start gap-3";
                 div.innerHTML = `
                     <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">AI</div>
-                    <div class="bg-white border border-slate-200 text-slate-700 px-5 py-4 rounded-2xl rounded-tl-sm max-w-3xl text-sm shadow-sm leading-relaxed">${formattedText}</div>
+                    <div class="bg-white border border-slate-200 text-slate-700 px-5 py-4 rounded-2xl rounded-tl-sm max-w-3xl text-sm shadow-sm leading-relaxed">${formatMessage(text)}</div>
                 `;
             }
             box.appendChild(div);
