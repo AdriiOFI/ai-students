@@ -4,22 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIStudents - Terminal d'Auditoria</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
-                extend: {
-                    fontFamily: { mono: ['Fira Code', 'Courier New', 'monospace'] }
-                }
+                extend: { fontFamily: { mono: ['Fira Code', 'Courier New', 'monospace'] } }
             }
         }
     </script>
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* Desactivar selecció de text per evitar copy-paste */
         body { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
         .terminal-scroll::-webkit-scrollbar { width: 8px; }
         .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -27,7 +22,6 @@
 </head>
 <body class="bg-black text-emerald-500 font-mono antialiased h-screen flex flex-col md:flex-row p-2 md:p-4 gap-4 overflow-hidden">
 
-    <!-- BARRA LATERAL -->
     <aside class="w-full md:w-64 bg-slate-950 border border-slate-800 rounded-xl flex flex-col p-4 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
         <div class="flex items-center gap-3 mb-8">
             <div class="bg-emerald-600 text-black p-2 rounded font-black text-lg">AI</div>
@@ -39,40 +33,23 @@
 
         <div class="space-y-2 flex-1">
             <h3 class="text-[10px] text-slate-500 mb-2">MÒDULS D'AUDITORIA</h3>
-            <button onclick="switchView('glitch')" id="btn-glitch" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-300 bg-slate-900 border border-emerald-500/30 hover:bg-slate-800 transition">
-                >_ Glitch Sandbox
-            </button>
-            <button onclick="switchView('radar')" id="btn-radar" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-400 hover:bg-slate-900 hover:text-slate-300 transition">
-                >_ Radar d'Al·lucinacions
-            </button>
-            <button onclick="switchView('reverse')" id="btn-reverse" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-400 hover:bg-slate-900 hover:text-slate-300 transition">
-                >_ Reverse Prompting
-            </button>
+            <button onclick="switchView('glitch')" id="btn-glitch" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-300 bg-slate-900 border border-emerald-500/30 hover:bg-slate-800 transition">>_ Glitch Sandbox</button>
+            <button onclick="switchView('radar')" id="btn-radar" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-400 hover:bg-slate-900 hover:text-slate-300 transition">>_ Radar d'Al·lucinacions</button>
+            <button onclick="switchView('reverse')" id="btn-reverse" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-400 hover:bg-slate-900 hover:text-slate-300 transition">>_ Reverse Prompting</button>
         </div>
-
-        <div class="mt-auto border-t border-slate-800 pt-4 text-[10px] text-slate-500 text-center">
-            Protecció Anti-Copy: ACTIVA
-        </div>
+        <div class="mt-auto border-t border-slate-800 pt-4 text-[10px] text-slate-500 text-center">Protecció Anti-Copy: ACTIVA</div>
     </aside>
 
-    <!-- CONTINGUT PRINCIPAL -->
     <main class="flex-1 bg-slate-950 border border-slate-800 rounded-xl relative flex flex-col overflow-hidden terminal-scroll">
-        
-        <!-- HEADER COMÚ -->
         <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
             <span id="module-title" class="text-sm font-bold text-emerald-400">root@aistudents:~# Glitch_Sandbox</span>
-            <!-- Temporitzador -->
-            <div id="timer-box" class="hidden bg-slate-950 border border-red-500/50 px-3 py-1 rounded text-red-400 font-bold text-xs flex items-center gap-2">
-                ⏱ Temps restant: <span id="timer-display">45s</span>
-            </div>
+            <div id="timer-box" class="hidden bg-slate-950 border border-red-500/50 px-3 py-1 rounded text-red-400 font-bold text-xs flex items-center gap-2">⏱ Temps: <span id="timer-display">45s</span></div>
         </header>
 
-        <!-- VISTA 1: GLITCH SANDBOX -->
         <div id="view-glitch" class="p-6 flex-1 overflow-y-auto">
             <div class="max-w-2xl mx-auto space-y-6">
-                <p class="text-xs text-slate-400">Detecta l'error de configuració generat per la IA abans que s'acabi el temps. Si surts d'aquesta pestanya, suspendràs automàticament.</p>
+                <p class="text-xs text-slate-400">Detecta l'error de configuració generat per la IA. Si surts d'aquesta pestanya, suspendràs.</p>
                 <button onclick="startGlitchChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-black font-bold px-4 py-2 rounded text-xs transition">Iniciar Diagnòstic</button>
-                
                 <div id="glitch-content" class="hidden space-y-4 mt-6">
                     <div class="p-4 bg-black border border-slate-700 rounded text-xs">
                         <span class="text-slate-500 block mb-2">/* Objectiu: <span id="glitch-context" class="text-emerald-300"></span> */</span>
@@ -80,37 +57,32 @@
                     </div>
                     <div class="flex gap-2">
                         <span class="text-emerald-500 pt-2">></span>
-                        <input type="text" id="glitch-answer" autocomplete="off" placeholder="Escriu la comanda de correcció exacta..." class="flex-1 bg-transparent border-b border-emerald-500/50 text-emerald-300 text-xs py-2 focus:outline-none focus:border-emerald-400">
+                        <input type="text" id="glitch-answer" autocomplete="off" placeholder="Comanda de correcció..." class="flex-1 bg-transparent border-b border-emerald-500/50 text-emerald-300 text-xs py-2 focus:outline-none focus:border-emerald-400">
                         <button onclick="verifyGlitch()" class="bg-slate-800 text-emerald-400 border border-slate-600 hover:bg-slate-700 px-4 py-2 rounded text-xs">Fix</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA 2: RADAR D'AL·LUCINACIONS -->
         <div id="view-radar" class="hidden p-6 flex-1 overflow-y-auto">
             <div class="max-w-3xl mx-auto space-y-6">
-                <p class="text-xs text-slate-400">La IA ha generat 3 afirmacions tècniques. Dues són veritat, una és una al·lucinació. Identifica la falsa.</p>
+                <p class="text-xs text-slate-400">La IA ha generat 3 afirmacions. Identifica l'al·lucinació.</p>
                 <button onclick="startRadarChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-black font-bold px-4 py-2 rounded text-xs transition">Escanejar Al·lucinacions</button>
-
                 <div id="radar-content" class="hidden grid gap-4 mt-6"></div>
             </div>
         </div>
 
-        <!-- VISTA 3: REVERSE PROMPTING -->
         <div id="view-reverse" class="hidden p-6 flex-1 overflow-y-auto">
             <div class="max-w-2xl mx-auto space-y-6">
-                <p class="text-xs text-slate-400">La IA ha arribat a una sortida de terminal concreta. Escriu el "prompt" exacte que li donaries per generar aquest resultat net.</p>
-                
+                <p class="text-xs text-slate-400">Escriu el "prompt" exacte per generar aquest resultat.</p>
                 <div class="p-4 bg-black border border-slate-700 rounded text-xs">
-                    <span class="text-slate-500 block mb-2">/* Resultat Esperat (Sortida generada) */</span>
+                    <span class="text-slate-500 block mb-2">/* Resultat Esperat */</span>
                     <pre class="text-slate-300">drwxr-xr-x 2 root root 4096 Oct 20 10:00 backups
 -r-------- 1 root root  512 Oct 20 10:01 secret.key</pre>
                 </div>
-
                 <div class="space-y-2">
                     <label class="text-xs text-emerald-500">> Prompt de l'Auditor:</label>
-                    <textarea id="reverse-prompt" rows="3" placeholder="Ex: Actua com a sysadmin i dóna'm les comandes per crear una carpeta backups i un arxiu secret.key només llegible per root..." class="w-full bg-slate-900 border border-slate-700 rounded p-3 text-emerald-300 text-xs focus:outline-none focus:border-emerald-500"></textarea>
+                    <textarea id="reverse-prompt" rows="3" placeholder="Ex: Actua com a sysadmin i dóna'm les comandes per..." class="w-full bg-slate-900 border border-slate-700 rounded p-3 text-emerald-300 text-xs focus:outline-none focus:border-emerald-500"></textarea>
                 </div>
                 <button onclick="verifyReverse()" class="bg-emerald-600 hover:bg-emerald-500 text-black font-bold px-4 py-2 rounded text-xs transition">Avaluar Prompt</button>
             </div>
@@ -122,14 +94,10 @@
         let timerInterval;
         let isChallengeActive = false;
 
-        // SISTEMA ANTI-CHEAT (Detecció de canvi de pestanya)
         window.addEventListener('blur', () => {
-            if (isChallengeActive) {
-                failChallenge("TRAMPA DETECTADA: Has sortit de la pestanya. Auditori cancel·lat.");
-            }
+            if (isChallengeActive) failChallenge("TRAMPA DETECTADA: Has sortit de la pestanya.");
         });
 
-        // NAVEGACIÓ
         function switchView(view) {
             if (isChallengeActive) {
                 Swal.fire('Atenció', 'No pots canviar de mòdul mentre un repte està actiu.', 'warning');
@@ -141,23 +109,18 @@
             });
             document.getElementById(`view-${view}`).classList.remove('hidden');
             document.getElementById(`btn-${view}`).className = "w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-300 bg-slate-900 border border-emerald-500/30";
-            
             const titles = { 'glitch': 'Glitch_Sandbox', 'radar': 'Hallucination_Radar', 'reverse': 'Reverse_Prompting' };
             document.getElementById('module-title').innerText = `root@aistudents:~# ${titles[view]}`;
         }
 
-        // CONTROL DEL TEMPS
         function startTimer(seconds) {
             document.getElementById('timer-box').classList.remove('hidden');
             let timeLeft = seconds;
             document.getElementById('timer-display').innerText = timeLeft + 's';
-            
             timerInterval = setInterval(() => {
                 timeLeft--;
                 document.getElementById('timer-display').innerText = timeLeft + 's';
-                if (timeLeft <= 0) {
-                    failChallenge("TIMEOUT: Has trigat massa temps.");
-                }
+                if (timeLeft <= 0) failChallenge("TIMEOUT: Has trigat massa temps.");
             }, 1000);
         }
 
@@ -170,116 +133,124 @@
         function failChallenge(reason) {
             stopTimer();
             Swal.fire({ title: 'Suspens', text: reason, icon: 'error', background: '#0f172a', color: '#ef4444' });
-            document.getElementById('glitch-answer').disabled = true;
+            if(document.getElementById('glitch-answer')) document.getElementById('glitch-answer').disabled = true;
         }
 
-        // 1. GLITCH SANDBOX LOGIC
-        async function startGlitchChallenge() {
-            Swal.fire({ title: 'Generant Entorn...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#10b981' });
+        // --- SISTEMA DE CONTROL D'ERRORS ---
+        async function fetchAPI(actionData) {
             try {
+                // Comprova si està executant-se en local
+                if (window.location.protocol === 'file:') {
+                    throw new Error("Estàs obrint el fitxer des del teu disc dur (file:///). Has d'entrar des de la URL de Vercel per tal que el backend funcioni.");
+                }
+
                 const res = await fetch('/api/generate', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'glitch' })
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(actionData)
                 });
+                
+                // Si Vercel crasheja completament abans d'arribar al codi
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(`Crasheig fatal de Vercel (Error ${res.status}): ${errorText.substring(0, 150)}...`);
+                }
+
                 const data = await res.json();
                 
-                document.getElementById('glitch-context').innerText = data.context;
-                document.getElementById('glitch-code').innerText = data.codi_amb_error;
-                currentGlitchAnswer = data.solucio_comanda;
-                
-                document.getElementById('glitch-content').classList.remove('hidden');
-                document.getElementById('glitch-answer').disabled = false;
-                document.getElementById('glitch-answer').value = "";
-                document.getElementById('glitch-answer').focus();
-                
-                Swal.close();
-                isChallengeActive = true;
-                startTimer(45); // 45 Segons Anti-Copy
-            } catch (e) {
-                Swal.fire('Error', 'Falla de connexió al servidor de IA', 'error');
+                // Si el nostre Backend captura un error intern
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                return data;
+            } catch (error) {
+                // Mostra el missatge d'error EXACTE per pantalla
+                Swal.fire({ title: 'Error Tècnic Detectat', html: `<p style="font-size:12px; color:#ff8a8a; text-align:left">${error.message}</p>`, icon: 'error', background: '#0f172a' });
+                throw error; // Atura l'execució
             }
+        }
+
+        async function startGlitchChallenge() {
+            Swal.fire({ title: 'Generant Entorn...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#10b981' });
+            
+            const data = await fetchAPI({ action: 'glitch' });
+            
+            document.getElementById('glitch-context').innerText = data.context;
+            document.getElementById('glitch-code').innerText = data.codi_amb_error;
+            currentGlitchAnswer = data.solucio_comanda;
+            
+            document.getElementById('glitch-content').classList.remove('hidden');
+            document.getElementById('glitch-answer').disabled = false;
+            document.getElementById('glitch-answer').value = "";
+            document.getElementById('glitch-answer').focus();
+            
+            Swal.close();
+            isChallengeActive = true;
+            startTimer(45);
         }
 
         function verifyGlitch() {
             if (!isChallengeActive) return;
             const input = document.getElementById('glitch-answer').value.trim();
             stopTimer();
-            // Comprovació simple, a producció la validaria la IA
             if (input.toLowerCase() === currentGlitchAnswer.toLowerCase() || input.includes(currentGlitchAnswer)) {
-                Swal.fire({ title: 'Auditoria Superada', text: 'Has corregit el bug correctament.', icon: 'success', background: '#0f172a', color: '#10b981' });
+                Swal.fire({ title: 'Auditoria Superada', text: 'Has corregit el bug.', icon: 'success', background: '#0f172a', color: '#10b981' });
             } else {
-                Swal.fire({ title: 'Error', text: `La solució correcta era: ${currentGlitchAnswer}`, icon: 'error', background: '#0f172a', color: '#ef4444' });
+                Swal.fire({ title: 'Error', text: `Solució correcta: ${currentGlitchAnswer}`, icon: 'error', background: '#0f172a', color: '#ef4444' });
             }
             document.getElementById('glitch-content').classList.add('hidden');
         }
 
-        // 2. RADAR LOGIC
         let currentRadarData = null;
         async function startRadarChallenge() {
             Swal.fire({ title: 'Escanejant xarxa...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#10b981' });
-            try {
-                const res = await fetch('/api/generate', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'radar' })
-                });
-                currentRadarData = await res.json();
-                
-                const container = document.getElementById('radar-content');
-                container.innerHTML = "";
-                
-                // Barrejar array perquè la falsa no estigui sempre al mateix lloc
-                const shuffled = currentRadarData.afirmacions.sort(() => Math.random() - 0.5);
-                
-                shuffled.forEach(item => {
-                    container.innerHTML += `
-                        <div class="p-4 bg-slate-900 border border-slate-700 rounded-lg hover:border-emerald-500/50 transition cursor-pointer flex justify-between items-center" onclick="verifyRadar(${item.es_falsa})">
-                            <span class="text-xs text-slate-300 w-5/6">${item.text}</span>
-                            <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded">AL·LUCINACIÓ?</span>
-                        </div>
-                    `;
-                });
-                container.classList.remove('hidden');
-                Swal.close();
-            } catch (e) {
-                Swal.fire('Error', 'Falla de connexió al servidor de IA', 'error');
-            }
+            
+            currentRadarData = await fetchAPI({ action: 'radar' });
+            
+            const container = document.getElementById('radar-content');
+            container.innerHTML = "";
+            const shuffled = currentRadarData.afirmacions.sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach(item => {
+                container.innerHTML += `
+                    <div class="p-4 bg-slate-900 border border-slate-700 rounded-lg hover:border-emerald-500/50 transition cursor-pointer flex justify-between items-center" onclick="verifyRadar(${item.es_falsa})">
+                        <span class="text-xs text-slate-300 w-5/6">${item.text}</span>
+                        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded">AL·LUCINACIÓ?</span>
+                    </div>
+                `;
+            });
+            container.classList.remove('hidden');
+            Swal.close();
         }
 
         function verifyRadar(isFake) {
             if (isFake) {
                 Swal.fire({ title: 'Detectat!', text: currentRadarData.explicacio_falsa, icon: 'success', background: '#0f172a', color: '#10b981' });
             } else {
-                Swal.fire({ title: 'Auditoria Fallida', text: "Has marcat una configuració real com a falsa. Revisa el llibre.", icon: 'error', background: '#0f172a', color: '#ef4444' });
+                Swal.fire({ title: 'Fallida', text: "Has marcat una configuració real com a falsa.", icon: 'error', background: '#0f172a', color: '#ef4444' });
             }
             document.getElementById('radar-content').classList.add('hidden');
         }
 
-        // 3. REVERSE PROMPTING LOGIC
         async function verifyReverse() {
             const prompt = document.getElementById('reverse-prompt').value.trim();
             if (!prompt) return;
             
             Swal.fire({ title: 'Avaluant Prompt...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#10b981' });
-            try {
-                const res = await fetch('/api/generate', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        action: 'reverse', 
-                        userPrompt: prompt,
-                        targetConcept: "Crear directori backups i arxiu secret.key amb permisos r-------- per l'usuari root"
-                    })
-                });
-                const data = await res.json();
-                
-                Swal.fire({
-                    title: `Puntuació: ${data.puntuacio}/10`,
-                    html: `<p class="text-sm mb-4">${data.feedback}</p><div class="bg-black p-2 rounded text-xs text-slate-400"><b>Prompt Ideal:</b><br>${data.prompt_ideal}</div>`,
-                    icon: data.puntuacio >= 7 ? 'success' : 'warning',
-                    background: '#0f172a', color: '#10b981'
-                });
-            } catch (e) {
-                Swal.fire('Error', 'Falla d\'avaluació', 'error');
-            }
+            
+            const data = await fetchAPI({ 
+                action: 'reverse', 
+                userPrompt: prompt,
+                targetConcept: "Crear directori backups i arxiu secret.key amb permisos r-------- per l'usuari root"
+            });
+            
+            Swal.fire({
+                title: `Puntuació: ${data.puntuacio}/10`,
+                html: `<p class="text-sm mb-4">${data.feedback}</p><div class="bg-black p-2 rounded text-xs text-slate-400"><b>Prompt Ideal:</b><br>${data.prompt_ideal}</div>`,
+                icon: data.puntuacio >= 7 ? 'success' : 'warning',
+                background: '#0f172a', color: '#10b981'
+            });
         }
     </script>
 </body>
