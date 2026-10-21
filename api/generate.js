@@ -11,13 +11,10 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory } = req.body;
 
-        // ACCIÓ 1: GENERAR EL TEST DE 5 PREGUNTES
         if (action === 'quiz') {
             const systemPrompt = `Ets un professor universitari estricte però just. Genera un test de diagnòstic de 5 preguntes tipus test basat ÚNICAMENT en el següent temari. 
-            Han de ser preguntes que avaluïn realment si l'alumne entén el tema.
             
             Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
-            Instruccions addicionals: ${instructions}
             
             RETORNA ÚNICAMENT UN OBJECTE JSON PUR. SENSE MARKDOWN. FORMAT EXACTE:
             {
@@ -34,9 +31,9 @@ module.exports = async function handler(req, res) {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "openai/gpt-oss-20b",
+                    model: "llama-3.1-70b-versatile",
                     messages: [ { role: "system", content: systemPrompt } ],
-                    response_format: { type: "json_object" } // Forzem que torni JSON per poder llegir les preguntes
+                    response_format: { type: "json_object" }
                 })
             });
 
@@ -50,11 +47,18 @@ module.exports = async function handler(req, res) {
             return res.status(200).json(result);
         }
 
-        // ACCIÓ 2: XAT CONTINU AMB LA IA
         if (action === 'chat') {
             const masterSystemPrompt = {
                 role: "system",
-                content: "Ets AIStudents, un tutor d'intel·ligència artificial. El teu to és empàtic, clar i pedagògic. Tens accés als apunts i a la nota del test inicial de l'alumne (que estan en els missatges anteriors d'aquest xat). Adapta la teva explicació al seu nivell demostrat."
+                content: `Ets AIStudents, un tutor d'intel·ligència artificial avançat. La teva missió és ajudar l'alumne a estudiar perquè retingui la informació.
+                
+                DIRECTRIUS IMPORTANTS:
+                1. Manté el fil de la conversa: Recorda tot el que s'ha parlat abans en aquest xat i utilitza aquesta informació.
+                2. Sigues Proactiu: Fes preguntes a l'alumne per posar a prova els seus coneixements en lloc de donar només la resposta llarga.
+                3. Utilitza Recursos Visuals: Si cal resumir o organitzar idees, utilitza estructures de blocs de codi (\`\`\`) per fer esquemes visuals o arbres conceptuals basats en text.
+                4. Gamificació (Kahoot): Si l'alumne ho demana o si ho veus necessari, inicia un joc de preguntes i respostes ràpides estil "Kahoot" amb opcions A, B, C, D per fer l'estudi divertit. Anota els seus punts.
+                
+                El teu to ha de ser empàtic, encoratjador i molt interactiu.`
             };
 
             const messagesToSend = [masterSystemPrompt, ...chatHistory];
