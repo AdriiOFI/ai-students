@@ -1,256 +1,289 @@
 <!DOCTYPE html>
-<html lang="ca" class="dark">
+<html lang="ca">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIStudents - Terminal d'Auditoria</title>
+    <title>AIStudents - Tutor Intel·ligent</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- PDF.js per llegir fitxers PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         tailwind.config = {
-            darkMode: 'class',
             theme: {
-                extend: { fontFamily: { mono: ['Fira Code', 'Courier New', 'monospace'] } }
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+                }
             }
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
-        .terminal-scroll::-webkit-scrollbar { width: 8px; }
-        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        /* Estils per a un scroll net */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-black text-emerald-500 font-mono antialiased h-screen flex flex-col md:flex-row p-2 md:p-4 gap-4 overflow-hidden">
+<body class="bg-white text-slate-800 h-screen flex overflow-hidden antialiased font-sans">
 
-    <aside class="w-full md:w-64 bg-slate-950 border border-slate-800 rounded-xl flex flex-col p-4 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="bg-emerald-600 text-black p-2 rounded font-black text-lg">AI</div>
-            <div>
-                <span class="font-bold tracking-tight text-emerald-400 block">AIStudents</span>
-                <span class="text-[10px] text-slate-500">v1.0.MVP // SMX Lab</span>
+    <!-- BARRA LATERAL (Historial de Xats) -->
+    <aside class="w-72 bg-slate-50 border-r border-slate-200 flex flex-col">
+        <div class="p-4">
+            <button onclick="location.reload()" class="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                Nova Sessió
+            </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-3 space-y-1" id="chat-history">
+            <h3 class="text-xs font-semibold text-slate-400 px-3 mb-2 uppercase tracking-wider">Avui</h3>
+            <!-- Aquí s'afegiran els historials -->
+            <div class="text-sm text-slate-500 italic px-3 py-2">Cap xat anterior...</div>
+        </div>
+
+        <div class="p-4 border-t border-slate-200 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md">AI</div>
+            <div class="flex flex-col">
+                <span class="text-sm font-semibold text-slate-700">AIStudents</span>
+                <span class="text-[10px] text-slate-500">Tutor d'Estudi</span>
             </div>
         </div>
-
-        <div class="space-y-2 flex-1">
-            <h3 class="text-[10px] text-slate-500 mb-2">MÒDULS D'AUDITORIA</h3>
-            <button onclick="switchView('glitch')" id="btn-glitch" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-300 bg-slate-900 border border-emerald-500/30 hover:bg-slate-800 transition">>_ Glitch Sandbox</button>
-            <button onclick="switchView('radar')" id="btn-radar" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-400 hover:bg-slate-900 hover:text-slate-300 transition">>_ Radar d'Al·lucinacions</button>
-            <button onclick="switchView('reverse')" id="btn-reverse" class="w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-400 hover:bg-slate-900 hover:text-slate-300 transition">>_ Reverse Prompting</button>
-        </div>
-        <div class="mt-auto border-t border-slate-800 pt-4 text-[10px] text-slate-500 text-center">Protecció Anti-Copy: ACTIVA</div>
     </aside>
 
-    <main class="flex-1 bg-slate-950 border border-slate-800 rounded-xl relative flex flex-col overflow-hidden terminal-scroll">
-        <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center">
-            <span id="module-title" class="text-sm font-bold text-emerald-400">root@aistudents:~# Glitch_Sandbox</span>
-            <div id="timer-box" class="hidden bg-slate-950 border border-red-500/50 px-3 py-1 rounded text-red-400 font-bold text-xs flex items-center gap-2">⏱ Temps: <span id="timer-display">45s</span></div>
-        </header>
+    <!-- CONTINGUT PRINCIPAL -->
+    <main class="flex-1 flex flex-col relative bg-white">
+        
+        <!-- VISTA 1: FORMULARI DE CONFIGURACIÓ INICIAL -->
+        <div id="setup-view" class="flex-1 overflow-y-auto flex items-center justify-center p-6">
+            <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-xl p-8 md:p-12">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-slate-800 mb-2">Què anem a estudiar avui?</h1>
+                    <p class="text-slate-500 text-sm">Configura la teva sessió perquè la IA s'adapti a les teves necessitats.</p>
+                </div>
 
-        <div id="view-glitch" class="p-6 flex-1 overflow-y-auto">
-            <div class="max-w-2xl mx-auto space-y-6">
-                <p class="text-xs text-slate-400">Detecta l'error de configuració generat per la IA. Si surts d'aquesta pestanya, suspendràs.</p>
-                <button onclick="startGlitchChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-black font-bold px-4 py-2 rounded text-xs transition">Iniciar Diagnòstic</button>
-                <div id="glitch-content" class="hidden space-y-4 mt-6">
-                    <div class="p-4 bg-black border border-slate-700 rounded text-xs">
-                        <span class="text-slate-500 block mb-2">/* Objectiu: <span id="glitch-context" class="text-emerald-300"></span> */</span>
-                        <pre id="glitch-code" class="text-red-400"></pre>
+                <div class="space-y-6">
+                    <!-- 1. Data d'examen i Marcador de dies -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">📅 Data de l'examen</label>
+                        <input type="date" id="exam-date" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <div id="days-left-marker" class="text-sm font-medium text-slate-500 mt-2 hidden"></div>
                     </div>
-                    <div class="flex gap-2">
-                        <span class="text-emerald-500 pt-2">></span>
-                        <input type="text" id="glitch-answer" autocomplete="off" placeholder="Comanda de correcció..." class="flex-1 bg-transparent border-b border-emerald-500/50 text-emerald-300 text-xs py-2 focus:outline-none focus:border-emerald-400">
-                        <button onclick="verifyGlitch()" class="bg-slate-800 text-emerald-400 border border-slate-600 hover:bg-slate-700 px-4 py-2 rounded text-xs">Fix</button>
+
+                    <!-- 2. Temari (PDFs) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">📚 Temari (Puja el teu PDF)</label>
+                        <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition relative cursor-pointer group">
+                            <input type="file" id="pdf-upload" accept=".pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <div class="flex flex-col items-center gap-2 pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-400 group-hover:text-blue-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                <span id="pdf-status" class="text-sm font-medium text-slate-600">Arrossega el teu fitxer PDF o fes clic aquí</span>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- 3. Comentaris extra -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">✍️ Comentaris o instruccions per a la IA</label>
+                        <textarea id="extra-comments" rows="3" placeholder="Ex: Pregunta'm conceptes clau, fes-me un resum, o sigues estricte corregint..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"></textarea>
+                    </div>
+
+                    <button onclick="startStudySession()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
+                        Començar Sessió d'Estudi
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div id="view-radar" class="hidden p-6 flex-1 overflow-y-auto">
-            <div class="max-w-3xl mx-auto space-y-6">
-                <p class="text-xs text-slate-400">La IA ha generat 3 afirmacions. Identifica l'al·lucinació.</p>
-                <button onclick="startRadarChallenge()" class="bg-emerald-600 hover:bg-emerald-500 text-black font-bold px-4 py-2 rounded text-xs transition">Escanejar Al·lucinacions</button>
-                <div id="radar-content" class="hidden grid gap-4 mt-6"></div>
+        <!-- VISTA 2: XAT NET DE LA IA (Ocult a l'inici) -->
+        <div id="chat-view" class="hidden flex-1 flex-col h-full">
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Missatge de Benvinguda -->
+            </div>
+
+            <!-- Caixa d'input al fons -->
+            <div class="p-4 bg-white border-t border-slate-100">
+                <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center">
+                    <input type="text" id="chat-input" placeholder="Escriu la teva pregunta al tutor..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
+                    <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </form>
+                <div class="text-center mt-2">
+                    <span class="text-[10px] text-slate-400">La IA pot cometre errors. Revisa la informació important amb els teus apunts.</span>
+                </div>
             </div>
         </div>
 
-        <div id="view-reverse" class="hidden p-6 flex-1 overflow-y-auto">
-            <div class="max-w-2xl mx-auto space-y-6">
-                <p class="text-xs text-slate-400">Escriu el "prompt" exacte per generar aquest resultat.</p>
-                <div class="p-4 bg-black border border-slate-700 rounded text-xs">
-                    <span class="text-slate-500 block mb-2">/* Resultat Esperat */</span>
-                    <pre class="text-slate-300">drwxr-xr-x 2 root root 4096 Oct 20 10:00 backups
--r-------- 1 root root  512 Oct 20 10:01 secret.key</pre>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-xs text-emerald-500">> Prompt de l'Auditor:</label>
-                    <textarea id="reverse-prompt" rows="3" placeholder="Ex: Actua com a sysadmin i dóna'm les comandes per..." class="w-full bg-slate-900 border border-slate-700 rounded p-3 text-emerald-300 text-xs focus:outline-none focus:border-emerald-500"></textarea>
-                </div>
-                <button onclick="verifyReverse()" class="bg-emerald-600 hover:bg-emerald-500 text-black font-bold px-4 py-2 rounded text-xs transition">Avaluar Prompt</button>
-            </div>
-        </div>
     </main>
 
     <script>
-        let currentGlitchAnswer = "";
-        let timerInterval;
-        let isChallengeActive = false;
+        let extractedText = "";
+        let chatHistory = [];
 
-        window.addEventListener('blur', () => {
-            if (isChallengeActive) failChallenge("TRAMPA DETECTADA: Has sortit de la pestanya.");
+        // Lògica del marcador de dies
+        document.getElementById('exam-date').addEventListener('change', (e) => {
+            const examDate = new Date(e.target.value);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            const diffTime = examDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            const marker = document.getElementById('days-left-marker');
+            marker.classList.remove('hidden');
+            
+            if (diffDays > 0) {
+                marker.innerHTML = `⏳ Et queden <span class="text-blue-600 font-bold">${diffDays} dies</span> per preparar-te. Temps de sobres!`;
+            } else if (diffDays === 0) {
+                marker.innerHTML = `⚠️ <span class="text-orange-500 font-bold">L'examen és avui!</span> Últim repàs ràpid.`;
+            } else {
+                marker.innerHTML = `❌ <span class="text-red-500 font-bold">Aquesta data ja ha passat.</span>`;
+            }
         });
 
-        function switchView(view) {
-            if (isChallengeActive) {
-                Swal.fire('Atenció', 'No pots canviar de mòdul mentre un repte està actiu.', 'warning');
-                return;
-            }
-            ['glitch', 'radar', 'reverse'].forEach(v => {
-                document.getElementById(`view-${v}`).classList.add('hidden');
-                document.getElementById(`btn-${v}`).className = "w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-400 hover:bg-slate-900 hover:text-slate-300 transition";
-            });
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-            document.getElementById(`btn-${view}`).className = "w-full text-left px-3 py-2 rounded text-xs font-bold text-slate-300 bg-slate-900 border border-emerald-500/30";
-            const titles = { 'glitch': 'Glitch_Sandbox', 'radar': 'Hallucination_Radar', 'reverse': 'Reverse_Prompting' };
-            document.getElementById('module-title').innerText = `root@aistudents:~# ${titles[view]}`;
-        }
+        // Lògica d'extracció del PDF
+        document.getElementById('pdf-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        function startTimer(seconds) {
-            document.getElementById('timer-box').classList.remove('hidden');
-            let timeLeft = seconds;
-            document.getElementById('timer-display').innerText = timeLeft + 's';
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer-display').innerText = timeLeft + 's';
-                if (timeLeft <= 0) failChallenge("TIMEOUT: Has trigat massa temps.");
-            }, 1000);
-        }
+            const status = document.getElementById('pdf-status');
+            status.innerHTML = `<span class="text-blue-500">⏳ Processant: ${file.name}...</span>`;
 
-        function stopTimer() {
-            clearInterval(timerInterval);
-            document.getElementById('timer-box').classList.add('hidden');
-            isChallengeActive = false;
-        }
-
-        function failChallenge(reason) {
-            stopTimer();
-            Swal.fire({ title: 'Suspens', text: reason, icon: 'error', background: '#0f172a', color: '#ef4444' });
-            if(document.getElementById('glitch-answer')) document.getElementById('glitch-answer').disabled = true;
-        }
-
-        // --- SISTEMA DE CONTROL D'ERRORS ---
-        async function fetchAPI(actionData) {
             try {
-                // Comprova si està executant-se en local
-                if (window.location.protocol === 'file:') {
-                    throw new Error("Estàs obrint el fitxer des del teu disc dur (file:///). Has d'entrar des de la URL de Vercel per tal que el backend funcioni.");
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = "";
+
+                // Limitem l'extracció a les primeres 10 pàgines per no saturar la IA
+                const pagesToRead = Math.min(pdf.numPages, 10); 
+                for (let i = 1; i <= pagesToRead; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    fullText += textContent.items.map(item => item.str).join(" ") + "\n";
                 }
 
+                extractedText = fullText;
+                status.innerHTML = `<span class="text-green-600 font-bold">✅ ${file.name} carregat amb èxit!</span>`;
+            } catch (err) {
+                console.error(err);
+                status.innerHTML = `<span class="text-red-500 font-bold">❌ Error en llegir el PDF.</span>`;
+            }
+        });
+
+        // Començar la sessió i passar a la vista del xat
+        async function startStudySession() {
+            const examDate = document.getElementById('exam-date').value;
+            const comments = document.getElementById('extra-comments').value;
+
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.remove('hidden');
+            document.getElementById('chat-view').classList.add('flex');
+
+            // Afegir historial visual a la barra lateral
+            const historyList = document.getElementById('chat-history');
+            historyList.innerHTML = `
+                <div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium cursor-pointer flex items-center gap-2 border border-blue-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Sessió Actual
+                </div>
+            `;
+
+            // Missatge intern de configuració per a la IA
+            const systemContext = `
+                L'usuari està estudiant per un examen el dia: ${examDate || 'No especificat'}.
+                Instruccions de l'usuari: ${comments || 'Cap instrucció extra.'}.
+                Text extret dels apunts/PDF: ${extractedText ? extractedText.substring(0, 3000) : 'Cap PDF pujat.'}
+            `;
+            
+            chatHistory.push({ role: "system", content: systemContext });
+
+            // Mostrar missatge de benvinguda de la IA
+            appendMessage('ai', "Hola! He rebut la configuració de la teva sessió. Tinc els teus apunts i instruccions llestes. Què t'agradaria repassar primer?");
+        }
+
+        // Enviar missatges al xat
+        document.getElementById('chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            appendMessage('user', msg);
+            input.value = '';
+
+            // Afegim la pregunta al'historial intern
+            chatHistory.push({ role: 'user', content: msg });
+
+            // Mostrem estat de càrrega
+            const loadingId = 'loading-' + Date.now();
+            appendLoading(loadingId);
+
+            try {
                 const res = await fetch('/api/generate', {
-                    method: 'POST', 
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(actionData)
+                    body: JSON.stringify({ action: 'chat', chatHistory: chatHistory })
                 });
-                
-                // Si Vercel crasheja completament abans d'arribar al codi
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    throw new Error(`Crasheig fatal de Vercel (Error ${res.status}): ${errorText.substring(0, 150)}...`);
-                }
 
+                document.getElementById(loadingId).remove();
+                
                 const data = await res.json();
-                
-                // Si el nostre Backend captura un error intern
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+                if(data.error) throw new Error(data.error);
 
-                return data;
-            } catch (error) {
-                // Mostra el missatge d'error EXACTE per pantalla
-                Swal.fire({ title: 'Error Tècnic Detectat', html: `<p style="font-size:12px; color:#ff8a8a; text-align:left">${error.message}</p>`, icon: 'error', background: '#0f172a' });
-                throw error; // Atura l'execució
+                appendMessage('ai', data.reply);
+                chatHistory.push({ role: 'assistant', content: data.reply });
+
+            } catch (err) {
+                document.getElementById(loadingId).remove();
+                appendMessage('ai', 'Error tècnic en rebre la resposta: ' + err.message);
             }
-        }
+        });
 
-        async function startGlitchChallenge() {
-            Swal.fire({ title: 'Generant Entorn...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#10b981' });
+        // Funcions per dibuixar els missatges
+        function appendMessage(sender, text) {
+            const box = document.getElementById('chat-messages');
+            const div = document.createElement('div');
             
-            const data = await fetchAPI({ action: 'glitch' });
-            
-            document.getElementById('glitch-context').innerText = data.context;
-            document.getElementById('glitch-code').innerText = data.codi_amb_error;
-            currentGlitchAnswer = data.solucio_comanda;
-            
-            document.getElementById('glitch-content').classList.remove('hidden');
-            document.getElementById('glitch-answer').disabled = false;
-            document.getElementById('glitch-answer').value = "";
-            document.getElementById('glitch-answer').focus();
-            
-            Swal.close();
-            isChallengeActive = true;
-            startTimer(45);
-        }
-
-        function verifyGlitch() {
-            if (!isChallengeActive) return;
-            const input = document.getElementById('glitch-answer').value.trim();
-            stopTimer();
-            if (input.toLowerCase() === currentGlitchAnswer.toLowerCase() || input.includes(currentGlitchAnswer)) {
-                Swal.fire({ title: 'Auditoria Superada', text: 'Has corregit el bug.', icon: 'success', background: '#0f172a', color: '#10b981' });
-            } else {
-                Swal.fire({ title: 'Error', text: `Solució correcta: ${currentGlitchAnswer}`, icon: 'error', background: '#0f172a', color: '#ef4444' });
-            }
-            document.getElementById('glitch-content').classList.add('hidden');
-        }
-
-        let currentRadarData = null;
-        async function startRadarChallenge() {
-            Swal.fire({ title: 'Escanejant xarxa...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#10b981' });
-            
-            currentRadarData = await fetchAPI({ action: 'radar' });
-            
-            const container = document.getElementById('radar-content');
-            container.innerHTML = "";
-            const shuffled = currentRadarData.afirmacions.sort(() => Math.random() - 0.5);
-            
-            shuffled.forEach(item => {
-                container.innerHTML += `
-                    <div class="p-4 bg-slate-900 border border-slate-700 rounded-lg hover:border-emerald-500/50 transition cursor-pointer flex justify-between items-center" onclick="verifyRadar(${item.es_falsa})">
-                        <span class="text-xs text-slate-300 w-5/6">${item.text}</span>
-                        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded">AL·LUCINACIÓ?</span>
+            if (sender === 'user') {
+                div.className = "flex justify-end";
+                div.innerHTML = `
+                    <div class="bg-blue-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm max-w-2xl text-sm shadow-sm">
+                        ${text}
                     </div>
                 `;
-            });
-            container.classList.remove('hidden');
-            Swal.close();
-        }
-
-        function verifyRadar(isFake) {
-            if (isFake) {
-                Swal.fire({ title: 'Detectat!', text: currentRadarData.explicacio_falsa, icon: 'success', background: '#0f172a', color: '#10b981' });
             } else {
-                Swal.fire({ title: 'Fallida', text: "Has marcat una configuració real com a falsa.", icon: 'error', background: '#0f172a', color: '#ef4444' });
+                div.className = "flex justify-start gap-3";
+                div.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">AI</div>
+                    <div class="bg-white border border-slate-100 text-slate-700 px-5 py-3.5 rounded-2xl rounded-tl-sm max-w-3xl text-sm shadow-sm leading-relaxed">
+                        ${text.replace(/\n/g, '<br>')}
+                    </div>
+                `;
             }
-            document.getElementById('radar-content').classList.add('hidden');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
-        async function verifyReverse() {
-            const prompt = document.getElementById('reverse-prompt').value.trim();
-            if (!prompt) return;
-            
-            Swal.fire({ title: 'Avaluant Prompt...', allowOutsideClick: false, didOpen: () => Swal.showLoading(), background: '#0f172a', color: '#10b981' });
-            
-            const data = await fetchAPI({ 
-                action: 'reverse', 
-                userPrompt: prompt,
-                targetConcept: "Crear directori backups i arxiu secret.key amb permisos r-------- per l'usuari root"
-            });
-            
-            Swal.fire({
-                title: `Puntuació: ${data.puntuacio}/10`,
-                html: `<p class="text-sm mb-4">${data.feedback}</p><div class="bg-black p-2 rounded text-xs text-slate-400"><b>Prompt Ideal:</b><br>${data.prompt_ideal}</div>`,
-                icon: data.puntuacio >= 7 ? 'success' : 'warning',
-                background: '#0f172a', color: '#10b981'
-            });
+        function appendLoading(id) {
+            const box = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = "flex justify-start gap-3";
+            div.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-sm">AI</div>
+                <div class="bg-white border border-slate-100 px-5 py-4 rounded-2xl rounded-tl-sm flex gap-1 shadow-sm">
+                    <div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
+                    <div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                    <div class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                </div>
+            `;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
