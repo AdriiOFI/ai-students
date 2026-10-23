@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
         if (action === 'prepare_study') {
             const systemPrompt = `Ets un tutor d'estudi. T'han pujat apunts.
             La teva missió és doble:
-            1. Crear un pla d'estudi de EXACTAMENT ${totalSessionsToGenerate} sessions. ELS ÚLTIMS TEMES han de ser EXCLUSIVAMENT "Repàs General" o "Simulacre d'Examen".
+            1. Crear un pla d'estudi de EXACTAMENT ${totalSessionsToGenerate} sessions. ELS ÚLTIMS TEMES han de ser EXCLUSIVAMENT "Repàs General".
             2. Crear un test de diagnòstic de 5 preguntes tipus test.
             
             Apunts: ${pdfText || 'Temari sobre: ' + instructions}
@@ -25,9 +25,7 @@ module.exports = async function handler(req, res) {
             FORMAT EXACTE OBLIGATORI:
             {
               "calendari_estudi": [
-                { "tema": "Fonaments i introducció" },
-                { "tema": "Desenvolupament" },
-                { "tema": "Repàs Full" }
+                { "tema": "Fonaments i introducció" }
               ],
               "preguntes": [
                 {
@@ -82,11 +80,11 @@ module.exports = async function handler(req, res) {
             }
         }
 
-        // ACCIÓ 2: XAT CONTINU AMB LA IA (MÈTODE MICRO-LEARNING)
+        // ACCIÓ 2: XAT CONTINU AMB LA IA
         if (action === 'chat') {
             const masterSystemPrompt = {
                 role: "system",
-                content: `Ets AIStudents, un tutor d'estudi d'intel·ligència artificial.
+                content: `Ets AIStudents, un tutor d'estudi avançat d'intel·ligència artificial.
                 
                 MEMÒRIA ACTUAL DE L'ALUMNE:
                 ${studentContext}
@@ -94,19 +92,35 @@ module.exports = async function handler(req, res) {
                 APUNTS/TEMARI (Fes-los servir per treure la teoria):
                 ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts."}
                 
-                MÈTODE D'ENSENYAMENT OBLIGATORI (MICRO-LEARNING):
-                1. POC A POC: Tens PROHIBIT fer explicacions llargues. Explica només UN concepte petit i molt centrat cada vegada (màxim 1-2 paràgrafs curts).
-                2. MNEMOTÈCNIA I IMATGES: Dóna UN truc per recordar-ho (ex: SMTP = Send Mail To People, port 25 perquè ets adult) i genera UNA imatge visual utilitzant AQUEST CODI Markdown:
-                   ![Il·lustració](https://image.pollinations.ai/prompt/descripcio-en-angles-separada-per-guions?width=800&height=400&nologo=true)
-                3. JOC INTERACTIU (OBLIGATORI): Després de la teva breu explicació i la imatge, HAS DE POSAR un mini-joc per comprovar si ho ha entès abans d'avançar. Utilitza AQUEST BLOC EXACTE perquè surtin els botons a la pantalla:
+                MÈTODE D'ENSENYAMENT (MOLT IMPORTANT):
+                1. POC A POC: Explica només UN concepte petit cada vegada.
+                2. NATURALITAT: Tens PROHIBIT dir "Aquí tens un truc mnemotècnic" o frases robòtiques similars. Integra el truc de memòria directament i de forma natural en la teva explicació.
+                3. IMATGES: Per il·lustrar conceptes, pots generar diagrames visuals utilitzant AQUEST CODI Markdown:
+                   ![Esquema](https://image.pollinations.ai/prompt/clean-educational-diagram-of-[tema-en-angles]-white-background?width=800&height=400&nologo=true)
+                4. ESPERA: Quan acabis d'explicar, atura't. NO facis jocs fins que l'alumne et digui "ho he entès", "vale", o t'ho demani.
+                
+                JOCS INTERACTIUS (NOMÉS QUAN L'ALUMNE HO ENTENGUI O HO DEMANI):
+                Quan toqui comprovar si ho ha après, INSEREIX UN D'AQUESTS DOS BLOCS perquè el sistema creï la interfície interactiva:
+
+                OPCIÓ A (Joc d'Esquema amb buits per omplir):
+                \`\`\`schema
+                {
+                  "titol": "Títol de l'esquema",
+                  "buits": [
+                    { "context": "Concepte anterior", "resposta": "paraula a endevinar" },
+                    { "context": "Deriva d'això...", "resposta": "una altra paraula" }
+                  ]
+                }
+                \`\`\`
+
+                OPCIÓ B (Kahoot clàssic amb 4 opcions):
                 \`\`\`kahoot
                 {
-                  "pregunta": "Pregunta ràpida sobre el que t'acabo d'explicar:",
+                  "pregunta": "Pregunta ràpida:",
                   "opcions": ["Opció 1", "Opció 2", "Opció 3", "Opció 4"],
                   "correcta": 0
                 }
-                \`\`\`
-                (L'alumne respondrà fent clic. Fins que no respongui o et digui alguna cosa, tu no pots seguir explicant teoria).`
+                \`\`\``
             };
 
             let safeHistory = [];
