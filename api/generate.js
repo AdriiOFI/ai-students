@@ -9,13 +9,13 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ error: 'Falta la clau GROQ_API_KEY a Vercel.' });
         }
 
-        const { action, pdfText, instructions, chatHistory, daysLeft, currentDate } = req.body;
+        const { action, pdfText, instructions, chatHistory, daysLeft, currentDate, availableDays } = req.body;
 
         // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
         if (action === 'prepare_study') {
-            const systemPrompt = `Ets un tutor d'estudi avançat. T'han pujat apunts. Avui és ${currentDate}.
+            const systemPrompt = `Ets un tutor d'estudi avançat. T'han pujat apunts. Avui és ${currentDate}. L'alumne té disponibilitat per estudiar els següents dies de la setmana: ${availableDays}. Faltan ${daysLeft} dies per l'examen.
             La teva missió és doble:
-            1. Crear un calendari d'estudi per l'alumne dividit en els dies que li queden (${daysLeft} dies). Posa-li un títol curt al tema de cada dia.
+            1. Crear un calendari d'estudi. Assigna una data o dia real que encaixi dins dels dies de la setmana disponibles. Posa-li un títol curt al tema de cada dia.
             2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari.
             
             Apunts: ${pdfText || 'Temari sobre: ' + instructions}
@@ -25,8 +25,8 @@ module.exports = async function handler(req, res) {
             FORMAT EXACTE OBLIGATORI:
             {
               "calendari_estudi": [
-                { "dia": 1, "tema": "Fonaments i introducció" },
-                { "dia": 2, "tema": "Conceptes avançats" }
+                { "dia_real": "Dilluns 26 d'Octubre", "tema": "Fonaments i introducció" },
+                { "dia_real": "Dimecres 28 d'Octubre", "tema": "Conceptes avançats" }
               ],
               "preguntes": [
                 {
@@ -43,7 +43,7 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
                     messages: [ { role: "system", content: systemPrompt } ],
-                    temperature: 0.1, // Molt baixa perquè no es salti el format
+                    temperature: 0.1, 
                     max_tokens: 3000
                 })
             });
@@ -59,7 +59,6 @@ module.exports = async function handler(req, res) {
             try {
                 if (!rawContent) throw new Error("La resposta de la IA està buida.");
                 
-                // Extracció intel·ligent del JSON ignorant text Markdown
                 let cleanedContent = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
                 const jsonStart = cleanedContent.indexOf('{');
                 const jsonEnd = cleanedContent.lastIndexOf('}');
@@ -70,10 +69,10 @@ module.exports = async function handler(req, res) {
 
                 let result;
                 try {
-                    result = JSON.parse(cleanedContent); // Intent 1: Estricte
+                    result = JSON.parse(cleanedContent); 
                 } catch (strictError) {
                     let safeJS = cleanedContent.replace(/\n/g, "\\n").replace(/\r/g, "");
-                    result = new Function("return " + safeJS)(); // Intent 2: Relaxat
+                    result = new Function("return " + safeJS)(); 
                 }
                 
                 return res.status(200).json(result);
@@ -97,7 +96,7 @@ module.exports = async function handler(req, res) {
                 2. Adapta la dificultat al nivell que l'alumne ha demostrat.
                 
                 JOC KAHOOT: 
-                Quan l'alumne et demani "Jugar a Kahoot", fer un joc de preguntes o quan vulguis fer-li una prova interactiva, HAS D'INSERIR AQUEST BLOC EXACTE. El sistema el detectarà i pintarà els 4 botons de colors interactius a la pantalla.
+                Quan l'alumne et demani "Jugar a Kahoot", fer un joc de preguntes o quan vulguis fer-li una prova interactiva, HAS D'INSERIR AQUEST BLOC EXACTE.
                 
                 \`\`\`kahoot
                 {
@@ -106,7 +105,7 @@ module.exports = async function handler(req, res) {
                   "correcta": 0
                 }
                 \`\`\`
-                (La 'correcta' és l'índex de la resposta vàlida: 0, 1, 2 o 3. Pots posar text abans i després del bloc per donar ànims).`
+                (La 'correcta' és l'índex de la resposta vàlida: 0, 1, 2 o 3).`
             };
 
             const messagesToSend = [masterSystemPrompt, ...chatHistory];
