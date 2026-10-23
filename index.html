@@ -96,7 +96,7 @@
                     </div>
 
                     <button id="btn-start" onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
-                        Començar Estudi
+                        Planificar Estudi
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
                 </div>
@@ -137,7 +137,7 @@
             <!-- Barra superior del Xat per obrir el calendari -->
             <div class="p-4 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-20">
                 <div class="font-bold text-slate-800 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Tutor Virtual
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Tutor Virtual Actiu
                 </div>
                 <button onclick="showCalendarModal()" class="text-sm bg-slate-100 text-slate-700 font-semibold px-4 py-2 rounded-xl hover:bg-slate-200 transition flex items-center gap-2">
                     📅 Veure Calendari
@@ -147,7 +147,7 @@
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6"></div>
 
             <div class="p-4 bg-white border-t border-slate-200 relative z-20">
-                <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center">
+                <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden" id="chat-form-container">
                     <input type="text" id="chat-input" placeholder="Demana un esquema, fes una pregunta o escriu 'Jugar a Kahoot'..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
                     <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -166,6 +166,7 @@
         let generatedCalendarArray = [];
         let studyDaysLeft = 0;
         let isPdfProcessing = false;
+        let studentContextStr = ""; // Memòria mestra oculta
 
         window.onload = () => {
             const savedSession = localStorage.getItem('aiStudentsSession');
@@ -173,11 +174,13 @@
                 const data = JSON.parse(savedSession);
                 chatHistory = data.history;
                 generatedCalendarArray = data.calendar || [];
+                studentContextStr = data.context || "";
                 document.getElementById('chat-messages').innerHTML = data.html;
                 
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('chat-view').classList.remove('hidden');
                 document.getElementById('chat-view').classList.add('flex');
+                document.getElementById('chat-form').classList.remove('hidden');
                 document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium border border-blue-100">Sessió Recuperada</div>`;
                 document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
             }
@@ -192,7 +195,8 @@
             localStorage.setItem('aiStudentsSession', JSON.stringify({
                 history: chatHistory,
                 html: document.getElementById('chat-messages').innerHTML,
-                calendar: generatedCalendarArray
+                calendar: generatedCalendarArray,
+                context: studentContextStr
             }));
         }
 
@@ -212,9 +216,7 @@
             
             isPdfProcessing = true;
             document.getElementById('btn-start').disabled = true;
-            
-            const status = document.getElementById('pdf-status');
-            status.innerHTML = `⏳ Llegint text dels PDFs...`;
+            document.getElementById('pdf-status').innerHTML = `⏳ Llegint text dels PDFs...`;
             
             for(let file of files) {
                 try {
@@ -229,7 +231,7 @@
             }
             
             updatePdfListAndText();
-            status.innerHTML = `Pots afegir més PDFs si vols.`;
+            document.getElementById('pdf-status').innerHTML = `Pots afegir més PDFs si vols.`;
             isPdfProcessing = false;
             document.getElementById('btn-start').disabled = false;
             e.target.value = ''; 
@@ -264,10 +266,12 @@
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('chat-view').classList.remove('hidden');
                 document.getElementById('chat-view').classList.add('flex');
+                document.getElementById('chat-form').classList.remove('hidden');
                 
                 const comments = document.getElementById('extra-comments').value;
-                chatHistory.push({ role: "system", content: `L'usuari no ha pujat cap PDF. Dies restants: ${studyDaysLeft}. Dies que pot estudiar: ${availableDays}. Instruccions: ${comments}.` });
-                appendMessage('ai', "Veig que no has pujat cap PDF. **Explica'm què has d'estudiar** per dissenyar el calendari i ajudar-te.");
+                studentContextStr = `L'usuari NO ha pujat apunts. Dies restants: ${studyDaysLeft}. Dies per estudiar: ${availableDays}. Instruccions: ${comments}.`;
+                
+                appendMessage('ai', "Veig que no has pujat cap PDF. **Explica'm què has d'estudiar** per dissenyar el calendari i començar l'estudi.");
                 saveSession();
             } else {
                 generatePlanAndQuiz(availableDays);
@@ -328,13 +332,7 @@
             });
             htmlContent += '</div>';
             
-            Swal.fire({
-                title: '📅 El teu Pla d\'Estudi',
-                html: htmlContent,
-                showCloseButton: true,
-                confirmButtonText: 'Tancar',
-                confirmButtonColor: '#2563eb'
-            });
+            Swal.fire({ title: '📅 El teu Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb' });
         }
 
         function exportCalendarICS() {
@@ -346,7 +344,6 @@
                 let eventDate = new Date(startDate);
                 eventDate.setDate(startDate.getDate() + index);
                 let dateStr = eventDate.toISOString().replace(/-|:|\.\d+/g, "").substring(0, 8);
-                
                 icsContent += "BEGIN:VEVENT\nDTSTART;VALUE=DATE:" + dateStr + "\nDTEND;VALUE=DATE:" + dateStr + "\nSUMMARY:Estudiar: " + item.tema + "\nDESCRIPTION:Sessió AIStudents.\\n\nEND:VEVENT\n";
             });
             icsContent += "END:VCALENDAR";
@@ -385,8 +382,7 @@
                 if (sel && sel.value.trim().toLowerCase() === q.resposta_correcta.trim().toLowerCase()) correct++;
             });
             let level = correct <= 2 ? "Nivell Inicial" : correct <= 4 ? "Nivell Intermedi" : "Nivell Avançat";
-            Swal.fire({ title: `Nota: ${correct}/5`, text: `S'ha establert el teu punt de partida: ${level}`, icon: correct >= 3 ? 'success' : 'info', confirmButtonText: 'Anar al Xat', confirmButtonColor: '#2563eb' })
-            .then(() => startChatPhase(correct, level));
+            startChatPhase(correct, level);
         }
 
         async function startChatPhase(score, level) {
@@ -394,13 +390,38 @@
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
 
-            const systemContext = `Memòria: Dies examen: ${studyDaysLeft}. Nivell test: ${score}/5 (${level}).`;
-            chatHistory.push({ role: "system", content: systemContext });
+            // Definim el Context global (Memòria que s'enviarà a la IA a cada petició)
+            studentContextStr = `Notes del Test de Diagnòstic: ${score}/5 (${level}). Calendari d'estudi actual: ${JSON.stringify(generatedCalendarArray)}. Dies restants: ${studyDaysLeft}.`;
 
-            const initialMsg = `He desat el teu **Calendari d'Estudi** (el pots consultar al botó de dalt). Tens un **${level}** al test. Per on comencem? Demana'm esquemes o jugar a un Kahoot.`;
-            appendMessage('ai', initialMsg);
-            chatHistory.push({ role: 'assistant', content: initialMsg });
+            // Pintem la targeta de benvinguda a l'historial (NO es passa a la IA, és purament visual)
+            const box = document.getElementById('chat-messages');
+            box.innerHTML = `
+                <div class="w-full flex justify-center my-6" id="welcome-card">
+                    <div class="bg-blue-50 border border-blue-200 p-8 rounded-3xl text-center shadow-sm max-w-xl">
+                        <h2 class="text-3xl font-black text-blue-800 mb-2">Pla d'Estudi Preparat!</h2>
+                        <p class="text-blue-700 mb-6 font-medium">Has tret un ${score}/5 al test inicial.<br>La memòria de la IA ja ha emmagatzemat els apunts i l'horari.</p>
+                        <button onclick="startTeaching()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-lg w-full text-lg flex items-center justify-center gap-2">
+                            ▶ Començar la Primera Lliçó
+                        </button>
+                    </div>
+                </div>
+            `;
             saveSession();
+        }
+
+        // Acció de començar realment la classe
+        window.startTeaching = function() {
+            document.getElementById('welcome-card').style.display = 'none';
+            document.getElementById('chat-form').classList.remove('hidden');
+            
+            // Enviem el missatge d'inici per darrere
+            const initialPrompt = "Hola tutor! Ja he fet el test inicial i està tot preparat. Si us plau, **comença explicant-me el primer tema del calendari**. Recorda utilitzar imatges visuals i donar-me trucs mnemotècnics perquè sigui més fàcil de recordar.";
+            
+            // Ho pintem visualment com si l'alumne ho hagués escrit
+            appendMessage('user', "Som-hi! Comencem amb el primer tema del calendari.");
+            chatHistory.push({ role: 'user', content: initialPrompt });
+            
+            triggerAiResponse();
         }
 
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
@@ -413,11 +434,25 @@
             input.value = '';
             chatHistory.push({ role: 'user', content: msg });
             
+            triggerAiResponse();
+        });
+
+        // Petició centralitzada a l'API
+        async function triggerAiResponse() {
             const loadingId = 'loading-' + Date.now();
             appendLoading(loadingId);
 
             try {
-                const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat', chatHistory: chatHistory }) });
+                const res = await fetch('/api/generate', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ 
+                        action: 'chat', 
+                        chatHistory: chatHistory, 
+                        pdfText: extractedText,
+                        studentContext: studentContextStr
+                    }) 
+                });
                 document.getElementById(loadingId).remove();
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
@@ -429,10 +464,10 @@
                 document.getElementById(loadingId).remove();
                 appendMessage('ai', 'Error tècnic: ' + err.message);
             }
-        });
+        }
 
         // =========================================================================
-        // PARSEJADOR (MARKDOWN + TIPOGRAFIA + KAHOOT)
+        // PARSEJADOR (MARKDOWN + TIPOGRAFIA + KAHOOT + IMATGES)
         // =========================================================================
         function formatMessage(text) {
             if(!text) return "";
@@ -449,7 +484,9 @@
                 } catch(e) { return "<p class='text-red-500 bg-red-50 p-2'>[Error Kahoot]</p>"; }
             });
 
+            // Convertir imatges generades per la IA a imatges HTML rodones
             let htmlContent = marked.parse(preParsedText);
+            htmlContent = htmlContent.replace(/<img src="(.*?)" alt="(.*?)"(.*?)>/g, '<img src="$1" alt="$2" class="w-full rounded-2xl shadow-md my-4 border border-slate-200">');
 
             for (let i = 0; i < kahoots.length; i++) {
                 let k = kahoots[i];
@@ -473,22 +510,14 @@
             
             buttons.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; b.style.pointerEvents = "none"; });
             btn.style.opacity = "1";
-            btn.classList.add('ring-4', 'ring-offset-4', 'ring-offset-slate-900');
+            btn.classList.add('ring-4', 'ring-offset-4', 'ring-offset-slate-900', 'scale-105');
             
-            let autoReply = isCorrect ? `He triat: "${textResponded}". És correcta! Suma'm els punts.` : `He triat: "${textResponded}". He fallat. Explica'm per què.`;
+            let autoReply = isCorrect ? `He triat: "${textResponded}". És correcte! Explica'm ràpidament per què i fem una altra pregunta.` : `He triat: "${textResponded}". He fallat. Explica'm l'error.`;
             
             setTimeout(() => {
                 appendMessage('user', autoReply);
                 chatHistory.push({ role: 'user', content: autoReply });
-                const loadingId = 'loading-' + Date.now();
-                appendLoading(loadingId);
-                fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat', chatHistory: chatHistory }) })
-                .then(res => res.json()).then(data => {
-                    document.getElementById(loadingId).remove();
-                    appendMessage('ai', data.reply);
-                    chatHistory.push({ role: 'assistant', content: data.reply });
-                    saveSession();
-                });
+                triggerAiResponse();
             }, 1000);
         }
 
