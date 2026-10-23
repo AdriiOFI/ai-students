@@ -32,12 +32,10 @@
                 Nova Sessió
             </button>
         </div>
-        
         <div class="flex-1 overflow-y-auto p-3 space-y-1" id="chat-history">
             <h3 class="text-xs font-semibold text-slate-400 px-3 mb-2 uppercase tracking-wider mt-2">Sessió Actual</h3>
             <div id="history-placeholder" class="text-sm text-slate-500 italic px-3 py-2">Pendent de configurar...</div>
         </div>
-
         <div class="p-4 border-t border-slate-100 flex items-center gap-3 bg-slate-50/50">
             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">AI</div>
             <div class="flex flex-col overflow-hidden">
@@ -60,7 +58,7 @@
 
                 <div class="space-y-6">
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">📅 Data de l'examen</label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">📅 Data de l'examen (Obligatori)</label>
                         <input type="date" id="exam-date" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
                         <div id="days-left-marker" class="text-sm font-medium text-slate-500 mt-2 hidden"></div>
                     </div>
@@ -68,13 +66,13 @@
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">🗓️ Dies disponibles per estudiar</label>
                         <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="available-days">
-                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dilluns" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dilluns</div></label>
-                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dimarts" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dimarts</div></label>
-                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dimecres" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dimecres</div></label>
-                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dijous" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dijous</div></label>
-                            <label class="cursor-pointer text-center"><input type="checkbox" value="Divendres" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Divendres</div></label>
-                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dissabte" class="day-checkbox hidden"><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dissabte</div></label>
-                            <label class="cursor-pointer text-center"><input type="checkbox" value="Diumenge" class="day-checkbox hidden"><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Diumenge</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="1" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dilluns</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="2" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dimarts</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="3" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dimecres</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="4" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dijous</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="5" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Divendres</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="6" class="day-checkbox hidden"><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dissabte</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="0" class="day-checkbox hidden"><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Diumenge</div></label>
                         </div>
                     </div>
 
@@ -92,7 +90,7 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">✍️ Instruccions addicionals</label>
-                        <textarea id="extra-comments" rows="2" placeholder="Ex: Curs de batxillerat, sigues estricte..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
+                        <textarea id="extra-comments" rows="2" placeholder="Ex: Vull trucs mnemotècnics rars, o posa moltes imatges..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
                     </div>
 
                     <button id="btn-start" onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
@@ -134,7 +132,6 @@
         <!-- VISTA 3: XAT DE LA IA -->
         <div id="chat-view" class="hidden flex-1 flex-col h-full bg-white relative">
             
-            <!-- Barra superior del Xat per obrir el calendari -->
             <div class="p-4 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-20">
                 <div class="font-bold text-slate-800 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-green-500"></span> Tutor Virtual Actiu
@@ -148,7 +145,7 @@
 
             <div class="p-4 bg-white border-t border-slate-200 relative z-20">
                 <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden" id="chat-form-container">
-                    <input type="text" id="chat-input" placeholder="Demana un esquema, fes una pregunta o escriu 'Jugar a Kahoot'..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
+                    <input type="text" id="chat-input" placeholder="Demana un esquema, més trucs, o 'Jugar a Kahoot'..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
                     <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -163,10 +160,10 @@
         let extractedText = "";
         let chatHistory = [];
         let currentQuizData = [];
-        let generatedCalendarArray = [];
-        let studyDaysLeft = 0;
+        let generatedCalendarArray = []; 
+        let validStudyDates = []; // Aquí guardarem les dates exactes calculades
         let isPdfProcessing = false;
-        let studentContextStr = ""; // Memòria mestra oculta
+        let studentContextStr = ""; 
 
         window.onload = () => {
             const savedSession = localStorage.getItem('aiStudentsSession');
@@ -186,26 +183,19 @@
             }
         };
 
-        function newSession() {
-            localStorage.removeItem('aiStudentsSession');
-            location.reload();
-        }
-
+        function newSession() { localStorage.removeItem('aiStudentsSession'); location.reload(); }
         function saveSession() {
             localStorage.setItem('aiStudentsSession', JSON.stringify({
-                history: chatHistory,
-                html: document.getElementById('chat-messages').innerHTML,
-                calendar: generatedCalendarArray,
-                context: studentContextStr
+                history: chatHistory, html: document.getElementById('chat-messages').innerHTML,
+                calendar: generatedCalendarArray, context: studentContextStr
             }));
         }
 
         document.getElementById('exam-date').addEventListener('change', (e) => {
             const diffDays = Math.ceil((new Date(e.target.value) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-            studyDaysLeft = diffDays;
             const marker = document.getElementById('days-left-marker');
             marker.classList.remove('hidden');
-            if (diffDays > 0) marker.innerHTML = `⏳ Tens <span class="text-blue-600 font-bold">${diffDays} dies</span> fins l'examen.`;
+            if (diffDays > 0) marker.innerHTML = `⏳ Queden <span class="text-blue-600 font-bold">${diffDays} dies</span> fins l'examen.`;
             else if (diffDays === 0) marker.innerHTML = `⚠️ <span class="text-orange-500 font-bold">L'examen és avui!</span>`;
             else marker.innerHTML = `❌ Data passada.`;
         });
@@ -213,7 +203,6 @@
         document.getElementById('pdf-upload').addEventListener('change', async (e) => {
             const files = e.target.files;
             if (files.length === 0) return;
-            
             isPdfProcessing = true;
             document.getElementById('btn-start').disabled = true;
             document.getElementById('pdf-status').innerHTML = `⏳ Llegint text dels PDFs...`;
@@ -227,9 +216,8 @@
                         fullText += textContent.items.map(item => item.str).join(" ") + "\n";
                     }
                     uploadedPDFs.push({ id: 'pdf_' + Date.now() + Math.random(), name: file.name, text: fullText.trim() });
-                } catch (err) { console.error(err); }
+                } catch (err) {}
             }
-            
             updatePdfListAndText();
             document.getElementById('pdf-status').innerHTML = `Pots afegir més PDFs si vols.`;
             isPdfProcessing = false;
@@ -241,26 +229,44 @@
             const list = document.getElementById('pdf-list');
             list.innerHTML = '';
             uploadedPDFs.forEach(pdf => {
-                list.innerHTML += `
-                    <li class="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl shadow-sm">
-                        <span class="text-sm text-slate-700 font-medium truncate flex-1">📄 ${pdf.name}</span>
-                        <button onclick="removePdf('${pdf.id}')" class="text-red-500 p-2 rounded-lg">❌</button>
-                    </li>`;
+                list.innerHTML += `<li class="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl shadow-sm"><span class="text-sm text-slate-700 font-medium truncate flex-1">📄 ${pdf.name}</span><button onclick="removePdf('${pdf.id}')" class="text-red-500 p-2 rounded-lg">❌</button></li>`;
             });
             extractedText = uploadedPDFs.map(p => p.text).join("\n\n---\n\n");
         }
 
         function removePdf(id) { uploadedPDFs = uploadedPDFs.filter(p => p.id !== id); updatePdfListAndText(); }
 
+        // MATEIXES DATES DISPONIBLES
+        function calculateValidDates() {
+            const examDateStr = document.getElementById('exam-date').value;
+            if (!examDateStr) return [];
+            
+            const availableDaysInputs = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(el => parseInt(el.value)); // 0 = Diumenge, 1 = Dilluns...
+            let dates = [];
+            let current = new Date();
+            current.setHours(0,0,0,0);
+            let exam = new Date(examDateStr);
+            exam.setHours(0,0,0,0);
+            
+            while(current <= exam) {
+                if(availableDaysInputs.includes(current.getDay())) {
+                    dates.push(new Date(current));
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
         async function proceedToNextStep() {
             if (isPdfProcessing) return;
+            const examDateStr = document.getElementById('exam-date').value;
+            if (!examDateStr) { Swal.fire('Atenció', 'Has de seleccionar la data de l\'examen.', 'warning'); return; }
             
-            const availableDaysInputs = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(el => el.value);
-            if(availableDaysInputs.length === 0) {
-                Swal.fire('Atenció', 'Has de seleccionar almenys un dia disponible per estudiar.', 'warning');
+            validStudyDates = calculateValidDates();
+            if(validStudyDates.length === 0) {
+                Swal.fire('Atenció', 'Amb els dies marcats no hi ha temps per estudiar abans de l\'examen.', 'warning');
                 return;
             }
-            const availableDays = availableDaysInputs.join(', ');
 
             if (uploadedPDFs.length === 0) {
                 document.getElementById('setup-view').classList.add('hidden');
@@ -269,34 +275,47 @@
                 document.getElementById('chat-form').classList.remove('hidden');
                 
                 const comments = document.getElementById('extra-comments').value;
-                studentContextStr = `L'usuari NO ha pujat apunts. Dies restants: ${studyDaysLeft}. Dies per estudiar: ${availableDays}. Instruccions: ${comments}.`;
+                studentContextStr = `L'usuari NO ha pujat apunts. Té ${validStudyDates.length} dies reals d'estudi. Instruccions: ${comments}.`;
                 
-                appendMessage('ai', "Veig que no has pujat cap PDF. **Explica'm què has d'estudiar** per dissenyar el calendari i començar l'estudi.");
+                appendMessage('ai', "Veig que no has pujat cap PDF. **Explica'm què has d'estudiar** per dissenyar el calendari interactiu.");
                 saveSession();
             } else {
-                generatePlanAndQuiz(availableDays);
+                generatePlanAndQuiz();
             }
         }
 
-        async function generatePlanAndQuiz(availableDays) {
-            Swal.fire({ title: 'Planificant l\'Estudi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        async function generatePlanAndQuiz() {
+            Swal.fire({ title: 'Planificant l\'Estudi...', text: 'Estructurant els temes i el repàs final...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
+                // Demanem a la IA que generi tants temes com dies tenim (màxim 12 per no trencar l'API)
+                let numSessions = validStudyDates.length > 12 ? 12 : validStudyDates.length;
+
                 const res = await fetch('/api/generate', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         action: 'prepare_study', 
                         pdfText: extractedText.substring(0, 4500),
-                        instructions: document.getElementById('extra-comments').value,
-                        daysLeft: studyDaysLeft,
-                        availableDays: availableDays,
-                        currentDate: new Date().toLocaleDateString('ca-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                        totalSessionsToGenerate: numSessions
                     })
                 });
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
                 
-                generatedCalendarArray = Array.isArray(data.calendari_estudi) ? data.calendari_estudi : [];
+                let iaTopics = Array.isArray(data.calendari_estudi) ? data.calendari_estudi : [];
                 currentQuizData = Array.isArray(data.preguntes) ? data.preguntes : [];
+                
+                // MÀGIA DEL CALENDARI: Repartim els temes de la IA exactament sobre les dates reals de l'alumne
+                generatedCalendarArray = [];
+                if (iaTopics.length > 0) {
+                    validStudyDates.forEach((dateObj, index) => {
+                        let topicIndex = Math.floor((index / validStudyDates.length) * iaTopics.length);
+                        let topicName = iaTopics[topicIndex].tema;
+                        let dateStr = dateObj.toLocaleDateString('ca-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+                        dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+                        
+                        generatedCalendarArray.push({ dia_real: dateStr, tema: topicName, dateObj: dateObj });
+                    });
+                }
                 
                 renderCalendar();
                 renderQuiz();
@@ -322,39 +341,29 @@
         }
 
         function showCalendarModal() {
-            if (generatedCalendarArray.length === 0) {
-                Swal.fire('Info', 'No hi ha cap calendari generat encara.', 'info');
-                return;
-            }
-            let htmlContent = '<div class="grid grid-cols-1 gap-3 mt-4 text-left">';
+            if (generatedCalendarArray.length === 0) { Swal.fire('Info', 'Cap calendari generat.', 'info'); return; }
+            let htmlContent = '<div class="grid grid-cols-1 gap-3 mt-4 text-left overflow-y-auto max-h-96">';
             generatedCalendarArray.forEach(item => {
                 htmlContent += `<div class="p-3 bg-slate-50 border border-slate-200 rounded-lg"><div class="text-xs font-bold text-blue-600 mb-1">${item.dia_real}</div><div class="text-sm text-slate-700">${item.tema}</div></div>`;
             });
             htmlContent += '</div>';
-            
             Swal.fire({ title: '📅 El teu Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb' });
         }
 
         function exportCalendarICS() {
             if (generatedCalendarArray.length === 0) return;
             let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//AIStudents//Tutor//CA\n";
-            let startDate = new Date();
-            
-            generatedCalendarArray.forEach((item, index) => {
-                let eventDate = new Date(startDate);
-                eventDate.setDate(startDate.getDate() + index);
+            generatedCalendarArray.forEach((item) => {
+                let eventDate = new Date(item.dateObj);
                 let dateStr = eventDate.toISOString().replace(/-|:|\.\d+/g, "").substring(0, 8);
-                icsContent += "BEGIN:VEVENT\nDTSTART;VALUE=DATE:" + dateStr + "\nDTEND;VALUE=DATE:" + dateStr + "\nSUMMARY:Estudiar: " + item.tema + "\nDESCRIPTION:Sessió AIStudents.\\n\nEND:VEVENT\n";
+                icsContent += "BEGIN:VEVENT\nDTSTART;VALUE=DATE:" + dateStr + "\nDTEND;VALUE=DATE:" + dateStr + "\nSUMMARY:Estudiar: " + item.tema + "\nDESCRIPTION:AIStudents.\\n\nEND:VEVENT\n";
             });
             icsContent += "END:VCALENDAR";
-            
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
             link.setAttribute('download', 'Pla_Estudi.ics');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
         function renderQuiz() {
@@ -367,7 +376,7 @@
                         <div class="space-y-3 pl-10">
                             ${q.opcions.map((opt) => `
                                 <label class="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
-                                    <input type="radio" name="q_${idx}" value="${opt.replace(/"/g, '&quot;')}" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                    <input type="radio" name="q_${idx}" value="${opt.replace(/"/g, '&quot;')}" class="w-4 h-4 text-blue-600">
                                     <span class="text-sm font-medium text-slate-700">${opt}</span>
                                 </label>`).join('')}
                         </div>
@@ -390,16 +399,14 @@
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
 
-            // Definim el Context global (Memòria que s'enviarà a la IA a cada petició)
-            studentContextStr = `Notes del Test de Diagnòstic: ${score}/5 (${level}). Calendari d'estudi actual: ${JSON.stringify(generatedCalendarArray)}. Dies restants: ${studyDaysLeft}.`;
+            studentContextStr = `Notes del Test: ${score}/5 (${level}). Calendari establert amb repàs final.`;
 
-            // Pintem la targeta de benvinguda a l'historial (NO es passa a la IA, és purament visual)
             const box = document.getElementById('chat-messages');
             box.innerHTML = `
                 <div class="w-full flex justify-center my-6" id="welcome-card">
                     <div class="bg-blue-50 border border-blue-200 p-8 rounded-3xl text-center shadow-sm max-w-xl">
                         <h2 class="text-3xl font-black text-blue-800 mb-2">Pla d'Estudi Preparat!</h2>
-                        <p class="text-blue-700 mb-6 font-medium">Has tret un ${score}/5 al test inicial.<br>La memòria de la IA ja ha emmagatzemat els apunts i l'horari.</p>
+                        <p class="text-blue-700 mb-6 font-medium">Has tret un ${score}/5 al test inicial.<br>El teu calendari arriba just fins l'examen amb repàs inclòs.</p>
                         <button onclick="startTeaching()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-lg w-full text-lg flex items-center justify-center gap-2">
                             ▶ Començar la Primera Lliçó
                         </button>
@@ -409,15 +416,11 @@
             saveSession();
         }
 
-        // Acció de començar realment la classe
         window.startTeaching = function() {
             document.getElementById('welcome-card').style.display = 'none';
             document.getElementById('chat-form').classList.remove('hidden');
             
-            // Enviem el missatge d'inici per darrere
-            const initialPrompt = "Hola tutor! Ja he fet el test inicial i està tot preparat. Si us plau, **comença explicant-me el primer tema del calendari**. Recorda utilitzar imatges visuals i donar-me trucs mnemotècnics perquè sigui més fàcil de recordar.";
-            
-            // Ho pintem visualment com si l'alumne ho hagués escrit
+            const initialPrompt = "Hola tutor! He tret la nota del test i està tot preparat. **Comença explicant-me el primer tema del calendari**. Recorda donar-me alguna imatge visual i algun TRUC MNEMOTÈCNIC per memoritzar fàcilment!";
             appendMessage('user', "Som-hi! Comencem amb el primer tema del calendari.");
             chatHistory.push({ role: 'user', content: initialPrompt });
             
@@ -437,7 +440,6 @@
             triggerAiResponse();
         });
 
-        // Petició centralitzada a l'API
         async function triggerAiResponse() {
             const loadingId = 'loading-' + Date.now();
             appendLoading(loadingId);
@@ -467,7 +469,7 @@
         }
 
         // =========================================================================
-        // PARSEJADOR (MARKDOWN + TIPOGRAFIA + KAHOOT + IMATGES)
+        // PARSEJADOR D'IMATGES I KAHOOT
         // =========================================================================
         function formatMessage(text) {
             if(!text) return "";
@@ -476,30 +478,31 @@
             
             let preParsedText = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
                 try {
-                    let k = JSON.parse(p1.trim());
+                    kahoots[idCounter] = JSON.parse(p1.trim());
                     let placeholder = `___KAHOOT_BLOCK_${idCounter}___`;
-                    kahoots[idCounter] = k;
                     idCounter++;
                     return placeholder;
-                } catch(e) { return "<p class='text-red-500 bg-red-50 p-2'>[Error Kahoot]</p>"; }
+                } catch(e) { return "<p class='text-red-500'>[Error Kahoot]</p>"; }
             });
 
-            // Convertir imatges generades per la IA a imatges HTML rodones
             let htmlContent = marked.parse(preParsedText);
+            
+            // Format d'imatges renderitzades automàticament des del Prompt de la IA
             htmlContent = htmlContent.replace(/<img src="(.*?)" alt="(.*?)"(.*?)>/g, '<img src="$1" alt="$2" class="w-full rounded-2xl shadow-md my-4 border border-slate-200">');
 
             for (let i = 0; i < kahoots.length; i++) {
                 let k = kahoots[i];
                 let uniqueId = 'kahoot_' + Date.now() + i;
-                let colors = ['bg-red-500 hover:bg-red-600', 'bg-blue-500 hover:bg-blue-600', 'bg-yellow-500 hover:bg-yellow-600', 'bg-green-500 hover:bg-green-600'];
+                let colors = ['bg-red-500 hover:bg-red-600 ring-red-400', 'bg-blue-500 hover:bg-blue-600 ring-blue-400', 'bg-yellow-500 hover:bg-yellow-600 ring-yellow-400', 'bg-green-500 hover:bg-green-600 ring-green-400'];
                 let shapes = ['▲', '◆', '●', '■'];
 
                 let buttonsHtml = k.opcions.map((opcio, index) => {
+                    let isCorrect = (index === k.correcta);
                     let safeOpcio = opcio.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    return `<button onclick="handleKahootClick(this, '${uniqueId}', ${index === k.correcta}, '${safeOpcio}')" class="kahoot-btn w-full text-left text-white font-bold p-4 rounded-2xl shadow-md flex items-center gap-4 ${colors[index % 4]}"><span class="bg-black/20 w-8 h-8 flex items-center justify-center rounded-lg text-lg">${shapes[index % 4]}</span><span>${opcio}</span></button>`;
+                    return `<button onclick="handleKahootClick(this, '${uniqueId}', ${isCorrect}, '${safeOpcio}')" class="kahoot-btn w-full text-left text-white font-bold p-4 rounded-2xl shadow-md flex items-center gap-4 ${colors[index % 4]} focus:outline-none"><span class="bg-black/20 w-8 h-8 flex items-center justify-center rounded-lg text-lg shrink-0">${shapes[index % 4]}</span><span class="flex-1 leading-snug">${opcio}</span></button>`;
                 }).join('');
 
-                htmlContent = htmlContent.replace(`___KAHOOT_BLOCK_${i}___`, `<div id="${uniqueId}" class="not-prose my-6 bg-slate-900 p-6 sm:p-8 rounded-3xl w-full max-w-2xl mx-auto"><div class="bg-white text-slate-800 font-black text-lg p-5 rounded-2xl mb-6 text-center">${k.pregunta}</div><div class="grid grid-cols-1 md:grid-cols-2 gap-3">${buttonsHtml}</div></div>`);
+                htmlContent = htmlContent.replace(`___KAHOOT_BLOCK_${i}___`, `<div id="${uniqueId}" class="not-prose my-6 bg-slate-900 p-6 sm:p-8 rounded-3xl w-full max-w-2xl mx-auto"><div class="bg-white text-slate-800 font-black text-lg p-5 rounded-2xl mb-6 text-center">${k.pregunta}</div><div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">${buttonsHtml}</div></div>`);
             }
             return htmlContent;
         }
@@ -507,12 +510,11 @@
         window.handleKahootClick = function(btn, containerId, isCorrect, textResponded) {
             const container = document.getElementById(containerId);
             const buttons = container.querySelectorAll('button');
-            
             buttons.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; b.style.pointerEvents = "none"; });
             btn.style.opacity = "1";
             btn.classList.add('ring-4', 'ring-offset-4', 'ring-offset-slate-900', 'scale-105');
             
-            let autoReply = isCorrect ? `He triat: "${textResponded}". És correcte! Explica'm ràpidament per què i fem una altra pregunta.` : `He triat: "${textResponded}". He fallat. Explica'm l'error.`;
+            let autoReply = isCorrect ? `He triat: "${textResponded}". Correcte! Explica'm ràpid per què.` : `He triat: "${textResponded}". He fallat. Explica'm l'error.`;
             
             setTimeout(() => {
                 appendMessage('user', autoReply);
