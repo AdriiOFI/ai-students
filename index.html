@@ -17,8 +17,8 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .kahoot-btn { transition: all 0.15s ease-in-out; }
-        .kahoot-btn:active { transform: scale(0.97); }
+        .kahoot-btn { transition: all 0.2s ease; }
+        .kahoot-btn:active { transform: scale(0.96); }
         .day-checkbox:checked + div { background-color: #eff6ff; border-color: #3b82f6; color: #2563eb; font-weight: bold; }
     </style>
 </head>
@@ -40,7 +40,7 @@
             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">AI</div>
             <div class="flex flex-col overflow-hidden">
                 <span class="text-sm font-semibold text-slate-700 truncate">AIStudents Tutor</span>
-                <span class="text-[10px] text-emerald-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> Memòria Activa</span>
+                <span class="text-[10px] text-emerald-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> Micro-Learning Actiu</span>
             </div>
         </div>
     </aside>
@@ -88,11 +88,6 @@
                         <ul id="pdf-list" class="mt-3 space-y-2"></ul>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">✍️ Instruccions addicionals</label>
-                        <textarea id="extra-comments" rows="2" placeholder="Ex: Vull trucs mnemotècnics rars, o posa moltes imatges..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
-                    </div>
-
                     <button id="btn-start" onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
                         Planificar Estudi
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -123,7 +118,7 @@
                     </div>
                     <div id="quiz-container" class="space-y-6 mb-8"></div>
                     <button onclick="evaluateQuiz()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-lg text-lg">
-                        Avaluar i Començar el Xat
+                        Avaluar i Començar
                     </button>
                 </div>
             </div>
@@ -131,21 +126,20 @@
 
         <!-- VISTA 3: XAT DE LA IA -->
         <div id="chat-view" class="hidden flex-1 flex-col h-full bg-white relative">
-            
             <div class="p-4 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-20">
                 <div class="font-bold text-slate-800 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Tutor Virtual Actiu
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Classe en curs (Poc a poc)
                 </div>
                 <button onclick="showCalendarModal()" class="text-sm bg-slate-100 text-slate-700 font-semibold px-4 py-2 rounded-xl hover:bg-slate-200 transition flex items-center gap-2">
                     📅 Veure Calendari
                 </button>
             </div>
 
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6"></div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-slate-50"></div>
 
-            <div class="p-4 bg-white border-t border-slate-200 relative z-20">
-                <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden" id="chat-form-container">
-                    <input type="text" id="chat-input" placeholder="Demana un esquema, més trucs, o 'Jugar a Kahoot'..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
+            <div class="p-4 bg-white border-t border-slate-200 relative z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+                <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden">
+                    <input type="text" id="chat-input" placeholder="Escriu 'Ho he entès', fes una pregunta o demana un joc..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
                     <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -161,7 +155,7 @@
         let chatHistory = [];
         let currentQuizData = [];
         let generatedCalendarArray = []; 
-        let validStudyDates = []; // Aquí guardarem les dates exactes calculades
+        let validStudyDates = []; 
         let isPdfProcessing = false;
         let studentContextStr = ""; 
 
@@ -205,7 +199,7 @@
             if (files.length === 0) return;
             isPdfProcessing = true;
             document.getElementById('btn-start').disabled = true;
-            document.getElementById('pdf-status').innerHTML = `⏳ Llegint text dels PDFs...`;
+            document.getElementById('pdf-status').innerHTML = `⏳ Llegint text...`;
             
             for(let file of files) {
                 try {
@@ -215,11 +209,11 @@
                         const textContent = await (await pdf.getPage(i)).getTextContent();
                         fullText += textContent.items.map(item => item.str).join(" ") + "\n";
                     }
-                    uploadedPDFs.push({ id: 'pdf_' + Date.now() + Math.random(), name: file.name, text: fullText.trim() });
+                    uploadedPDFs.push({ id: 'pdf_' + Date.now(), name: file.name, text: fullText.trim() });
                 } catch (err) {}
             }
             updatePdfListAndText();
-            document.getElementById('pdf-status').innerHTML = `Pots afegir més PDFs si vols.`;
+            document.getElementById('pdf-status').innerHTML = `Arrossega més PDFs si vols.`;
             isPdfProcessing = false;
             document.getElementById('btn-start').disabled = false;
             e.target.value = ''; 
@@ -236,12 +230,11 @@
 
         function removePdf(id) { uploadedPDFs = uploadedPDFs.filter(p => p.id !== id); updatePdfListAndText(); }
 
-        // MATEIXES DATES DISPONIBLES
         function calculateValidDates() {
             const examDateStr = document.getElementById('exam-date').value;
             if (!examDateStr) return [];
             
-            const availableDaysInputs = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(el => parseInt(el.value)); // 0 = Diumenge, 1 = Dilluns...
+            const availableDaysInputs = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(el => parseInt(el.value));
             let dates = [];
             let current = new Date();
             current.setHours(0,0,0,0);
@@ -269,26 +262,17 @@
             }
 
             if (uploadedPDFs.length === 0) {
-                document.getElementById('setup-view').classList.add('hidden');
-                document.getElementById('chat-view').classList.remove('hidden');
-                document.getElementById('chat-view').classList.add('flex');
-                document.getElementById('chat-form').classList.remove('hidden');
-                
-                const comments = document.getElementById('extra-comments').value;
-                studentContextStr = `L'usuari NO ha pujat apunts. Té ${validStudyDates.length} dies reals d'estudi. Instruccions: ${comments}.`;
-                
-                appendMessage('ai', "Veig que no has pujat cap PDF. **Explica'm què has d'estudiar** per dissenyar el calendari interactiu.");
-                saveSession();
-            } else {
-                generatePlanAndQuiz();
+                Swal.fire('Atenció', 'Si us plau, puja almenys un PDF amb el temari.', 'warning');
+                return;
             }
+            
+            generatePlanAndQuiz();
         }
 
         async function generatePlanAndQuiz() {
-            Swal.fire({ title: 'Planificant l\'Estudi...', text: 'Estructurant els temes i el repàs final...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Planificant l\'Estudi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                // Demanem a la IA que generi tants temes com dies tenim (màxim 12 per no trencar l'API)
-                let numSessions = validStudyDates.length > 12 ? 12 : validStudyDates.length;
+                let numSessions = validStudyDates.length > 15 ? 15 : validStudyDates.length;
 
                 const res = await fetch('/api/generate', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -304,7 +288,7 @@
                 let iaTopics = Array.isArray(data.calendari_estudi) ? data.calendari_estudi : [];
                 currentQuizData = Array.isArray(data.preguntes) ? data.preguntes : [];
                 
-                // MÀGIA DEL CALENDARI: Repartim els temes de la IA exactament sobre les dates reals de l'alumne
+                // MÀGIA DEL CALENDARI: Combinació de Dia Real + Número de Sessió
                 generatedCalendarArray = [];
                 if (iaTopics.length > 0) {
                     validStudyDates.forEach((dateObj, index) => {
@@ -313,7 +297,12 @@
                         let dateStr = dateObj.toLocaleDateString('ca-ES', { weekday: 'long', day: 'numeric', month: 'short' });
                         dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
                         
-                        generatedCalendarArray.push({ dia_real: dateStr, tema: topicName, dateObj: dateObj });
+                        generatedCalendarArray.push({ 
+                            num: index + 1,
+                            dia_real: dateStr, 
+                            tema: topicName, 
+                            dateObj: dateObj 
+                        });
                     });
                 }
                 
@@ -333,9 +322,10 @@
             if(generatedCalendarArray.length === 0) return;
             generatedCalendarArray.forEach(item => {
                 container.innerHTML += `
-                    <div class="bg-blue-50/50 border border-blue-100 p-5 rounded-2xl flex flex-col justify-center shadow-sm">
-                        <span class="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">${item.dia_real}</span>
-                        <span class="text-sm font-semibold text-slate-700 leading-snug">${item.tema}</span>
+                    <div class="bg-blue-50 border border-blue-200 p-5 rounded-2xl flex flex-col justify-center shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">Sessió ${item.num}</div>
+                        <span class="text-xs font-black text-blue-600 uppercase tracking-widest mb-2 mt-1">${item.dia_real}</span>
+                        <span class="text-sm font-semibold text-slate-800 leading-snug">${item.tema}</span>
                     </div>`;
             });
         }
@@ -344,7 +334,10 @@
             if (generatedCalendarArray.length === 0) { Swal.fire('Info', 'Cap calendari generat.', 'info'); return; }
             let htmlContent = '<div class="grid grid-cols-1 gap-3 mt-4 text-left overflow-y-auto max-h-96">';
             generatedCalendarArray.forEach(item => {
-                htmlContent += `<div class="p-3 bg-slate-50 border border-slate-200 rounded-lg"><div class="text-xs font-bold text-blue-600 mb-1">${item.dia_real}</div><div class="text-sm text-slate-700">${item.tema}</div></div>`;
+                htmlContent += `<div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex gap-4 items-center">
+                    <div class="bg-blue-100 text-blue-700 font-bold rounded-full w-8 h-8 flex items-center justify-center shrink-0">${item.num}</div>
+                    <div><div class="text-xs font-bold text-slate-500 mb-0.5">${item.dia_real}</div><div class="text-sm font-semibold text-slate-800">${item.tema}</div></div>
+                </div>`;
             });
             htmlContent += '</div>';
             Swal.fire({ title: '📅 El teu Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb' });
@@ -356,7 +349,7 @@
             generatedCalendarArray.forEach((item) => {
                 let eventDate = new Date(item.dateObj);
                 let dateStr = eventDate.toISOString().replace(/-|:|\.\d+/g, "").substring(0, 8);
-                icsContent += "BEGIN:VEVENT\nDTSTART;VALUE=DATE:" + dateStr + "\nDTEND;VALUE=DATE:" + dateStr + "\nSUMMARY:Estudiar: " + item.tema + "\nDESCRIPTION:AIStudents.\\n\nEND:VEVENT\n";
+                icsContent += "BEGIN:VEVENT\nDTSTART;VALUE=DATE:" + dateStr + "\nDTEND;VALUE=DATE:" + dateStr + "\nSUMMARY:Sessió " + item.num + ": " + item.tema + "\nDESCRIPTION:Estudi planificat per AIStudents.\\n\nEND:VEVENT\n";
             });
             icsContent += "END:VCALENDAR";
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
@@ -406,7 +399,7 @@
                 <div class="w-full flex justify-center my-6" id="welcome-card">
                     <div class="bg-blue-50 border border-blue-200 p-8 rounded-3xl text-center shadow-sm max-w-xl">
                         <h2 class="text-3xl font-black text-blue-800 mb-2">Pla d'Estudi Preparat!</h2>
-                        <p class="text-blue-700 mb-6 font-medium">Has tret un ${score}/5 al test inicial.<br>El teu calendari arriba just fins l'examen amb repàs inclòs.</p>
+                        <p class="text-blue-700 mb-6 font-medium">Has tret un ${score}/5 al test inicial.<br>Tots els teus temes estan distribuïts amb les teves dates exactes.</p>
                         <button onclick="startTeaching()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-lg w-full text-lg flex items-center justify-center gap-2">
                             ▶ Començar la Primera Lliçó
                         </button>
@@ -420,10 +413,10 @@
             document.getElementById('welcome-card').style.display = 'none';
             document.getElementById('chat-form').classList.remove('hidden');
             
-            const initialPrompt = "Hola tutor! He tret la nota del test i està tot preparat. **Comença explicant-me el primer tema del calendari**. Recorda donar-me alguna imatge visual i algun TRUC MNEMOTÈCNIC per memoritzar fàcilment!";
-            appendMessage('user', "Som-hi! Comencem amb el primer tema del calendari.");
-            chatHistory.push({ role: 'user', content: initialPrompt });
+            const initialPrompt = "Hola tutor! Estic preparat per començar a estudiar seguint el calendari. Si us plau, comença explicant-me el primer tema. Recorda: **fes-ho poc a poc**, genera una imatge i dóna'm un truc mnemotècnic. Al final de la teva explicació, fes-me una pregunta interactiva amb botons per veure si ho he entès.";
             
+            appendMessage('user', "Comencem la primera sessió del calendari!");
+            chatHistory.push({ role: 'user', content: initialPrompt });
             triggerAiResponse();
         }
 
@@ -436,7 +429,6 @@
             appendMessage('user', msg);
             input.value = '';
             chatHistory.push({ role: 'user', content: msg });
-            
             triggerAiResponse();
         });
 
@@ -469,7 +461,7 @@
         }
 
         // =========================================================================
-        // PARSEJADOR D'IMATGES I KAHOOT
+        // PARSEJADOR D'IMATGES I WIDGETS INTERACTIUS
         // =========================================================================
         function formatMessage(text) {
             if(!text) return "";
@@ -487,40 +479,77 @@
 
             let htmlContent = marked.parse(preParsedText);
             
-            // Format d'imatges renderitzades automàticament des del Prompt de la IA
+            // Imatges a tota amplada
             htmlContent = htmlContent.replace(/<img src="(.*?)" alt="(.*?)"(.*?)>/g, '<img src="$1" alt="$2" class="w-full rounded-2xl shadow-md my-4 border border-slate-200">');
 
+            // Renderitzar la targeta del joc dins del Xat
             for (let i = 0; i < kahoots.length; i++) {
                 let k = kahoots[i];
                 let uniqueId = 'kahoot_' + Date.now() + i;
-                let colors = ['bg-red-500 hover:bg-red-600 ring-red-400', 'bg-blue-500 hover:bg-blue-600 ring-blue-400', 'bg-yellow-500 hover:bg-yellow-600 ring-yellow-400', 'bg-green-500 hover:bg-green-600 ring-green-400'];
-                let shapes = ['▲', '◆', '●', '■'];
+                let colors = ['bg-indigo-500 hover:bg-indigo-600 ring-indigo-400', 'bg-emerald-500 hover:bg-emerald-600 ring-emerald-400', 'bg-amber-500 hover:bg-amber-600 ring-amber-400', 'bg-rose-500 hover:bg-rose-600 ring-rose-400'];
 
                 let buttonsHtml = k.opcions.map((opcio, index) => {
                     let isCorrect = (index === k.correcta);
                     let safeOpcio = opcio.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    return `<button onclick="handleKahootClick(this, '${uniqueId}', ${isCorrect}, '${safeOpcio}')" class="kahoot-btn w-full text-left text-white font-bold p-4 rounded-2xl shadow-md flex items-center gap-4 ${colors[index % 4]} focus:outline-none"><span class="bg-black/20 w-8 h-8 flex items-center justify-center rounded-lg text-lg shrink-0">${shapes[index % 4]}</span><span class="flex-1 leading-snug">${opcio}</span></button>`;
+                    return `<button onclick="handleKahootClick(this, '${uniqueId}', ${isCorrect}, '${safeOpcio}')" class="kahoot-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-sm flex items-center gap-3 ${colors[index % 4]} focus:outline-none border-b-4 border-black/20"><span class="flex-1 leading-snug">${opcio}</span></button>`;
                 }).join('');
 
-                htmlContent = htmlContent.replace(`___KAHOOT_BLOCK_${i}___`, `<div id="${uniqueId}" class="not-prose my-6 bg-slate-900 p-6 sm:p-8 rounded-3xl w-full max-w-2xl mx-auto"><div class="bg-white text-slate-800 font-black text-lg p-5 rounded-2xl mb-6 text-center">${k.pregunta}</div><div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">${buttonsHtml}</div></div>`);
+                htmlContent = htmlContent.replace(`___KAHOOT_BLOCK_${i}___`, `
+                <div id="${uniqueId}" class="not-prose my-6 bg-white p-5 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.05)] border border-slate-200 w-full max-w-lg mx-auto overflow-hidden relative">
+                    <div id="header-${uniqueId}" class="bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0">🎮 Mini-Repte Interactiu</div>
+                    <div class="text-slate-800 font-bold text-lg mt-5 mb-5 text-center px-2">${k.pregunta}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${buttonsHtml}</div>
+                </div>`);
             }
             return htmlContent;
         }
 
+        // Click en la tarjeta del juego interactivo
         window.handleKahootClick = function(btn, containerId, isCorrect, textResponded) {
             const container = document.getElementById(containerId);
             const buttons = container.querySelectorAll('button');
-            buttons.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; b.style.pointerEvents = "none"; });
-            btn.style.opacity = "1";
-            btn.classList.add('ring-4', 'ring-offset-4', 'ring-offset-slate-900', 'scale-105');
+            const header = document.getElementById('header-' + containerId);
             
-            let autoReply = isCorrect ? `He triat: "${textResponded}". Correcte! Explica'm ràpid per què.` : `He triat: "${textResponded}". He fallat. Explica'm l'error.`;
+            // Bloquejar la tarjeta permanentment (es quedarà guardat així al historial)
+            buttons.forEach(b => { 
+                b.disabled = true; 
+                b.style.pointerEvents = "none";
+                b.classList.remove('border-b-4'); // Treiem l'efecte 3D
+                if (b !== btn) b.style.opacity = "0.4"; 
+            });
+
+            btn.style.opacity = "1";
+            
+            if (isCorrect) {
+                btn.className = "kahoot-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-sm flex items-center gap-3 bg-green-500 ring-4 ring-green-300 ring-offset-2";
+                header.className = "bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0";
+                header.innerHTML = "✅ RESPOSTA CORRECTA";
+            } else {
+                btn.className = "kahoot-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-sm flex items-center gap-3 bg-red-500 ring-4 ring-red-300 ring-offset-2";
+                header.className = "bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0";
+                header.innerHTML = "❌ RESPOSTA INCORRECTA";
+                
+                // Mostrar a l'alumne quina era la bona (buscant la de l'array original)
+                const correctBtnIndex = chatHistory[chatHistory.length - 1].content.match(/"correcta":\s*(\d)/)?.[1];
+                if(correctBtnIndex !== undefined && buttons[correctBtnIndex]) {
+                    buttons[correctBtnIndex].style.opacity = "1";
+                    buttons[correctBtnIndex].classList.add('bg-green-500');
+                }
+            }
+            
+            // Desem l'estat modificat del HTML al LocalStorage
+            saveSession();
+
+            // Continuem amb la classe automàticament
+            let autoReply = isCorrect ? 
+                `He triat: "${textResponded}". És correcte! Avança al següent mini-concepte.` : 
+                `He triat: "${textResponded}". He fallat. Explica'm ràpid l'error i avança al següent concepte.`;
             
             setTimeout(() => {
                 appendMessage('user', autoReply);
                 chatHistory.push({ role: 'user', content: autoReply });
                 triggerAiResponse();
-            }, 1000);
+            }, 800);
         }
 
         function appendMessage(sender, text) {
@@ -529,10 +558,10 @@
             
             if (sender === 'user') {
                 div.className = "flex justify-end w-full mb-4";
-                div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3.5 rounded-3xl rounded-tr-sm max-w-[85%] text-sm shadow-md">${text}</div>`;
+                div.innerHTML = `<div class="bg-slate-800 text-white px-5 py-3.5 rounded-3xl rounded-tr-sm max-w-[85%] text-sm shadow-sm">${formatMessage(text)}</div>`;
             } else {
-                div.className = "flex justify-start gap-3 w-full mb-4";
-                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div><div class="bg-white border border-slate-200 text-slate-800 px-6 py-5 rounded-3xl rounded-tl-sm max-w-[90%] shadow-md w-full overflow-hidden"><div class="prose prose-sm md:prose-base prose-slate max-w-none">${formatMessage(text)}</div></div>`;
+                div.className = "flex justify-start gap-4 w-full mb-4";
+                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div><div class="bg-white border border-slate-200 text-slate-800 px-6 py-5 rounded-3xl rounded-tl-sm max-w-[95%] shadow-md w-full overflow-hidden"><div class="prose prose-sm md:prose-base prose-slate max-w-none">${formatMessage(text)}</div></div>`;
             }
             box.appendChild(div);
             setTimeout(() => { box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' }); }, 100);
@@ -542,7 +571,7 @@
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
             div.id = id;
-            div.className = "flex justify-start gap-3 w-full mb-4";
+            div.className = "flex justify-start gap-4 w-full mb-4";
             div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div><div class="bg-white border border-slate-200 px-6 py-5 rounded-3xl rounded-tl-sm flex gap-1.5 shadow-md items-center h-14"><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div></div>`;
             box.appendChild(div);
             box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
