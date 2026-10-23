@@ -17,12 +17,21 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .kahoot-btn { transition: all 0.2s ease; }
-        .kahoot-btn:active { transform: scale(0.96); }
+        .interactive-btn { transition: all 0.15s ease-in-out; }
+        .interactive-btn:active { transform: scale(0.97); }
         .day-checkbox:checked + div { background-color: #eff6ff; border-color: #3b82f6; color: #2563eb; font-weight: bold; }
+        
+        /* Lightbox Image Styles */
+        #lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); justify-content: center; align-items: center; padding: 20px; cursor: zoom-out; backdrop-filter: blur(5px); }
+        #lightbox img { max-width: 90%; max-height: 90vh; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); object-fit: contain; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden antialiased font-sans">
+
+    <!-- Modal per a les Imatges (Zoom) -->
+    <div id="lightbox" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt="Zoomed Image">
+    </div>
 
     <!-- BARRA LATERAL -->
     <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-10 shadow-sm shrink-0">
@@ -40,7 +49,7 @@
             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">AI</div>
             <div class="flex flex-col overflow-hidden">
                 <span class="text-sm font-semibold text-slate-700 truncate">AIStudents Tutor</span>
-                <span class="text-[10px] text-emerald-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> Micro-Learning Actiu</span>
+                <span class="text-[10px] text-emerald-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> Sistema Actiu</span>
             </div>
         </div>
     </aside>
@@ -53,16 +62,14 @@
             <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-xl p-8 md:p-12">
                 <div class="text-center mb-8">
                     <h1 class="text-3xl font-bold text-slate-800 mb-2">Preparació de l'Estudi</h1>
-                    <p class="text-slate-500 text-sm">Configura el temari, data d'examen i disponibilitat.</p>
+                    <p class="text-slate-500 text-sm">Configura el temari i els dies d'estudi.</p>
                 </div>
-
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">📅 Data de l'examen (Obligatori)</label>
                         <input type="date" id="exam-date" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
                         <div id="days-left-marker" class="text-sm font-medium text-slate-500 mt-2 hidden"></div>
                     </div>
-
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">🗓️ Dies disponibles per estudiar</label>
                         <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="available-days">
@@ -75,19 +82,17 @@
                             <label class="cursor-pointer text-center"><input type="checkbox" value="0" class="day-checkbox hidden"><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Diumenge</div></label>
                         </div>
                     </div>
-
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">📚 Temari (Puja els teus PDFs)</label>
                         <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition relative cursor-pointer group">
                             <input type="file" id="pdf-upload" accept=".pdf" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                             <div class="flex flex-col items-center gap-2 pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-400 group-hover:text-blue-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                <span id="pdf-status" class="text-sm font-medium text-slate-600">Arrossega els PDFs o fes clic per afegir-los</span>
+                                <span id="pdf-status" class="text-sm font-medium text-slate-600">Arrossega els PDFs o fes clic</span>
                             </div>
                         </div>
                         <ul id="pdf-list" class="mt-3 space-y-2"></ul>
                     </div>
-
                     <button id="btn-start" onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
                         Planificar Estudi
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -99,18 +104,12 @@
         <!-- VISTA 2: CALENDARI I TEST DE NIVELL -->
         <div id="quiz-view" class="hidden flex-1 overflow-y-auto items-start justify-center p-6 py-10">
             <div class="w-full max-w-4xl space-y-6">
-                <!-- Calendari d'Estudi -->
                 <div class="bg-white border border-slate-200 rounded-3xl shadow-lg p-8">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">📅 El teu Pla d'Estudi</h2>
-                        <button onclick="exportCalendarICS()" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-xl text-sm transition flex items-center gap-2 shadow-sm">
-                            Exportar a Calendar
-                        </button>
                     </div>
                     <div id="calendar-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
                 </div>
-
-                <!-- Test de Diagnòstic -->
                 <div class="bg-white border border-slate-200 rounded-3xl shadow-lg p-8">
                     <div class="border-b border-slate-100 pb-4 mb-6">
                         <h2 class="text-2xl font-bold text-slate-800">Test de Diagnòstic</h2>
@@ -128,25 +127,22 @@
         <div id="chat-view" class="hidden flex-1 flex-col h-full bg-white relative">
             <div class="p-4 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-20">
                 <div class="font-bold text-slate-800 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Classe en curs (Poc a poc)
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Classe Interactiva
                 </div>
                 <button onclick="showCalendarModal()" class="text-sm bg-slate-100 text-slate-700 font-semibold px-4 py-2 rounded-xl hover:bg-slate-200 transition flex items-center gap-2">
                     📅 Veure Calendari
                 </button>
             </div>
-
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-slate-50"></div>
-
             <div class="p-4 bg-white border-t border-slate-200 relative z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
                 <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden">
-                    <input type="text" id="chat-input" placeholder="Escriu 'Ho he entès', fes una pregunta o demana un joc..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
+                    <input type="text" id="chat-input" placeholder="Escriu 'Ho he entès', fes una pregunta..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
                     <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
                 </form>
             </div>
         </div>
-
     </main>
 
     <script>
@@ -158,6 +154,9 @@
         let validStudyDates = []; 
         let isPdfProcessing = false;
         let studentContextStr = ""; 
+        
+        // Memòria global per als jocs interactius generats al xat
+        window.interactiveGames = {};
 
         window.onload = () => {
             const savedSession = localStorage.getItem('aiStudentsSession');
@@ -172,8 +171,15 @@
                 document.getElementById('chat-view').classList.remove('hidden');
                 document.getElementById('chat-view').classList.add('flex');
                 document.getElementById('chat-form').classList.remove('hidden');
-                document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium border border-blue-100">Sessió Recuperada</div>`;
                 document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+                
+                // Regenerar la memòria de jocs en cas de refrescar
+                document.querySelectorAll('.game-container').forEach(el => {
+                    let rawData = el.getAttribute('data-game');
+                    if(rawData) {
+                        try { window.interactiveGames[el.id] = JSON.parse(decodeURIComponent(rawData)); } catch(e) {}
+                    }
+                });
             }
         };
 
@@ -200,7 +206,6 @@
             isPdfProcessing = true;
             document.getElementById('btn-start').disabled = true;
             document.getElementById('pdf-status').innerHTML = `⏳ Llegint text...`;
-            
             for(let file of files) {
                 try {
                     const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
@@ -213,7 +218,7 @@
                 } catch (err) {}
             }
             updatePdfListAndText();
-            document.getElementById('pdf-status').innerHTML = `Arrossega més PDFs si vols.`;
+            document.getElementById('pdf-status').innerHTML = `Pots afegir més PDFs si vols.`;
             isPdfProcessing = false;
             document.getElementById('btn-start').disabled = false;
             e.target.value = ''; 
@@ -227,24 +232,17 @@
             });
             extractedText = uploadedPDFs.map(p => p.text).join("\n\n---\n\n");
         }
-
         function removePdf(id) { uploadedPDFs = uploadedPDFs.filter(p => p.id !== id); updatePdfListAndText(); }
 
         function calculateValidDates() {
             const examDateStr = document.getElementById('exam-date').value;
             if (!examDateStr) return [];
-            
             const availableDaysInputs = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(el => parseInt(el.value));
             let dates = [];
-            let current = new Date();
-            current.setHours(0,0,0,0);
-            let exam = new Date(examDateStr);
-            exam.setHours(0,0,0,0);
-            
+            let current = new Date(); current.setHours(0,0,0,0);
+            let exam = new Date(examDateStr); exam.setHours(0,0,0,0);
             while(current <= exam) {
-                if(availableDaysInputs.includes(current.getDay())) {
-                    dates.push(new Date(current));
-                }
+                if(availableDaysInputs.includes(current.getDay())) dates.push(new Date(current));
                 current.setDate(current.getDate() + 1);
             }
             return dates;
@@ -254,18 +252,9 @@
             if (isPdfProcessing) return;
             const examDateStr = document.getElementById('exam-date').value;
             if (!examDateStr) { Swal.fire('Atenció', 'Has de seleccionar la data de l\'examen.', 'warning'); return; }
-            
             validStudyDates = calculateValidDates();
-            if(validStudyDates.length === 0) {
-                Swal.fire('Atenció', 'Amb els dies marcats no hi ha temps per estudiar abans de l\'examen.', 'warning');
-                return;
-            }
-
-            if (uploadedPDFs.length === 0) {
-                Swal.fire('Atenció', 'Si us plau, puja almenys un PDF amb el temari.', 'warning');
-                return;
-            }
-            
+            if(validStudyDates.length === 0) { Swal.fire('Atenció', 'No hi ha dies disponibles fins l\'examen.', 'warning'); return; }
+            if (uploadedPDFs.length === 0) { Swal.fire('Atenció', 'Puja almenys un PDF amb el temari.', 'warning'); return; }
             generatePlanAndQuiz();
         }
 
@@ -273,14 +262,9 @@
             Swal.fire({ title: 'Planificant l\'Estudi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 let numSessions = validStudyDates.length > 15 ? 15 : validStudyDates.length;
-
                 const res = await fetch('/api/generate', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        action: 'prepare_study', 
-                        pdfText: extractedText.substring(0, 4500),
-                        totalSessionsToGenerate: numSessions
-                    })
+                    body: JSON.stringify({ action: 'prepare_study', pdfText: extractedText.substring(0, 4500), totalSessionsToGenerate: numSessions })
                 });
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
@@ -288,27 +272,18 @@
                 let iaTopics = Array.isArray(data.calendari_estudi) ? data.calendari_estudi : [];
                 currentQuizData = Array.isArray(data.preguntes) ? data.preguntes : [];
                 
-                // MÀGIA DEL CALENDARI: Combinació de Dia Real + Número de Sessió
                 generatedCalendarArray = [];
                 if (iaTopics.length > 0) {
                     validStudyDates.forEach((dateObj, index) => {
                         let topicIndex = Math.floor((index / validStudyDates.length) * iaTopics.length);
                         let topicName = iaTopics[topicIndex].tema;
                         let dateStr = dateObj.toLocaleDateString('ca-ES', { weekday: 'long', day: 'numeric', month: 'short' });
-                        dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-                        
-                        generatedCalendarArray.push({ 
-                            num: index + 1,
-                            dia_real: dateStr, 
-                            tema: topicName, 
-                            dateObj: dateObj 
-                        });
+                        generatedCalendarArray.push({ num: index + 1, dia_real: dateStr, tema: topicName });
                     });
                 }
                 
                 renderCalendar();
                 renderQuiz();
-                
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('quiz-view').classList.remove('hidden');
                 document.getElementById('quiz-view').classList.add('flex');
@@ -319,44 +294,23 @@
         function renderCalendar() {
             const container = document.getElementById('calendar-container');
             container.innerHTML = '';
-            if(generatedCalendarArray.length === 0) return;
             generatedCalendarArray.forEach(item => {
                 container.innerHTML += `
-                    <div class="bg-blue-50 border border-blue-200 p-5 rounded-2xl flex flex-col justify-center shadow-sm relative overflow-hidden">
+                    <div class="bg-blue-50 border border-blue-200 p-5 rounded-2xl flex flex-col shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">Sessió ${item.num}</div>
-                        <span class="text-xs font-black text-blue-600 uppercase tracking-widest mb-2 mt-1">${item.dia_real}</span>
-                        <span class="text-sm font-semibold text-slate-800 leading-snug">${item.tema}</span>
+                        <span class="text-xs font-black text-blue-600 uppercase mb-2 mt-1">${item.dia_real}</span>
+                        <span class="text-sm font-semibold text-slate-800">${item.tema}</span>
                     </div>`;
             });
         }
 
         function showCalendarModal() {
-            if (generatedCalendarArray.length === 0) { Swal.fire('Info', 'Cap calendari generat.', 'info'); return; }
             let htmlContent = '<div class="grid grid-cols-1 gap-3 mt-4 text-left overflow-y-auto max-h-96">';
             generatedCalendarArray.forEach(item => {
-                htmlContent += `<div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex gap-4 items-center">
-                    <div class="bg-blue-100 text-blue-700 font-bold rounded-full w-8 h-8 flex items-center justify-center shrink-0">${item.num}</div>
-                    <div><div class="text-xs font-bold text-slate-500 mb-0.5">${item.dia_real}</div><div class="text-sm font-semibold text-slate-800">${item.tema}</div></div>
-                </div>`;
+                htmlContent += `<div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex gap-4 items-center"><div class="bg-blue-100 text-blue-700 font-bold rounded-full w-8 h-8 flex items-center justify-center shrink-0">${item.num}</div><div><div class="text-xs font-bold text-slate-500 mb-0.5">${item.dia_real}</div><div class="text-sm font-semibold text-slate-800">${item.tema}</div></div></div>`;
             });
             htmlContent += '</div>';
             Swal.fire({ title: '📅 El teu Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb' });
-        }
-
-        function exportCalendarICS() {
-            if (generatedCalendarArray.length === 0) return;
-            let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//AIStudents//Tutor//CA\n";
-            generatedCalendarArray.forEach((item) => {
-                let eventDate = new Date(item.dateObj);
-                let dateStr = eventDate.toISOString().replace(/-|:|\.\d+/g, "").substring(0, 8);
-                icsContent += "BEGIN:VEVENT\nDTSTART;VALUE=DATE:" + dateStr + "\nDTEND;VALUE=DATE:" + dateStr + "\nSUMMARY:Sessió " + item.num + ": " + item.tema + "\nDESCRIPTION:Estudi planificat per AIStudents.\\n\nEND:VEVENT\n";
-            });
-            icsContent += "END:VCALENDAR";
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', 'Pla_Estudi.ics');
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
         function renderQuiz() {
@@ -392,14 +346,13 @@
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
 
-            studentContextStr = `Notes del Test: ${score}/5 (${level}). Calendari establert amb repàs final.`;
+            studentContextStr = `Notes Test: ${score}/5 (${level}). Calendari establert. L'alumne no repassarà la següent part fins que no li preguntis si ho ha entès o li facis un mini-joc.`;
 
-            const box = document.getElementById('chat-messages');
-            box.innerHTML = `
+            document.getElementById('chat-messages').innerHTML = `
                 <div class="w-full flex justify-center my-6" id="welcome-card">
                     <div class="bg-blue-50 border border-blue-200 p-8 rounded-3xl text-center shadow-sm max-w-xl">
                         <h2 class="text-3xl font-black text-blue-800 mb-2">Pla d'Estudi Preparat!</h2>
-                        <p class="text-blue-700 mb-6 font-medium">Has tret un ${score}/5 al test inicial.<br>Tots els teus temes estan distribuïts amb les teves dates exactes.</p>
+                        <p class="text-blue-700 mb-6 font-medium">Has tret un ${score}/5 al test inicial.</p>
                         <button onclick="startTeaching()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-lg w-full text-lg flex items-center justify-center gap-2">
                             ▶ Començar la Primera Lliçó
                         </button>
@@ -412,11 +365,9 @@
         window.startTeaching = function() {
             document.getElementById('welcome-card').style.display = 'none';
             document.getElementById('chat-form').classList.remove('hidden');
-            
-            const initialPrompt = "Hola tutor! Estic preparat per començar a estudiar seguint el calendari. Si us plau, comença explicant-me el primer tema. Recorda: **fes-ho poc a poc**, genera una imatge i dóna'm un truc mnemotècnic. Al final de la teva explicació, fes-me una pregunta interactiva amb botons per veure si ho he entès.";
-            
-            appendMessage('user', "Comencem la primera sessió del calendari!");
-            chatHistory.push({ role: 'user', content: initialPrompt });
+            const prompt = "Hola! Comencem amb el primer tema del calendari. **Explica-ho a poc a poc**, genera una imatge o esquema visual i dona'm trucs. Al final, fes-me un Kahoot o un Esquema amb buits per veure si ho he entès abans d'avançar.";
+            appendMessage('user', "Comencem la primera sessió!");
+            chatHistory.push({ role: 'user', content: prompt });
             triggerAiResponse();
         }
 
@@ -425,7 +376,6 @@
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if (!msg) return;
-
             appendMessage('user', msg);
             input.value = '';
             chatHistory.push({ role: 'user', content: msg });
@@ -435,17 +385,10 @@
         async function triggerAiResponse() {
             const loadingId = 'loading-' + Date.now();
             appendLoading(loadingId);
-
             try {
                 const res = await fetch('/api/generate', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ 
-                        action: 'chat', 
-                        chatHistory: chatHistory, 
-                        pdfText: extractedText,
-                        studentContext: studentContextStr
-                    }) 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ action: 'chat', chatHistory: chatHistory, pdfText: extractedText, studentContext: studentContextStr }) 
                 });
                 document.getElementById(loadingId).remove();
                 const data = await res.json();
@@ -456,102 +399,201 @@
                 saveSession();
             } catch (err) {
                 document.getElementById(loadingId).remove();
-                appendMessage('ai', 'Error tècnic: ' + err.message);
+                appendMessage('ai', 'Error: ' + err.message);
             }
         }
 
         // =========================================================================
-        // PARSEJADOR D'IMATGES I WIDGETS INTERACTIUS
+        // PARSEJADOR I RENDERITZAT (MARKDOWN + IMATGES + KAHOOT + ESQUEMES)
         // =========================================================================
+        
+        function openLightbox(src) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox').style.display = 'flex';
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+
         function formatMessage(text) {
             if(!text) return "";
-            let idCounter = 0;
-            const kahoots = [];
             
-            let preParsedText = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
+            // 1. Extraiem blocs de Kahoot
+            text = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
                 try {
-                    kahoots[idCounter] = JSON.parse(p1.trim());
-                    let placeholder = `___KAHOOT_BLOCK_${idCounter}___`;
-                    idCounter++;
-                    return placeholder;
+                    let k = JSON.parse(p1.trim());
+                    let id = 'kahoot_' + Date.now() + Math.random().toString().substr(2, 5);
+                    window.interactiveGames[id] = k;
+                    let safeData = encodeURIComponent(JSON.stringify(k));
+                    
+                    let buttonsHtml = k.opcions.map((opt, i) => {
+                        let safeOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        return `<button onclick="playKahoot('${id}', ${i}, '${safeOpt}')" class="interactive-btn w-full text-left text-slate-700 font-semibold p-4 rounded-xl shadow-sm border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 focus:outline-none"><span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full inline-flex items-center justify-center mr-3 text-xs">${i+1}</span>${opt}</button>`;
+                    }).join('');
+
+                    return `
+                    <div id="${id}" class="game-container not-prose my-6 bg-slate-50 p-6 rounded-3xl border border-slate-200 w-full max-w-lg shadow-sm relative overflow-hidden" data-game="${safeData}">
+                        <div class="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0">🎮 Mini-Repte Ràpid</div>
+                        <div class="text-slate-800 font-bold text-lg mt-6 mb-5 text-center px-2">${k.pregunta}</div>
+                        <div class="grid grid-cols-1 gap-3">${buttonsHtml}</div>
+                    </div>`;
                 } catch(e) { return "<p class='text-red-500'>[Error Kahoot]</p>"; }
             });
 
-            let htmlContent = marked.parse(preParsedText);
-            
-            // Imatges a tota amplada
-            htmlContent = htmlContent.replace(/<img src="(.*?)" alt="(.*?)"(.*?)>/g, '<img src="$1" alt="$2" class="w-full rounded-2xl shadow-md my-4 border border-slate-200">');
+            // 2. Extraiem blocs d'Esquemes interactius
+            text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
+                try {
+                    let s = JSON.parse(p1.trim());
+                    let id = 'schema_' + Date.now() + Math.random().toString().substr(2, 5);
+                    s.attempts = 0; // Inicialitzem intents
+                    window.interactiveGames[id] = s;
+                    let safeData = encodeURIComponent(JSON.stringify(s));
+                    
+                    let boxesHtml = s.buits.map((item, i) => {
+                        return `
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 mb-3">
+                            <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl text-sm font-bold flex-1 text-center sm:text-right border border-blue-200 shadow-sm">${item.context}</div>
+                            <div class="hidden sm:block text-slate-300 font-black">➔</div>
+                            <div class="text-center sm:hidden text-slate-300 font-black">⬇</div>
+                            <input type="text" id="input_${id}_${i}" placeholder="Escriu aquí..." class="schema-input border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2 text-sm text-slate-800 flex-1 outline-none text-center sm:text-left transition shadow-inner bg-white">
+                        </div>`;
+                    }).join('');
 
-            // Renderitzar la targeta del joc dins del Xat
-            for (let i = 0; i < kahoots.length; i++) {
-                let k = kahoots[i];
-                let uniqueId = 'kahoot_' + Date.now() + i;
-                let colors = ['bg-indigo-500 hover:bg-indigo-600 ring-indigo-400', 'bg-emerald-500 hover:bg-emerald-600 ring-emerald-400', 'bg-amber-500 hover:bg-amber-600 ring-amber-400', 'bg-rose-500 hover:bg-rose-600 ring-rose-400'];
+                    return `
+                    <div id="${id}" class="game-container not-prose my-6 bg-slate-50 p-6 rounded-3xl border border-slate-200 w-full max-w-2xl shadow-sm relative overflow-hidden" data-game="${safeData}">
+                        <div id="header-${id}" class="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0">🧩 Completa l'Esquema</div>
+                        <div class="text-slate-800 font-black text-xl mt-6 mb-6 text-center">${s.titol}</div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm mb-5">${boxesHtml}</div>
+                        <button id="btn_${id}" onclick="checkSchema('${id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">Comprovar Respostes</button>
+                    </div>`;
+                } catch(e) { return "<p class='text-red-500'>[Error Esquema]</p>"; }
+            });
 
-                let buttonsHtml = k.opcions.map((opcio, index) => {
-                    let isCorrect = (index === k.correcta);
-                    let safeOpcio = opcio.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    return `<button onclick="handleKahootClick(this, '${uniqueId}', ${isCorrect}, '${safeOpcio}')" class="kahoot-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-sm flex items-center gap-3 ${colors[index % 4]} focus:outline-none border-b-4 border-black/20"><span class="flex-1 leading-snug">${opcio}</span></button>`;
-                }).join('');
+            // 3. Convertir Markdown normal a HTML i afegir el Lightbox a les imatges generades
+            let htmlContent = marked.parse(text);
+            htmlContent = htmlContent.replace(/<img src="(.*?)" alt="(.*?)"(.*?)>/g, '<img src="$1" alt="$2" class="w-full rounded-2xl shadow-md my-4 border border-slate-200 cursor-zoom-in hover:opacity-90 transition" onclick="openLightbox(this.src)" title="Fes clic per ampliar">');
 
-                htmlContent = htmlContent.replace(`___KAHOOT_BLOCK_${i}___`, `
-                <div id="${uniqueId}" class="not-prose my-6 bg-white p-5 rounded-3xl shadow-[0_0_15px_rgba(0,0,0,0.05)] border border-slate-200 w-full max-w-lg mx-auto overflow-hidden relative">
-                    <div id="header-${uniqueId}" class="bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0">🎮 Mini-Repte Interactiu</div>
-                    <div class="text-slate-800 font-bold text-lg mt-5 mb-5 text-center px-2">${k.pregunta}</div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${buttonsHtml}</div>
-                </div>`);
-            }
             return htmlContent;
         }
 
-        // Click en la tarjeta del juego interactivo
-        window.handleKahootClick = function(btn, containerId, isCorrect, textResponded) {
-            const container = document.getElementById(containerId);
-            const buttons = container.querySelectorAll('button');
-            const header = document.getElementById('header-' + containerId);
-            
-            // Bloquejar la tarjeta permanentment (es quedarà guardat així al historial)
-            buttons.forEach(b => { 
-                b.disabled = true; 
-                b.style.pointerEvents = "none";
-                b.classList.remove('border-b-4'); // Treiem l'efecte 3D
-                if (b !== btn) b.style.opacity = "0.4"; 
-            });
+        // =========================================================================
+        // LÒGICA DELS JOCS (Kahoots i Esquemes)
+        // =========================================================================
 
-            btn.style.opacity = "1";
+        window.playKahoot = function(id, indexPicked, textResponded) {
+            const container = document.getElementById(id);
+            const buttons = container.querySelectorAll('button');
+            const gameData = window.interactiveGames[id];
+            if(!gameData) return;
+
+            buttons.forEach(b => { b.disabled = true; b.style.pointerEvents = "none"; b.classList.add('opacity-50'); });
             
-            if (isCorrect) {
-                btn.className = "kahoot-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-sm flex items-center gap-3 bg-green-500 ring-4 ring-green-300 ring-offset-2";
-                header.className = "bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0";
-                header.innerHTML = "✅ RESPOSTA CORRECTA";
+            let btnClicked = buttons[indexPicked];
+            btnClicked.classList.remove('opacity-50');
+            
+            let isCorrect = (indexPicked === gameData.correcta);
+
+            if(isCorrect) {
+                btnClicked.className = "interactive-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-md flex items-center gap-3 bg-green-500 ring-4 ring-green-200";
             } else {
-                btn.className = "kahoot-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-sm flex items-center gap-3 bg-red-500 ring-4 ring-red-300 ring-offset-2";
-                header.className = "bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0";
-                header.innerHTML = "❌ RESPOSTA INCORRECTA";
-                
-                // Mostrar a l'alumne quina era la bona (buscant la de l'array original)
-                const correctBtnIndex = chatHistory[chatHistory.length - 1].content.match(/"correcta":\s*(\d)/)?.[1];
-                if(correctBtnIndex !== undefined && buttons[correctBtnIndex]) {
-                    buttons[correctBtnIndex].style.opacity = "1";
-                    buttons[correctBtnIndex].classList.add('bg-green-500');
-                }
+                btnClicked.className = "interactive-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-md flex items-center gap-3 bg-red-500 ring-4 ring-red-200";
+                buttons[gameData.correcta].classList.remove('opacity-50');
+                buttons[gameData.correcta].classList.add('bg-green-100', 'border-green-400');
             }
-            
-            // Desem l'estat modificat del HTML al LocalStorage
             saveSession();
 
-            // Continuem amb la classe automàticament
-            let autoReply = isCorrect ? 
-                `He triat: "${textResponded}". És correcte! Avança al següent mini-concepte.` : 
-                `He triat: "${textResponded}". He fallat. Explica'm ràpid l'error i avança al següent concepte.`;
-            
+            let reply = isCorrect ? `He marcat "${textResponded}". Ho he encertat! Continua explicant el següent pas.` : `He marcat "${textResponded}" i era incorrecta. Aclareix-me per què i seguim.`;
             setTimeout(() => {
-                appendMessage('user', autoReply);
-                chatHistory.push({ role: 'user', content: autoReply });
+                appendMessage('user', reply);
+                chatHistory.push({ role: 'user', content: reply });
                 triggerAiResponse();
-            }, 800);
+            }, 1000);
         }
 
+        window.checkSchema = function(id) {
+            const container = document.getElementById(id);
+            const gameData = window.interactiveGames[id];
+            if(!gameData) return;
+
+            let allCorrect = true;
+            let wrongs = [];
+
+            gameData.buits.forEach((buit, i) => {
+                let inputEl = document.getElementById(`input_${id}_${i}`);
+                let val = inputEl.value.trim().toLowerCase();
+                let correctVal = buit.resposta.trim().toLowerCase();
+                
+                if(val === correctVal) {
+                    inputEl.classList.replace('border-slate-200', 'border-green-500');
+                    inputEl.classList.add('bg-green-50', 'text-green-700', 'font-bold');
+                    inputEl.disabled = true;
+                } else {
+                    allCorrect = false;
+                    wrongs.push(buit.context);
+                    inputEl.classList.add('border-red-500', 'bg-red-50');
+                    // Netejar al fer clic si ens equivoquem
+                    inputEl.onclick = () => { inputEl.value = ''; inputEl.classList.remove('border-red-500', 'bg-red-50'); }
+                }
+            });
+
+            const btn = document.getElementById(`btn_${id}`);
+
+            if(allCorrect) {
+                btn.className = "w-full bg-green-500 text-white font-bold py-3.5 rounded-xl shadow-md";
+                btn.innerHTML = "✅ Completat Perfectament!";
+                btn.disabled = true;
+                document.getElementById('header-'+id).innerHTML = "✅ ESQUEMA SUPERAT";
+                document.getElementById('header-'+id).className = "bg-green-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0";
+                saveSession();
+
+                setTimeout(() => {
+                    let msg = `He completat l'esquema de "${gameData.titol}" correctament. Ja pots continuar.`;
+                    appendMessage('user', msg);
+                    chatHistory.push({ role: 'user', content: msg });
+                    triggerAiResponse();
+                }, 1000);
+            } else {
+                gameData.attempts++;
+                
+                if(gameData.attempts >= 3) {
+                    // Més de 3 errors: resolem i guardem memòria per a la IA
+                    gameData.buits.forEach((buit, i) => {
+                        let inputEl = document.getElementById(`input_${id}_${i}`);
+                        inputEl.value = buit.resposta;
+                        inputEl.className = "schema-input border-2 border-orange-400 bg-orange-50 text-orange-800 rounded-xl px-4 py-2 text-sm flex-1 font-bold outline-none text-center sm:text-left transition shadow-inner";
+                        inputEl.disabled = true;
+                    });
+                    btn.className = "w-full bg-slate-300 text-slate-600 font-bold py-3.5 rounded-xl";
+                    btn.innerHTML = "Has superat els intents. Solució mostrada.";
+                    btn.disabled = true;
+                    saveSession();
+
+                    setTimeout(() => {
+                        let msg = `He fallat l'esquema sobre "${gameData.titol}" 3 vegades. Guarda A LA TEVA MEMÒRIA INTERNA que m'has de tornar a fer repassar aquests conceptes més endavant: ${wrongs.join(', ')}. Ara explica'm on he fallat.`;
+                        appendMessage('user', msg);
+                        chatHistory.push({ role: 'user', content: msg });
+                        triggerAiResponse();
+                    }, 1500);
+
+                } else {
+                    // Menys de 3 errors, avisem
+                    btn.innerHTML = `Comprovar Respostes (Intent ${gameData.attempts}/3)`;
+                    Swal.fire({
+                        title: 'Ups!',
+                        text: `Tots els camps marcats en vermell són incorrectes. Et queden ${3 - gameData.attempts} intents!`,
+                        icon: 'warning',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            }
+        }
+
+        // =========================================================================
+        // PINTAR MISSATGES AL XAT
+        // =========================================================================
         function appendMessage(sender, text) {
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
@@ -561,7 +603,7 @@
                 div.innerHTML = `<div class="bg-slate-800 text-white px-5 py-3.5 rounded-3xl rounded-tr-sm max-w-[85%] text-sm shadow-sm">${formatMessage(text)}</div>`;
             } else {
                 div.className = "flex justify-start gap-4 w-full mb-4";
-                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div><div class="bg-white border border-slate-200 text-slate-800 px-6 py-5 rounded-3xl rounded-tl-sm max-w-[95%] shadow-md w-full overflow-hidden"><div class="prose prose-sm md:prose-base prose-slate max-w-none">${formatMessage(text)}</div></div>`;
+                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div><div class="bg-white border border-slate-200 text-slate-800 px-6 py-5 rounded-3xl rounded-tl-sm max-w-[95%] shadow-md w-full overflow-hidden relative"><div class="prose prose-sm md:prose-base prose-slate max-w-none">${formatMessage(text)}</div></div>`;
             }
             box.appendChild(div);
             setTimeout(() => { box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' }); }, 100);
