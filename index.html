@@ -135,7 +135,7 @@
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-slate-50"></div>
             <div class="p-4 bg-white border-t border-slate-200 relative z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
                 <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden">
-                    <input type="text" id="chat-input" placeholder="Escriu 'Ho he entès', fes una pregunta..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
+                    <input type="text" id="chat-input" placeholder="Pregunta algun dubte..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
                     <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -345,7 +345,7 @@
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
 
-            studentContextStr = `L'alumne ha tret ${score}/5 (${level}) al test. L'alumne no repassarà teoria nova fins que resolgui els jocs que li posis.`;
+            studentContextStr = `L'alumne ha tret ${score}/5 (${level}) al test.`;
 
             document.getElementById('chat-messages').innerHTML = `
                 <div class="w-full flex justify-center my-6" id="welcome-card">
@@ -364,7 +364,7 @@
         window.startTeaching = function() {
             document.getElementById('welcome-card').style.display = 'none';
             document.getElementById('chat-form').classList.remove('hidden');
-            const prompt = "Comença amb el primer concepte curt del calendari. Afegeix una imatge o diagrama i finalitza obligatòriament amb un Esquema o Kahoot.";
+            const prompt = "Comença amb el primer concepte curt del calendari. Afegeix un botó d'imatge i finalitza obligatòriament amb un Esquema o Kahoot.";
             appendMessage('user', "Comencem la primera sessió!");
             chatHistory.push({ role: 'user', content: prompt });
             triggerAiResponse();
@@ -402,12 +402,9 @@
             }
         }
 
-        // =========================================================================
-        // PETICIÓ D'IMATGES EN SEGON PLA
-        // =========================================================================
         window.fetchImage = async function(btn, prompt) {
             const container = btn.parentElement;
-            btn.innerHTML = `⏳ Generant disseny (pot trigar uns segons)...`;
+            btn.innerHTML = `⏳ Generant imatge (Pot trigar uns 10-15s)...`;
             btn.disabled = true;
             btn.classList.add('opacity-70');
             
@@ -422,22 +419,19 @@
                 container.innerHTML = `<img src="${data.image}" alt="Imatge generada" class="w-full max-w-lg mx-auto block rounded-2xl shadow-md border border-slate-200 cursor-zoom-in hover:opacity-90 transition" onclick="openLightbox(this.src)" title="Fes clic per ampliar">`;
                 saveSession(); 
             } catch (err) {
-                btn.innerHTML = `❌ Error generant la imatge`;
+                btn.innerHTML = `❌ Servidor d'imatges ple. Torna a intentar-ho.`;
                 btn.classList.replace('bg-indigo-50', 'bg-red-50');
                 btn.classList.replace('text-indigo-700', 'text-red-600');
+                btn.disabled = false;
+                btn.classList.remove('opacity-70');
             }
         };
 
-        // =========================================================================
-        // PARSEJADOR I RENDERITZAT (MARKDOWN + IMATGES + KAHOOT + ESQUEMES)
-        // =========================================================================
-        
         function formatMessage(text) {
             if(!text) return "";
             let idCounter = 0;
             const interactiveBlocks = [];
             
-            // 1. Evitar que Marked trenqui l'HTML canviant el codi per arroves @@@
             text = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let k = JSON.parse(p1.trim());
@@ -465,7 +459,6 @@
 
             let htmlContent = marked.parse(text);
             
-            // Reemplaçar l'etiqueta especial [IMG: "prompt"] pel Botó Generador
             htmlContent = htmlContent.replace(/\[IMG:\s*"(.*?)"\]/gi, function(match, prompt) {
                 let safePrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 return `<div class="image-container my-4 text-center">
@@ -475,7 +468,6 @@
                 </div>`;
             });
 
-            // Substituir l'@@@BLOCK_X@@@ pels formularis en HTML
             for (let i = 0; i < interactiveBlocks.length; i++) {
                 let block = interactiveBlocks[i];
                 let safeData = encodeURIComponent(JSON.stringify(block.data));
@@ -515,16 +507,11 @@
                         <button id="btn_${block.id}" onclick="checkSchema('${block.id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">Comprovar i Continuar</button>
                     </div>`;
                 }
-                
-                // Finalment fem el replace per col·locar la interfície on toca
                 htmlContent = htmlContent.replace(`@@@BLOCK_${i}@@@`, uiCode);
             }
             return htmlContent;
         }
 
-        // =========================================================================
-        // ACCIONS DELS JOCS
-        // =========================================================================
         window.playKahoot = function(id, indexPicked, textResponded) {
             const container = document.getElementById(id);
             const buttons = container.querySelectorAll('button');
@@ -542,7 +529,7 @@
             }
             saveSession();
 
-            let reply = indexPicked === gameData.correcta ? `He marcat "${textResponded}". Ho he encertat! Continua explicant.` : `He marcat "${textResponded}" i era incorrecta. Aclareix-me l'error i seguim.`;
+            let reply = indexPicked === gameData.correcta ? `He marcat "${textResponded}". Ho he encertat! Continua explicant.` : `He marcat "${textResponded}" i era incorrecta. Aclareix-me l'error (NO posis cap joc nou encara) i seguim.`;
             setTimeout(() => {
                 appendMessage('user', reply);
                 chatHistory.push({ role: 'user', content: reply });
@@ -600,11 +587,11 @@
                     btn.innerHTML = "Solució mostrada (Límit d'intents)";
                     btn.disabled = true;
                     
-                    studentContextStr += `\nALERTA: L'alumne ha fallat 3 vegades els conceptes: ${wrongs.join(', ')}. Recorda-ho per repassar un altre dia.`;
+                    studentContextStr += `\nALERTA: L'alumne ha fallat 3 vegades l'esquema de: ${wrongs.join(', ')}. Recorda-ho per repassar un altre dia.`;
                     saveSession();
 
                     setTimeout(() => {
-                        let msg = `He fallat l'esquema 3 vegades. Guarda't a la teva memòria interna que he de repassar això. Explica'm per què m'he equivocat i seguim.`;
+                        let msg = `He fallat l'esquema 3 vegades. Guarda-t'ho per fer-me repassar això un altre dia. Ara explica'm per què m'he equivocat (sense posar cap joc nou encara) i seguim.`;
                         appendMessage('user', msg);
                         chatHistory.push({ role: 'user', content: msg });
                         triggerAiResponse();
@@ -615,9 +602,6 @@
             }
         }
 
-        // =========================================================================
-        // DOM APPENDS
-        // =========================================================================
         function appendMessage(sender, text) {
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
