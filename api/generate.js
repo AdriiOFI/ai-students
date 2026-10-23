@@ -9,24 +9,23 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ error: 'Falta la clau GROQ_API_KEY a Vercel.' });
         }
 
-        const { action, pdfText, instructions, chatHistory, daysLeft, currentDate, availableDays } = req.body;
+        const { action, pdfText, instructions, chatHistory, daysLeft, currentDate, availableDays, studentContext } = req.body;
 
         // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
         if (action === 'prepare_study') {
             const systemPrompt = `Ets un tutor d'estudi avançat. T'han pujat apunts. Avui és ${currentDate}. L'alumne té disponibilitat per estudiar els següents dies de la setmana: ${availableDays}. Faltan ${daysLeft} dies per l'examen.
             La teva missió és doble:
-            1. Crear un calendari d'estudi. Assigna una data o dia real que encaixi dins dels dies de la setmana disponibles. Posa-li un títol curt al tema de cada dia.
+            1. Crear un calendari d'estudi assignant dates reals que encaixin dins dels dies disponibles. Posa un títol curt al tema de cada dia.
             2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari.
             
             Apunts: ${pdfText || 'Temari sobre: ' + instructions}
             
-            REGLA CRÍTICA: RETORNA ÚNICAMENT UN OBJECTE JSON VÀLID. Utilitza SEMPRE cometes dobles (") per les claus i valors, MAI cometes simples (').
+            REGLA CRÍTICA: RETORNA ÚNICAMENT UN OBJECTE JSON VÀLID. Utilitza SEMPRE cometes dobles (").
             
             FORMAT EXACTE OBLIGATORI:
             {
               "calendari_estudi": [
-                { "dia_real": "Dilluns 26 d'Octubre", "tema": "Fonaments i introducció" },
-                { "dia_real": "Dimecres 28 d'Octubre", "tema": "Conceptes avançats" }
+                { "dia_real": "Dilluns 26 d'Octubre", "tema": "Fonaments i introducció" }
               ],
               "preguntes": [
                 {
@@ -85,19 +84,25 @@ module.exports = async function handler(req, res) {
 
         // ACCIÓ 2: XAT CONTINU AMB LA IA
         if (action === 'chat') {
+            // El prompt mestre concentra tota la memòria en un sol missatge de sistema per evitar crashejos
             const masterSystemPrompt = {
                 role: "system",
                 content: `Ets AIStudents, un tutor d'estudi d'intel·ligència artificial.
                 
-                MEMÒRIA: Llegeix l'historial del xat. Recorda la nota inicial de l'alumne i els apunts que ha pujat.
+                MEMÒRIA ACTUAL DE L'ALUMNE:
+                ${studentContext}
+                APUNTS/TEMARI:
+                ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts físics, guia't per les instruccions generals."}
                 
-                ESTIL:
-                1. Utilitza formats Markdown (negretes, llistes, subtítols) per fer resums visuals i atractius. L'aplicació ho suporta nativament.
-                2. Adapta la dificultat al nivell que l'alumne ha demostrat.
+                ESTIL D'ENSENYAMENT (MOLT IMPORTANT):
+                1. Mnemotècnia: Quan expliquis conceptes teòrics, xifres o noms complexos, INVENTA regles mnemotècniques o trucs divertits (ex: SMTP = Send Mail To People, port 25 perquè és l'edat d'un adult).
+                2. Imatges Visuals: Pots generar imatges per ajudar-lo a recordar. Per inserir una imatge utilitza EXCLUSIVAMENT aquest codi Markdown:
+                   ![Descripció](https://image.pollinations.ai/prompt/descripcio-en-angles-separada-per-guions?width=800&height=400&nologo=true)
+                   (Substitueix la URL pel prompt de la imatge que vulguis, sempre en anglès i amb guions).
+                3. Guia pel calendari: Segueix l'ordre del calendari d'estudi. No expliquis tot el temari de cop.
                 
                 JOC KAHOOT: 
-                Quan l'alumne et demani "Jugar a Kahoot", fer un joc de preguntes o quan vulguis fer-li una prova interactiva, HAS D'INSERIR AQUEST BLOC EXACTE.
-                
+                Quan l'alumne et demani "Jugar a Kahoot" o vulguis posar-lo a prova, INSEREIX AQUEST BLOC EXACTE:
                 \`\`\`kahoot
                 {
                   "pregunta": "Escriu la pregunta aquí",
