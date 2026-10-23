@@ -11,7 +11,30 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ error: 'Falta la clau GROQ_API_KEY a Vercel.' });
         }
 
-        const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext } = req.body;
+        const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext, prompt } = req.body;
+
+        // ACCIÓ: GENERAR LA IMATGE A DEMANDA (Quan l'alumne fa clic al botó)
+        if (action === 'image') {
+            if (!hfApiKey) return res.status(200).json({ error: "Falta configurar HF_API_KEY a Vercel." });
+            try {
+                const hfRes = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
+                    headers: { "Authorization": `Bearer ${hfApiKey}`, "Content-Type": "application/json" },
+                    method: "POST",
+                    body: JSON.stringify({ inputs: prompt })
+                });
+                
+                if (hfRes.ok) {
+                    const arrayBuffer = await hfRes.arrayBuffer();
+                    const base64 = Buffer.from(arrayBuffer).toString('base64');
+                    const mimeType = hfRes.headers.get('content-type') || 'image/jpeg';
+                    return res.status(200).json({ image: `data:${mimeType};base64,${base64}` });
+                } else {
+                    return res.status(200).json({ error: "El servidor gràfic de Hugging Face està ocupat." });
+                }
+            } catch (e) {
+                return res.status(200).json({ error: "Error de connexió en generar la imatge." });
+            }
+        }
 
         // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
         if (action === 'prepare_study') {
@@ -96,15 +119,15 @@ module.exports = async function handler(req, res) {
                 
                 MÈTODE D'ENSENYAMENT (MICRO-LEARNING):
                 1. POC A POC: Explica només UN concepte curt cada vegada.
-                2. NATURALITAT I TRUCS: Explica els trucs mnemotècnics (regles per memoritzar) de forma natural integrats al text, SENSE dir frases com "Aquí tens un truc mnemotècnic".
-                3. IMATGES: Per il·lustrar conceptes, pots generar esquemes visuals demanant-ho EXACTAMENT amb aquest format, i jo m'encarrego de dibuixar-ho:
-                   [IMG: "clean educational diagram about [topic in english], white background, minimal"]
-                4. ESPERA: Després d'explicar el concepte i posar el joc, CALLA. No avancis temari fins que l'alumne resolgui el joc o t'ho demani.
+                2. NATURALITAT: Tens COMPLETAMENT PROHIBIT dir "Aquí tens un truc mnemotècnic" o "Et poso un truc". Integra la regla per memoritzar directament a l'explicació de forma conversacional i absolutament natural.
+                3. IMATGES: Per donar-li suport visual, genera imatges o esquemes. Utilitza EXACTAMENT aquest text (amb els claudàtors inclosos) perquè el sistema dibuixi un botó, i posa la descripció EN ANGLÈS i separada per guions.
+                   [IMG: "clean-educational-diagram-about-topic-white-background-minimal"]
+                4. ESPERA: Després d'explicar el concepte i posar el joc, CALLA. No avancis temari.
                 
                 JOCS INTERACTIUS (OBLIGATORI POSAR-NE UN AL FINAL DE CADA EXPLICACIÓ):
-                Insereix un d'aquests blocs perquè el sistema creï la interfície interactiva. L'alumne no pot avançar sense contestar-los.
+                L'alumne no pot avançar sense contestar-los. Utilitza UN d'aquests dos blocs exactes de Markdown:
 
-                OPCIÓ A (Esquema conceptual de caixes i fletxes):
+                OPCIÓ A (Esquema conceptual de caixes i fletxes on ha de deduir les paraules):
                 \`\`\`schema
                 {
                   "titol": "Completa el diagrama",
@@ -155,41 +178,7 @@ module.exports = async function handler(req, res) {
             }
 
             const data = await response.json();
-            let replyText = data.choices[0].message.content;
-
-            // PROCESSADOR D'IMATGES VIA HUGGING FACE FLUX
-            const imgRegex = /\[IMG:\s*"(.*?)"\]/gi;
-            let match;
-            
-            while ((match = imgRegex.exec(replyText)) !== null) {
-                const imgPrompt = match[1];
-                
-                if (hfApiKey) {
-                    try {
-                        const hfRes = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
-                            headers: { "Authorization": `Bearer ${hfApiKey}`, "Content-Type": "application/json" },
-                            method: "POST",
-                            body: JSON.stringify({ inputs: imgPrompt })
-                        });
-                        
-                        if (hfRes.ok) {
-                            const arrayBuffer = await hfRes.arrayBuffer();
-                            const base64 = Buffer.from(arrayBuffer).toString('base64');
-                            const mimeType = hfRes.headers.get('content-type') || 'image/jpeg';
-                            const imgMarkdown = `\n\n![Esquema visual](data:${mimeType};base64,${base64})\n\n`;
-                            replyText = replyText.replace(match[0], imgMarkdown);
-                        } else {
-                            replyText = replyText.replace(match[0], "\n*(Error generant imatge: El servidor gràfic està ocupat)*\n");
-                        }
-                    } catch (e) {
-                        replyText = replyText.replace(match[0], "\n*(Error carregant la imatge)*\n");
-                    }
-                } else {
-                    replyText = replyText.replace(match[0], "\n*(Falta configurar HF_API_KEY)*\n");
-                }
-            }
-
-            return res.status(200).json({ reply: replyText });
+            return res.status(200).json({ reply: data.choices[0].message.content });
         }
 
         return res.status(200).json({ error: 'Acció no reconeguda.' });
