@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIStudents - Tutor Intel·ligent</title>
-    <!-- Tailwind + Plugin de Tipografia per estilitzar l'HTML generat per la IA -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <!-- Llibreria per convertir Markdown a HTML amb estil -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } }
@@ -22,6 +19,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .kahoot-btn { transition: all 0.15s ease-in-out; }
         .kahoot-btn:active { transform: scale(0.97); }
+        .day-checkbox:checked + div { background-color: #eff6ff; border-color: #3b82f6; color: #2563eb; font-weight: bold; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden antialiased font-sans">
@@ -57,7 +55,7 @@
             <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-xl p-8 md:p-12">
                 <div class="text-center mb-8">
                     <h1 class="text-3xl font-bold text-slate-800 mb-2">Preparació de l'Estudi</h1>
-                    <p class="text-slate-500 text-sm">Configura el temari, pujant els teus apunts i marcant la data de l'examen.</p>
+                    <p class="text-slate-500 text-sm">Configura el temari, data d'examen i disponibilitat.</p>
                 </div>
 
                 <div class="space-y-6">
@@ -68,7 +66,20 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">📚 Temari (Opcional: Puja els teus PDFs)</label>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">🗓️ Dies disponibles per estudiar</label>
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2" id="available-days">
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dilluns" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dilluns</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dimarts" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dimarts</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dimecres" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dimecres</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dijous" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dijous</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="Divendres" class="day-checkbox hidden" checked><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Divendres</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="Dissabte" class="day-checkbox hidden"><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Dissabte</div></label>
+                            <label class="cursor-pointer text-center"><input type="checkbox" value="Diumenge" class="day-checkbox hidden"><div class="py-2 border border-slate-200 rounded-xl text-sm transition">Diumenge</div></label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">📚 Temari (Puja els teus PDFs)</label>
                         <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition relative cursor-pointer group">
                             <input type="file" id="pdf-upload" accept=".pdf" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                             <div class="flex flex-col items-center gap-2 pointer-events-none">
@@ -80,8 +91,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">✍️ Instruccions per a la IA</label>
-                        <textarea id="extra-comments" rows="2" placeholder="Ex: Curs de batxillerat, vull repassar història, sigues estricte..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">✍️ Instruccions addicionals</label>
+                        <textarea id="extra-comments" rows="2" placeholder="Ex: Curs de batxillerat, sigues estricte..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition resize-none"></textarea>
                     </div>
 
                     <button id="btn-start" onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
@@ -95,13 +106,11 @@
         <!-- VISTA 2: CALENDARI I TEST DE NIVELL -->
         <div id="quiz-view" class="hidden flex-1 overflow-y-auto items-start justify-center p-6 py-10">
             <div class="w-full max-w-4xl space-y-6">
-                
                 <!-- Calendari d'Estudi -->
                 <div class="bg-white border border-slate-200 rounded-3xl shadow-lg p-8">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">📅 El teu Pla d'Estudi</h2>
                         <button onclick="exportCalendarICS()" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-xl text-sm transition flex items-center gap-2 shadow-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Exportar a Calendar
                         </button>
                     </div>
@@ -124,6 +133,17 @@
 
         <!-- VISTA 3: XAT DE LA IA -->
         <div id="chat-view" class="hidden flex-1 flex-col h-full bg-white relative">
+            
+            <!-- Barra superior del Xat per obrir el calendari -->
+            <div class="p-4 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-20">
+                <div class="font-bold text-slate-800 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Tutor Virtual
+                </div>
+                <button onclick="showCalendarModal()" class="text-sm bg-slate-100 text-slate-700 font-semibold px-4 py-2 rounded-xl hover:bg-slate-200 transition flex items-center gap-2">
+                    📅 Veure Calendari
+                </button>
+            </div>
+
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6"></div>
 
             <div class="p-4 bg-white border-t border-slate-200 relative z-20">
@@ -147,22 +167,19 @@
         let studyDaysLeft = 0;
         let isPdfProcessing = false;
 
-        // Recuperar sessió de localStorage
         window.onload = () => {
             const savedSession = localStorage.getItem('aiStudentsSession');
             if (savedSession) {
                 const data = JSON.parse(savedSession);
                 chatHistory = data.history;
+                generatedCalendarArray = data.calendar || [];
                 document.getElementById('chat-messages').innerHTML = data.html;
                 
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('chat-view').classList.remove('hidden');
                 document.getElementById('chat-view').classList.add('flex');
                 document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-medium border border-blue-100">Sessió Recuperada</div>`;
-                
-                // Fer scroll cap a baix
-                const box = document.getElementById('chat-messages');
-                box.scrollTop = box.scrollHeight;
+                document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
             }
         };
 
@@ -174,7 +191,8 @@
         function saveSession() {
             localStorage.setItem('aiStudentsSession', JSON.stringify({
                 history: chatHistory,
-                html: document.getElementById('chat-messages').innerHTML
+                html: document.getElementById('chat-messages').innerHTML,
+                calendar: generatedCalendarArray
             }));
         }
 
@@ -183,7 +201,7 @@
             studyDaysLeft = diffDays;
             const marker = document.getElementById('days-left-marker');
             marker.classList.remove('hidden');
-            if (diffDays > 0) marker.innerHTML = `⏳ Tens <span class="text-blue-600 font-bold">${diffDays} dies</span> disponibles per estudiar.`;
+            if (diffDays > 0) marker.innerHTML = `⏳ Tens <span class="text-blue-600 font-bold">${diffDays} dies</span> fins l'examen.`;
             else if (diffDays === 0) marker.innerHTML = `⚠️ <span class="text-orange-500 font-bold">L'examen és avui!</span>`;
             else marker.innerHTML = `❌ Data passada.`;
         });
@@ -194,10 +212,9 @@
             
             isPdfProcessing = true;
             document.getElementById('btn-start').disabled = true;
-            document.getElementById('btn-start').classList.add('opacity-50');
             
             const status = document.getElementById('pdf-status');
-            status.innerHTML = `<span class="text-blue-500 font-semibold">⏳ Llegint text dels PDFs... Si us plau, espera.</span>`;
+            status.innerHTML = `⏳ Llegint text dels PDFs...`;
             
             for(let file of files) {
                 try {
@@ -208,14 +225,13 @@
                         fullText += textContent.items.map(item => item.str).join(" ") + "\n";
                     }
                     uploadedPDFs.push({ id: 'pdf_' + Date.now() + Math.random(), name: file.name, text: fullText.trim() });
-                } catch (err) { console.error("Error PDF", err); }
+                } catch (err) { console.error(err); }
             }
             
             updatePdfListAndText();
-            status.innerHTML = `<span class="text-slate-600 text-sm font-medium">Pots afegir més PDFs si vols.</span>`;
+            status.innerHTML = `Pots afegir més PDFs si vols.`;
             isPdfProcessing = false;
             document.getElementById('btn-start').disabled = false;
-            document.getElementById('btn-start').classList.remove('opacity-50');
             e.target.value = ''; 
         });
 
@@ -225,41 +241,41 @@
             uploadedPDFs.forEach(pdf => {
                 list.innerHTML += `
                     <li class="flex items-center justify-between bg-slate-50 border border-slate-200 p-3 rounded-xl shadow-sm">
-                        <span class="text-sm text-slate-700 font-medium truncate flex-1 flex items-center gap-2">📄 ${pdf.name}</span>
-                        <button onclick="removePdf('${pdf.id}')" class="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-lg transitiom">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
+                        <span class="text-sm text-slate-700 font-medium truncate flex-1">📄 ${pdf.name}</span>
+                        <button onclick="removePdf('${pdf.id}')" class="text-red-500 p-2 rounded-lg">❌</button>
                     </li>`;
             });
             extractedText = uploadedPDFs.map(p => p.text).join("\n\n---\n\n");
         }
 
-        function removePdf(id) {
-            uploadedPDFs = uploadedPDFs.filter(p => p.id !== id);
-            updatePdfListAndText();
-        }
+        function removePdf(id) { uploadedPDFs = uploadedPDFs.filter(p => p.id !== id); updatePdfListAndText(); }
 
         async function proceedToNextStep() {
             if (isPdfProcessing) return;
+            
+            const availableDaysInputs = Array.from(document.querySelectorAll('.day-checkbox:checked')).map(el => el.value);
+            if(availableDaysInputs.length === 0) {
+                Swal.fire('Atenció', 'Has de seleccionar almenys un dia disponible per estudiar.', 'warning');
+                return;
+            }
+            const availableDays = availableDaysInputs.join(', ');
+
             if (uploadedPDFs.length === 0) {
-                // Sense PDF
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('chat-view').classList.remove('hidden');
                 document.getElementById('chat-view').classList.add('flex');
                 
                 const comments = document.getElementById('extra-comments').value;
-                chatHistory.push({ role: "system", content: `L'usuari no ha pujat cap PDF. Dies restants: ${studyDaysLeft}. Instruccions: ${comments}.` });
-
-                const initialMsg = "Hola! Veig que no has pujat cap PDF. **Explica'm detalladament què has d'estudiar** per poder dissenyar-te un pla, fer-te preguntes i ajudar-te a preparar l'examen.";
-                appendMessage('ai', initialMsg);
-                chatHistory.push({ role: 'assistant', content: initialMsg });
+                chatHistory.push({ role: "system", content: `L'usuari no ha pujat cap PDF. Dies restants: ${studyDaysLeft}. Dies que pot estudiar: ${availableDays}. Instruccions: ${comments}.` });
+                appendMessage('ai', "Veig que no has pujat cap PDF. **Explica'm què has d'estudiar** per dissenyar el calendari i ajudar-te.");
+                saveSession();
             } else {
-                generatePlanAndQuiz();
+                generatePlanAndQuiz(availableDays);
             }
         }
 
-        async function generatePlanAndQuiz() {
-            Swal.fire({ title: 'Planificant l\'Estudi...', text: 'La IA està llegint els apunts i generant el teu calendari i test...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        async function generatePlanAndQuiz(availableDays) {
+            Swal.fire({ title: 'Planificant l\'Estudi...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch('/api/generate', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -268,7 +284,8 @@
                         pdfText: extractedText.substring(0, 4500),
                         instructions: document.getElementById('extra-comments').value,
                         daysLeft: studyDaysLeft,
-                        currentDate: new Date().toLocaleDateString()
+                        availableDays: availableDays,
+                        currentDate: new Date().toLocaleDateString('ca-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
                     })
                 });
                 const data = await res.json();
@@ -284,27 +301,39 @@
                 document.getElementById('quiz-view').classList.remove('hidden');
                 document.getElementById('quiz-view').classList.add('flex');
                 Swal.close();
-            } catch (err) {
-                Swal.fire('Error Tècnic', err.message, 'error');
-            }
+            } catch (err) { Swal.fire('Error Tècnic', err.message, 'error'); }
         }
 
         function renderCalendar() {
             const container = document.getElementById('calendar-container');
             container.innerHTML = '';
-            if(generatedCalendarArray.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-slate-500 text-sm p-4 bg-slate-50 rounded-xl">No s'ha pogut generar l'estructura del calendari.</div>`;
-                return;
-            }
+            if(generatedCalendarArray.length === 0) return;
             generatedCalendarArray.forEach(item => {
                 container.innerHTML += `
                     <div class="bg-blue-50/50 border border-blue-100 p-5 rounded-2xl flex flex-col justify-center shadow-sm">
-                        <span class="text-xs font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            Dia ${item.dia}
-                        </span>
+                        <span class="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">${item.dia_real}</span>
                         <span class="text-sm font-semibold text-slate-700 leading-snug">${item.tema}</span>
                     </div>`;
+            });
+        }
+
+        function showCalendarModal() {
+            if (generatedCalendarArray.length === 0) {
+                Swal.fire('Info', 'No hi ha cap calendari generat encara.', 'info');
+                return;
+            }
+            let htmlContent = '<div class="grid grid-cols-1 gap-3 mt-4 text-left">';
+            generatedCalendarArray.forEach(item => {
+                htmlContent += `<div class="p-3 bg-slate-50 border border-slate-200 rounded-lg"><div class="text-xs font-bold text-blue-600 mb-1">${item.dia_real}</div><div class="text-sm text-slate-700">${item.tema}</div></div>`;
+            });
+            htmlContent += '</div>';
+            
+            Swal.fire({
+                title: '📅 El teu Pla d\'Estudi',
+                html: htmlContent,
+                showCloseButton: true,
+                confirmButtonText: 'Tancar',
+                confirmButtonColor: '#2563eb'
             });
         }
 
@@ -318,19 +347,14 @@
                 eventDate.setDate(startDate.getDate() + index);
                 let dateStr = eventDate.toISOString().replace(/-|:|\.\d+/g, "").substring(0, 8);
                 
-                icsContent += "BEGIN:VEVENT\n";
-                icsContent += `DTSTART;VALUE=DATE:${dateStr}\n`;
-                icsContent += `DTEND;VALUE=DATE:${dateStr}\n`;
-                icsContent += `SUMMARY:Estudiar: ${item.tema}\n`;
-                icsContent += `DESCRIPTION:Sessió d'estudi planificada per AIStudents Tutor.\\nRecorda utilitzar la plataforma per resoldre dubtes d'aquest tema.\n`;
-                icsContent += "END:VEVENT\n";
+                icsContent += "BEGIN:VEVENT\nDTSTART;VALUE=DATE:" + dateStr + "\nDTEND;VALUE=DATE:" + dateStr + "\nSUMMARY:Estudiar: " + item.tema + "\nDESCRIPTION:Sessió AIStudents.\\n\nEND:VEVENT\n";
             });
             icsContent += "END:VCALENDAR";
             
             const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.setAttribute('download', 'Pla_Estudi_AIStudents.ics');
+            link.setAttribute('download', 'Pla_Estudi.ics');
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -342,13 +366,10 @@
             currentQuizData.forEach((q, idx) => {
                 container.innerHTML += `
                     <div class="p-6 bg-slate-50 border border-slate-200 rounded-3xl shadow-sm">
-                        <h3 class="font-bold text-slate-800 text-lg mb-4 flex gap-2">
-                            <span class="text-blue-600 bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center shrink-0">${idx + 1}</span> 
-                            <span class="pt-1">${q.pregunta}</span>
-                        </h3>
+                        <h3 class="font-bold text-slate-800 text-lg mb-4 flex gap-2"><span class="text-blue-600 bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center shrink-0">${idx + 1}</span> <span>${q.pregunta}</span></h3>
                         <div class="space-y-3 pl-10">
                             ${q.opcions.map((opt) => `
-                                <label class="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition group shadow-sm">
+                                <label class="flex items-center gap-3 p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
                                     <input type="radio" name="q_${idx}" value="${opt.replace(/"/g, '&quot;')}" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300">
                                     <span class="text-sm font-medium text-slate-700">${opt}</span>
                                 </label>`).join('')}
@@ -361,10 +382,8 @@
             let correct = 0;
             currentQuizData.forEach((q, idx) => {
                 const sel = document.querySelector(`input[name="q_${idx}"]:checked`);
-                // Comparació neta per evitar problemes d'espais
                 if (sel && sel.value.trim().toLowerCase() === q.resposta_correcta.trim().toLowerCase()) correct++;
             });
-
             let level = correct <= 2 ? "Nivell Inicial" : correct <= 4 ? "Nivell Intermedi" : "Nivell Avançat";
             Swal.fire({ title: `Nota: ${correct}/5`, text: `S'ha establert el teu punt de partida: ${level}`, icon: correct >= 3 ? 'success' : 'info', confirmButtonText: 'Anar al Xat', confirmButtonColor: '#2563eb' })
             .then(() => startChatPhase(correct, level));
@@ -375,21 +394,15 @@
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
 
-            document.getElementById('history-placeholder').innerHTML = `<div class="p-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm font-bold border border-blue-200 shadow-sm text-center">Nivell Establert: ${score}/5</div>`;
-
-            const systemContext = `Memòria: Dies examen: ${studyDaysLeft}. Nivell test: ${score}/5 (${level}). Apunts al context.`;
+            const systemContext = `Memòria: Dies examen: ${studyDaysLeft}. Nivell test: ${score}/5 (${level}).`;
             chatHistory.push({ role: "system", content: systemContext });
 
-            const initialMsg = `He desat el teu **Calendari d'Estudi** a la meva memòria. Pel que fa al test de diagnòstic, has demostrat tenir un **${level}** (${score}/5). \n\nJa tinc els apunts preparats. Per on comencem? \n- Puc fer-te esquemes resumits\n- Explicar-te conceptes clau\n- O escriu **"Jugar a Kahoot"** per posar-te a prova!`;
-            
+            const initialMsg = `He desat el teu **Calendari d'Estudi** (el pots consultar al botó de dalt). Tens un **${level}** al test. Per on comencem? Demana'm esquemes o jugar a un Kahoot.`;
             appendMessage('ai', initialMsg);
             chatHistory.push({ role: 'assistant', content: initialMsg });
             saveSession();
         }
 
-        // =========================================================================
-        // ENVIAMENT DE MISSATGES AL XAT
-        // =========================================================================
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = document.getElementById('chat-input');
@@ -404,10 +417,7 @@
             appendLoading(loadingId);
 
             try {
-                const res = await fetch('/api/generate', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'chat', chatHistory: chatHistory })
-                });
+                const res = await fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat', chatHistory: chatHistory }) });
                 document.getElementById(loadingId).remove();
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
@@ -426,11 +436,9 @@
         // =========================================================================
         function formatMessage(text) {
             if(!text) return "";
-            
             let idCounter = 0;
             const kahoots = [];
             
-            // 1. Primer, interceptem i guardem els blocs Kahoot perquè el Markdown no els trenqui
             let preParsedText = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let k = JSON.parse(p1.trim());
@@ -438,130 +446,64 @@
                     kahoots[idCounter] = k;
                     idCounter++;
                     return placeholder;
-                } catch(e) {
-                    console.error("Error interpretant JSON Kahoot:", e);
-                    return "<p class='text-red-500 font-bold bg-red-50 p-2 rounded'>[Error carregant la pregunta interactiva]</p>";
-                }
+                } catch(e) { return "<p class='text-red-500 bg-red-50 p-2'>[Error Kahoot]</p>"; }
             });
 
-            // 2. Passem el text per Marked.js per convertir Markdown a HTML
             let htmlContent = marked.parse(preParsedText);
 
-            // 3. Tornem a injectar els Kahoots amb els botons de colors renderitzats
             for (let i = 0; i < kahoots.length; i++) {
                 let k = kahoots[i];
                 let uniqueId = 'kahoot_' + Date.now() + i;
-                
-                let colors = [
-                    'bg-red-500 hover:bg-red-600 ring-red-400', 
-                    'bg-blue-500 hover:bg-blue-600 ring-blue-400', 
-                    'bg-yellow-500 hover:bg-yellow-600 ring-yellow-400', 
-                    'bg-green-500 hover:bg-green-600 ring-green-400'
-                ];
+                let colors = ['bg-red-500 hover:bg-red-600', 'bg-blue-500 hover:bg-blue-600', 'bg-yellow-500 hover:bg-yellow-600', 'bg-green-500 hover:bg-green-600'];
                 let shapes = ['▲', '◆', '●', '■'];
 
                 let buttonsHtml = k.opcions.map((opcio, index) => {
-                    let isCorrect = (index === k.correcta);
                     let safeOpcio = opcio.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    return `
-                    <button onclick="handleKahootClick(this, '${uniqueId}', ${isCorrect}, '${safeOpcio}')" 
-                            class="kahoot-btn w-full text-left text-white font-bold p-4 rounded-2xl shadow-md flex items-center gap-4 ${colors[index % 4]} focus:outline-none">
-                        <span class="bg-black/20 w-8 h-8 flex items-center justify-center rounded-lg text-lg shrink-0">${shapes[index % 4]}</span>
-                        <span class="flex-1 leading-snug">${opcio}</span>
-                    </button>`;
+                    return `<button onclick="handleKahootClick(this, '${uniqueId}', ${index === k.correcta}, '${safeOpcio}')" class="kahoot-btn w-full text-left text-white font-bold p-4 rounded-2xl shadow-md flex items-center gap-4 ${colors[index % 4]}"><span class="bg-black/20 w-8 h-8 flex items-center justify-center rounded-lg text-lg">${shapes[index % 4]}</span><span>${opcio}</span></button>`;
                 }).join('');
 
-                let kahootUI = `
-                <div id="${uniqueId}" class="not-prose my-6 bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-2xl border border-slate-700 w-full max-w-2xl mx-auto">
-                    <div class="bg-white text-slate-800 font-black text-lg sm:text-xl p-5 rounded-2xl mb-6 shadow-sm text-center">
-                        ${k.pregunta}
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                        ${buttonsHtml}
-                    </div>
-                </div>`;
-                
-                htmlContent = htmlContent.replace(`___KAHOOT_BLOCK_${i}___`, kahootUI);
+                htmlContent = htmlContent.replace(`___KAHOOT_BLOCK_${i}___`, `<div id="${uniqueId}" class="not-prose my-6 bg-slate-900 p-6 sm:p-8 rounded-3xl w-full max-w-2xl mx-auto"><div class="bg-white text-slate-800 font-black text-lg p-5 rounded-2xl mb-6 text-center">${k.pregunta}</div><div class="grid grid-cols-1 md:grid-cols-2 gap-3">${buttonsHtml}</div></div>`);
             }
-
             return htmlContent;
         }
 
-        // Funció quan es clica el Kahoot
         window.handleKahootClick = function(btn, containerId, isCorrect, textResponded) {
             const container = document.getElementById(containerId);
             const buttons = container.querySelectorAll('button');
             
-            // Desactiva botons
-            buttons.forEach(b => {
-                b.disabled = true;
-                b.style.opacity = "0.4";
-                b.style.pointerEvents = "none";
-            });
-
-            // Resalta el triat
+            buttons.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; b.style.pointerEvents = "none"; });
             btn.style.opacity = "1";
-            btn.classList.add('ring-4', 'ring-offset-4', 'ring-offset-slate-900', 'scale-105');
+            btn.classList.add('ring-4', 'ring-offset-4', 'ring-offset-slate-900');
             
-            if (!isCorrect) {
-                // Si és incorrecte, resalta també el correcte visualment
-                const correctBtnIndex = chatHistory[chatHistory.length - 1].content.match(/"correcta":\s*(\d)/)?.[1];
-                if(correctBtnIndex !== undefined && buttons[correctBtnIndex]) {
-                    buttons[correctBtnIndex].style.opacity = "1";
-                    buttons[correctBtnIndex].classList.add('animate-pulse');
-                }
-            }
-
-            let autoReply = isCorrect ? 
-                `He triat l'opció: "${textResponded}". És correcta! Suma'm els punts i fem la següent.` : 
-                `He triat l'opció: "${textResponded}". Ostres, he fallat. Explica'm per què.`;
+            let autoReply = isCorrect ? `He triat: "${textResponded}". És correcta! Suma'm els punts.` : `He triat: "${textResponded}". He fallat. Explica'm per què.`;
             
             setTimeout(() => {
                 appendMessage('user', autoReply);
                 chatHistory.push({ role: 'user', content: autoReply });
-                
                 const loadingId = 'loading-' + Date.now();
                 appendLoading(loadingId);
-                
-                fetch('/api/generate', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'chat', chatHistory: chatHistory })
-                }).then(res => res.json()).then(data => {
+                fetch('/api/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'chat', chatHistory: chatHistory }) })
+                .then(res => res.json()).then(data => {
                     document.getElementById(loadingId).remove();
-                    if(data.error) throw new Error(data.error);
                     appendMessage('ai', data.reply);
                     chatHistory.push({ role: 'assistant', content: data.reply });
                     saveSession();
-                }).catch(err => {
-                    document.getElementById(loadingId).remove();
-                    appendMessage('ai', 'Error tècnic avaluant resposta: ' + err.message);
                 });
             }, 1000);
         }
 
-        // Dibuix de missatges
         function appendMessage(sender, text) {
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
             
             if (sender === 'user') {
                 div.className = "flex justify-end w-full mb-4";
-                // L'usuari es veu en text pla, net
                 div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3.5 rounded-3xl rounded-tr-sm max-w-[85%] text-sm shadow-md">${text}</div>`;
             } else {
                 div.className = "flex justify-start gap-3 w-full mb-4";
-                // La IA utilitza els estils "prose" de Tailwind per pintar llistes, taules i negretes de forma preciosa
-                div.innerHTML = `
-                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div>
-                    <div class="bg-white border border-slate-200 text-slate-800 px-6 py-5 rounded-3xl rounded-tl-sm max-w-[90%] shadow-md w-full overflow-hidden">
-                        <div class="prose prose-sm md:prose-base prose-slate prose-a:text-blue-600 prose-headings:text-slate-800 max-w-none">
-                            ${formatMessage(text)}
-                        </div>
-                    </div>
-                `;
+                div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div><div class="bg-white border border-slate-200 text-slate-800 px-6 py-5 rounded-3xl rounded-tl-sm max-w-[90%] shadow-md w-full overflow-hidden"><div class="prose prose-sm md:prose-base prose-slate max-w-none">${formatMessage(text)}</div></div>`;
             }
             box.appendChild(div);
-            // Scroll suau a baix
             setTimeout(() => { box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' }); }, 100);
         }
 
@@ -570,12 +512,7 @@
             const div = document.createElement('div');
             div.id = id;
             div.className = "flex justify-start gap-3 w-full mb-4";
-            div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div>
-                <div class="bg-white border border-slate-200 px-6 py-5 rounded-3xl rounded-tl-sm flex gap-1.5 shadow-md items-center h-14">
-                    <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                    <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></div>
-                    <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
-                </div>`;
+            div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div><div class="bg-white border border-slate-200 px-6 py-5 rounded-3xl rounded-tl-sm flex gap-1.5 shadow-md items-center h-14"><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></div><div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div></div>`;
             box.appendChild(div);
             box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
         }
