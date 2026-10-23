@@ -4,8 +4,10 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ error: 'Mètode no permès.' });
         }
 
-        const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
+        const groqApiKey = process.env.GROQ_API_KEY;
+        const hfApiKey = process.env.HF_API_KEY;
+
+        if (!groqApiKey) {
             return res.status(200).json({ error: 'Falta la clau GROQ_API_KEY a Vercel.' });
         }
 
@@ -38,7 +40,7 @@ module.exports = async function handler(req, res) {
 
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                headers: { "Authorization": `Bearer ${groqApiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
                     messages: [ { role: "system", content: systemPrompt } ],
@@ -84,31 +86,31 @@ module.exports = async function handler(req, res) {
         if (action === 'chat') {
             const masterSystemPrompt = {
                 role: "system",
-                content: `Ets AIStudents, un tutor d'estudi avançat d'intel·ligència artificial.
+                content: `Ets AIStudents, un tutor d'estudi avançat.
                 
                 MEMÒRIA ACTUAL DE L'ALUMNE:
                 ${studentContext}
                 
-                APUNTS/TEMARI (Fes-los servir per treure la teoria):
+                APUNTS/TEMARI:
                 ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts."}
                 
-                MÈTODE D'ENSENYAMENT (MOLT IMPORTANT):
-                1. POC A POC: Explica només UN concepte petit cada vegada.
-                2. NATURALITAT: Tens PROHIBIT dir "Aquí tens un truc mnemotècnic" o frases robòtiques similars. Integra el truc de memòria directament i de forma natural en la teva explicació.
-                3. IMATGES: Per il·lustrar conceptes, pots generar diagrames visuals utilitzant AQUEST CODI Markdown:
-                   ![Esquema](https://image.pollinations.ai/prompt/clean-educational-diagram-of-[tema-en-angles]-white-background?width=800&height=400&nologo=true)
-                4. ESPERA: Quan acabis d'explicar, atura't. NO facis jocs fins que l'alumne et digui "ho he entès", "vale", o t'ho demani.
+                MÈTODE D'ENSENYAMENT (MICRO-LEARNING):
+                1. POC A POC: Explica només UN concepte curt cada vegada.
+                2. NATURALITAT I TRUCS: Explica els trucs mnemotècnics (regles per memoritzar) de forma natural integrats al text, SENSE dir frases com "Aquí tens un truc mnemotècnic".
+                3. IMATGES: Per il·lustrar conceptes, pots generar esquemes visuals demanant-ho EXACTAMENT amb aquest format, i jo m'encarrego de dibuixar-ho:
+                   [IMG: "clean educational diagram about [topic in english], white background, minimal"]
+                4. ESPERA: Després d'explicar el concepte i posar el joc, CALLA. No avancis temari fins que l'alumne resolgui el joc o t'ho demani.
                 
-                JOCS INTERACTIUS (NOMÉS QUAN L'ALUMNE HO ENTENGUI O HO DEMANI):
-                Quan toqui comprovar si ho ha après, INSEREIX UN D'AQUESTS DOS BLOCS perquè el sistema creï la interfície interactiva:
+                JOCS INTERACTIUS (OBLIGATORI POSAR-NE UN AL FINAL DE CADA EXPLICACIÓ):
+                Insereix un d'aquests blocs perquè el sistema creï la interfície interactiva. L'alumne no pot avançar sense contestar-los.
 
-                OPCIÓ A (Joc d'Esquema amb buits per omplir):
+                OPCIÓ A (Esquema conceptual de caixes i fletxes):
                 \`\`\`schema
                 {
-                  "titol": "Títol de l'esquema",
+                  "titol": "Completa el diagrama",
                   "buits": [
-                    { "context": "Concepte anterior", "resposta": "paraula a endevinar" },
-                    { "context": "Deriva d'això...", "resposta": "una altra paraula" }
+                    { "context": "Node principal", "resposta": "paraula" },
+                    { "context": "Node secundari", "resposta": "paraula" }
                   ]
                 }
                 \`\`\`
@@ -116,7 +118,7 @@ module.exports = async function handler(req, res) {
                 OPCIÓ B (Kahoot clàssic amb 4 opcions):
                 \`\`\`kahoot
                 {
-                  "pregunta": "Pregunta ràpida:",
+                  "pregunta": "Pregunta de repàs:",
                   "opcions": ["Opció 1", "Opció 2", "Opció 3", "Opció 4"],
                   "correcta": 0
                 }
@@ -138,11 +140,11 @@ module.exports = async function handler(req, res) {
 
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                headers: { "Authorization": `Bearer ${groqApiKey}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
                     messages: messagesToSend,
-                    temperature: 0.5,
+                    temperature: 0.4,
                     max_tokens: 2500
                 })
             });
@@ -153,7 +155,41 @@ module.exports = async function handler(req, res) {
             }
 
             const data = await response.json();
-            return res.status(200).json({ reply: data.choices[0].message.content });
+            let replyText = data.choices[0].message.content;
+
+            // PROCESSADOR D'IMATGES VIA HUGGING FACE FLUX
+            const imgRegex = /\[IMG:\s*"(.*?)"\]/gi;
+            let match;
+            
+            while ((match = imgRegex.exec(replyText)) !== null) {
+                const imgPrompt = match[1];
+                
+                if (hfApiKey) {
+                    try {
+                        const hfRes = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
+                            headers: { "Authorization": `Bearer ${hfApiKey}`, "Content-Type": "application/json" },
+                            method: "POST",
+                            body: JSON.stringify({ inputs: imgPrompt })
+                        });
+                        
+                        if (hfRes.ok) {
+                            const arrayBuffer = await hfRes.arrayBuffer();
+                            const base64 = Buffer.from(arrayBuffer).toString('base64');
+                            const mimeType = hfRes.headers.get('content-type') || 'image/jpeg';
+                            const imgMarkdown = `\n\n![Esquema visual](data:${mimeType};base64,${base64})\n\n`;
+                            replyText = replyText.replace(match[0], imgMarkdown);
+                        } else {
+                            replyText = replyText.replace(match[0], "\n*(Error generant imatge: El servidor gràfic està ocupat)*\n");
+                        }
+                    } catch (e) {
+                        replyText = replyText.replace(match[0], "\n*(Error carregant la imatge)*\n");
+                    }
+                } else {
+                    replyText = replyText.replace(match[0], "\n*(Falta configurar HF_API_KEY)*\n");
+                }
+            }
+
+            return res.status(200).json({ reply: replyText });
         }
 
         return res.status(200).json({ error: 'Acció no reconeguda.' });
