@@ -9,14 +9,14 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ error: 'Falta la clau GROQ_API_KEY a Vercel.' });
         }
 
-        const { action, pdfText, instructions, chatHistory, daysLeft, currentDate, availableDays, studentContext } = req.body;
+        const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext } = req.body;
 
-        // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
+        // ACCIÓ 1: GENERAR EL CALENDARI (NOMÉS TEMES) I EL TEST
         if (action === 'prepare_study') {
-            const systemPrompt = `Ets un tutor d'estudi avançat. T'han pujat apunts. Avui és ${currentDate}. L'alumne té disponibilitat per estudiar els següents dies de la setmana: ${availableDays}. Faltan ${daysLeft} dies per l'examen.
+            const systemPrompt = `Ets un tutor d'estudi. T'han pujat apunts.
             La teva missió és doble:
-            1. Crear un calendari d'estudi assignant dates reals que encaixin dins dels dies disponibles. Posa un títol curt al tema de cada dia.
-            2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari.
+            1. Crear un pla d'estudi de EXACTAMENT ${totalSessionsToGenerate} sessions. ELS ÚLTIMS TEMES (el 20% final de les sessions) HAN DE SER EXCLUSIVAMENT "Repàs General" o "Simulacre d'Examen".
+            2. Crear un test de diagnòstic de 5 preguntes tipus test.
             
             Apunts: ${pdfText || 'Temari sobre: ' + instructions}
             
@@ -25,7 +25,9 @@ module.exports = async function handler(req, res) {
             FORMAT EXACTE OBLIGATORI:
             {
               "calendari_estudi": [
-                { "dia_real": "Dilluns 26 d'Octubre", "tema": "Fonaments i introducció" }
+                { "tema": "Fonaments i introducció" },
+                { "tema": "Desenvolupament" },
+                { "tema": "Repàs Full" }
               ],
               "preguntes": [
                 {
@@ -43,7 +45,7 @@ module.exports = async function handler(req, res) {
                     model: "openai/gpt-oss-20b",
                     messages: [ { role: "system", content: systemPrompt } ],
                     temperature: 0.1, 
-                    max_tokens: 3000
+                    max_tokens: 2500
                 })
             });
 
@@ -56,12 +58,10 @@ module.exports = async function handler(req, res) {
             let rawContent = data.choices?.[0]?.message?.content || "";
             
             try {
-                if (!rawContent) throw new Error("La resposta de la IA està buida.");
-                
+                if (!rawContent) throw new Error("La resposta està buida.");
                 let cleanedContent = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
                 const jsonStart = cleanedContent.indexOf('{');
                 const jsonEnd = cleanedContent.lastIndexOf('}');
-                
                 if (jsonStart !== -1 && jsonEnd !== -1) {
                     cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
                 }
@@ -84,36 +84,47 @@ module.exports = async function handler(req, res) {
 
         // ACCIÓ 2: XAT CONTINU AMB LA IA
         if (action === 'chat') {
-            // El prompt mestre concentra tota la memòria en un sol missatge de sistema per evitar crashejos
             const masterSystemPrompt = {
                 role: "system",
-                content: `Ets AIStudents, un tutor d'estudi d'intel·ligència artificial.
+                content: `Ets AIStudents, un tutor d'estudi avançat d'intel·ligència artificial.
                 
                 MEMÒRIA ACTUAL DE L'ALUMNE:
                 ${studentContext}
+                
                 APUNTS/TEMARI:
-                ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts físics, guia't per les instruccions generals."}
+                ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts."}
                 
                 ESTIL D'ENSENYAMENT (MOLT IMPORTANT):
-                1. Mnemotècnia: Quan expliquis conceptes teòrics, xifres o noms complexos, INVENTA regles mnemotècniques o trucs divertits (ex: SMTP = Send Mail To People, port 25 perquè és l'edat d'un adult).
-                2. Imatges Visuals: Pots generar imatges per ajudar-lo a recordar. Per inserir una imatge utilitza EXCLUSIVAMENT aquest codi Markdown:
-                   ![Descripció](https://image.pollinations.ai/prompt/descripcio-en-angles-separada-per-guions?width=800&height=400&nologo=true)
-                   (Substitueix la URL pel prompt de la imatge que vulguis, sempre en anglès i amb guions).
-                3. Guia pel calendari: Segueix l'ordre del calendari d'estudi. No expliquis tot el temari de cop.
+                1. Mnemotècnia: Quan expliquis conceptes, INVENTA regles mnemotècniques o trucs divertits (ex: SMTP = Send Mail To People, port 25 perquè és l'edat d'un adult preparat).
+                2. Imatges Visuals: Has de generar imatges reals per ajudar-lo a recordar conceptes. Per inserir una imatge utilitza AQUEST CODI Markdown:
+                   ![Il·lustració](https://image.pollinations.ai/prompt/descripcio-en-angles-separada-per-guions?width=800&height=400&nologo=true)
+                   (Substitueix la URL pel prompt de la imatge que vulguis, sempre en anglès i amb guions en lloc d'espais).
+                3. Guia pel calendari: Segueix l'ordre del pla d'estudi. Fes esquemes amb blocs de codi (\`\`\`) si cal resumir.
                 
-                JOC KAHOOT: 
-                Quan l'alumne et demani "Jugar a Kahoot" o vulguis posar-lo a prova, INSEREIX AQUEST BLOC EXACTE:
+                KAHOOT: 
+                Si et demana "Jugar a Kahoot", INSEREIX AQUEST BLOC EXACTE perquè el sistema dibuixi els botons:
                 \`\`\`kahoot
                 {
-                  "pregunta": "Escriu la pregunta aquí",
+                  "pregunta": "Pregunta aquí",
                   "opcions": ["Opció 1", "Opció 2", "Opció 3", "Opció 4"],
                   "correcta": 0
                 }
-                \`\`\`
-                (La 'correcta' és l'índex de la resposta vàlida: 0, 1, 2 o 3).`
+                \`\`\``
             };
 
-            const messagesToSend = [masterSystemPrompt, ...chatHistory];
+            // FILTRE ANTI-CUELGUES: Ajuntem missatges consecutius del mateix rol
+            let safeHistory = [];
+            let lastRole = "";
+            for (let msg of chatHistory) {
+                if (msg.role !== lastRole) {
+                    safeHistory.push({ role: msg.role, content: msg.content });
+                    lastRole = msg.role;
+                } else {
+                    safeHistory[safeHistory.length - 1].content += "\n\n" + msg.content;
+                }
+            }
+
+            const messagesToSend = [masterSystemPrompt, ...safeHistory];
 
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
@@ -138,6 +149,6 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ error: 'Acció no reconeguda.' });
 
     } catch (error) {
-        return res.status(200).json({ error: `Error intern del servidor: ${error.message}` });
+        return res.status(200).json({ error: `Error intern: ${error.message}` });
     }
 }
