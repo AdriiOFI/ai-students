@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext, prompt } = req.body;
 
-        // ACCIÓ: GENERAR LA IMATGE A DEMANDA (Quan l'alumne fa clic al botó)
+        // ACCIÓ: GENERAR LA IMATGE A DEMANDA
         if (action === 'image') {
             if (!hfApiKey) return res.status(200).json({ error: "Falta configurar HF_API_KEY a Vercel." });
             try {
@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
                     const mimeType = hfRes.headers.get('content-type') || 'image/jpeg';
                     return res.status(200).json({ image: `data:${mimeType};base64,${base64}` });
                 } else {
-                    return res.status(200).json({ error: "El servidor gràfic de Hugging Face està ocupat." });
+                    return res.status(200).json({ error: "El servidor gràfic està ocupat. Torna-ho a provar." });
                 }
             } catch (e) {
                 return res.status(200).json({ error: "Error de connexió en generar la imatge." });
@@ -118,16 +118,15 @@ module.exports = async function handler(req, res) {
                 ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts."}
                 
                 MÈTODE D'ENSENYAMENT (MICRO-LEARNING):
-                1. POC A POC: Explica només UN concepte curt cada vegada.
-                2. NATURALITAT: Tens COMPLETAMENT PROHIBIT dir "Aquí tens un truc mnemotècnic" o "Et poso un truc". Integra la regla per memoritzar directament a l'explicació de forma conversacional i absolutament natural.
-                3. IMATGES: Per donar-li suport visual, genera imatges o esquemes. Utilitza EXACTAMENT aquest text (amb els claudàtors inclosos) perquè el sistema dibuixi un botó, i posa la descripció EN ANGLÈS i separada per guions.
-                   [IMG: "clean-educational-diagram-about-topic-white-background-minimal"]
-                4. ESPERA: Després d'explicar el concepte i posar el joc, CALLA. No avancis temari.
+                1. ORDRE ESTRICTE: SEMPRE dóna primer la teoria, i el joc al final de tot.
+                2. POC A POC: Explica només UN concepte curt cada vegada.
+                3. NATURALITAT: Tens COMPLETAMENT PROHIBIT dir "Aquí tens un truc mnemotècnic". Integra la regla directament a l'explicació de forma conversacional.
+                4. IMATGES: Demana-les EXACTAMENT amb aquest text perquè el sistema dibuixi un botó:
+                   [IMG: "clean-educational-diagram-about-topic-white-background"]
+                5. EXCEPCIÓ ALS JOCS: Si l'alumne et demana un dubte, o et diu que ha FALLAT un joc i vol que l'hi expliquis, LIMITA'T a explicar-li l'error. NO afegeixis cap joc nou en aquesta resposta.
                 
-                JOCS INTERACTIUS (OBLIGATORI POSAR-NE UN AL FINAL DE CADA EXPLICACIÓ):
-                L'alumne no pot avançar sense contestar-los. Utilitza UN d'aquests dos blocs exactes de Markdown:
-
-                OPCIÓ A (Esquema conceptual de caixes i fletxes on ha de deduir les paraules):
+                FORMAT DELS JOCS (Si estàs explicant teoria nova, posa'n un obligatòriament al final):
+                OPCIÓ A (Esquema conceptual):
                 \`\`\`schema
                 {
                   "titol": "Completa el diagrama",
@@ -138,7 +137,7 @@ module.exports = async function handler(req, res) {
                 }
                 \`\`\`
 
-                OPCIÓ B (Kahoot clàssic amb 4 opcions):
+                OPCIÓ B (Kahoot clàssic):
                 \`\`\`kahoot
                 {
                   "pregunta": "Pregunta de repàs:",
