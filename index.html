@@ -21,17 +21,16 @@
         .interactive-btn:active { transform: scale(0.97); }
         .day-checkbox:checked + div { background-color: #eff6ff; border-color: #3b82f6; color: #2563eb; font-weight: bold; }
         
-        /* Lightbox Image Styles */
         #lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); justify-content: center; align-items: center; padding: 20px; cursor: zoom-out; backdrop-filter: blur(5px); }
         #lightbox img { max-width: 90%; max-height: 90vh; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); object-fit: contain; }
+        
+        .schema-box { border: 2px solid #cbd5e1; border-radius: 16px; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden antialiased font-sans">
 
-    <!-- Modal per a les Imatges (Zoom) -->
-    <div id="lightbox" onclick="closeLightbox()">
-        <img id="lightbox-img" src="" alt="Zoomed Image">
-    </div>
+    <!-- Modal Zoom Imatges -->
+    <div id="lightbox" onclick="closeLightbox()"><img id="lightbox-img" src="" alt="Zoom"></div>
 
     <!-- BARRA LATERAL -->
     <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-10 shadow-sm shrink-0">
@@ -136,7 +135,7 @@
             <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-slate-50"></div>
             <div class="p-4 bg-white border-t border-slate-200 relative z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
                 <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden">
-                    <input type="text" id="chat-input" placeholder="Escriu 'Ho he entès', fes una pregunta..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
+                    <input type="text" id="chat-input" placeholder="Pregunta algun dubte..." class="w-full pl-5 pr-14 py-4 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm">
                     <button type="submit" class="absolute right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -155,7 +154,6 @@
         let isPdfProcessing = false;
         let studentContextStr = ""; 
         
-        // Memòria global per als jocs interactius generats al xat
         window.interactiveGames = {};
 
         window.onload = () => {
@@ -173,7 +171,6 @@
                 document.getElementById('chat-form').classList.remove('hidden');
                 document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
                 
-                // Regenerar la memòria de jocs en cas de refrescar
                 document.querySelectorAll('.game-container').forEach(el => {
                     let rawData = el.getAttribute('data-game');
                     if(rawData) {
@@ -190,6 +187,9 @@
                 calendar: generatedCalendarArray, context: studentContextStr
             }));
         }
+
+        function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').style.display = 'flex'; }
+        function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
 
         document.getElementById('exam-date').addEventListener('change', (e) => {
             const diffDays = Math.ceil((new Date(e.target.value) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
@@ -253,8 +253,8 @@
             const examDateStr = document.getElementById('exam-date').value;
             if (!examDateStr) { Swal.fire('Atenció', 'Has de seleccionar la data de l\'examen.', 'warning'); return; }
             validStudyDates = calculateValidDates();
-            if(validStudyDates.length === 0) { Swal.fire('Atenció', 'No hi ha dies disponibles fins l\'examen.', 'warning'); return; }
-            if (uploadedPDFs.length === 0) { Swal.fire('Atenció', 'Puja almenys un PDF amb el temari.', 'warning'); return; }
+            if(validStudyDates.length === 0) { Swal.fire('Atenció', 'No hi ha dies disponibles.', 'warning'); return; }
+            if (uploadedPDFs.length === 0) { Swal.fire('Atenció', 'Puja almenys un PDF.', 'warning'); return; }
             generatePlanAndQuiz();
         }
 
@@ -288,7 +288,7 @@
                 document.getElementById('quiz-view').classList.remove('hidden');
                 document.getElementById('quiz-view').classList.add('flex');
                 Swal.close();
-            } catch (err) { Swal.fire('Error Tècnic', err.message, 'error'); }
+            } catch (err) { Swal.fire('Error', err.message, 'error'); }
         }
 
         function renderCalendar() {
@@ -310,7 +310,7 @@
                 htmlContent += `<div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex gap-4 items-center"><div class="bg-blue-100 text-blue-700 font-bold rounded-full w-8 h-8 flex items-center justify-center shrink-0">${item.num}</div><div><div class="text-xs font-bold text-slate-500 mb-0.5">${item.dia_real}</div><div class="text-sm font-semibold text-slate-800">${item.tema}</div></div></div>`;
             });
             htmlContent += '</div>';
-            Swal.fire({ title: '📅 El teu Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb' });
+            Swal.fire({ title: '📅 Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb' });
         }
 
         function renderQuiz() {
@@ -337,8 +337,7 @@
                 const sel = document.querySelector(`input[name="q_${idx}"]:checked`);
                 if (sel && sel.value.trim().toLowerCase() === q.resposta_correcta.trim().toLowerCase()) correct++;
             });
-            let level = correct <= 2 ? "Nivell Inicial" : correct <= 4 ? "Nivell Intermedi" : "Nivell Avançat";
-            startChatPhase(correct, level);
+            startChatPhase(correct, correct <= 2 ? "Nivell Inicial" : correct <= 4 ? "Nivell Intermedi" : "Nivell Avançat");
         }
 
         async function startChatPhase(score, level) {
@@ -346,13 +345,13 @@
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
 
-            studentContextStr = `Notes Test: ${score}/5 (${level}). Calendari establert. L'alumne no repassarà la següent part fins que no li preguntis si ho ha entès o li facis un mini-joc.`;
+            studentContextStr = `L'alumne ha tret ${score}/5 (${level}) al test.`;
 
             document.getElementById('chat-messages').innerHTML = `
                 <div class="w-full flex justify-center my-6" id="welcome-card">
                     <div class="bg-blue-50 border border-blue-200 p-8 rounded-3xl text-center shadow-sm max-w-xl">
-                        <h2 class="text-3xl font-black text-blue-800 mb-2">Pla d'Estudi Preparat!</h2>
-                        <p class="text-blue-700 mb-6 font-medium">Has tret un ${score}/5 al test inicial.</p>
+                        <h2 class="text-3xl font-black text-blue-800 mb-2">Pla d'Estudi Activat!</h2>
+                        <p class="text-blue-700 mb-6 font-medium">Nota inicial: ${score}/5. Tot preparat.</p>
                         <button onclick="startTeaching()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-xl transition shadow-lg w-full text-lg flex items-center justify-center gap-2">
                             ▶ Començar la Primera Lliçó
                         </button>
@@ -365,7 +364,7 @@
         window.startTeaching = function() {
             document.getElementById('welcome-card').style.display = 'none';
             document.getElementById('chat-form').classList.remove('hidden');
-            const prompt = "Hola! Comencem amb el primer tema del calendari. **Explica-ho a poc a poc**, genera una imatge o esquema visual i dona'm trucs. Al final, fes-me un Kahoot o un Esquema amb buits per veure si ho he entès abans d'avançar.";
+            const prompt = "Tot preparat. Comença amb el primer tema del calendari de forma interactiva.";
             appendMessage('user', "Comencem la primera sessió!");
             chatHistory.push({ role: 'user', content: prompt });
             triggerAiResponse();
@@ -407,132 +406,137 @@
         // PARSEJADOR I RENDERITZAT (MARKDOWN + IMATGES + KAHOOT + ESQUEMES)
         // =========================================================================
         
-        function openLightbox(src) {
-            document.getElementById('lightbox-img').src = src;
-            document.getElementById('lightbox').style.display = 'flex';
-        }
-        function closeLightbox() {
-            document.getElementById('lightbox').style.display = 'none';
-        }
-
         function formatMessage(text) {
             if(!text) return "";
+            let idCounter = 0;
+            const interactiveBlocks = [];
             
-            // 1. Extraiem blocs de Kahoot
+            // Extreure Kahoot
             text = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let k = JSON.parse(p1.trim());
-                    let id = 'kahoot_' + Date.now() + Math.random().toString().substr(2, 5);
+                    let id = 'kahoot_' + Date.now() + idCounter;
+                    interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id };
                     window.interactiveGames[id] = k;
-                    let safeData = encodeURIComponent(JSON.stringify(k));
-                    
-                    let buttonsHtml = k.opcions.map((opt, i) => {
-                        let safeOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                        return `<button onclick="playKahoot('${id}', ${i}, '${safeOpt}')" class="interactive-btn w-full text-left text-slate-700 font-semibold p-4 rounded-xl shadow-sm border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50 focus:outline-none"><span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-full inline-flex items-center justify-center mr-3 text-xs">${i+1}</span>${opt}</button>`;
-                    }).join('');
-
-                    return `
-                    <div id="${id}" class="game-container not-prose my-6 bg-slate-50 p-6 rounded-3xl border border-slate-200 w-full max-w-lg shadow-sm relative overflow-hidden" data-game="${safeData}">
-                        <div class="bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0">🎮 Mini-Repte Ràpid</div>
-                        <div class="text-slate-800 font-bold text-lg mt-6 mb-5 text-center px-2">${k.pregunta}</div>
-                        <div class="grid grid-cols-1 gap-3">${buttonsHtml}</div>
-                    </div>`;
-                } catch(e) { return "<p class='text-red-500'>[Error Kahoot]</p>"; }
+                    let placeholder = `___BLOCK_${idCounter}___`;
+                    idCounter++;
+                    return placeholder;
+                } catch(e) { return "[Error Kahoot]"; }
             });
 
-            // 2. Extraiem blocs d'Esquemes interactius
+            // Extreure Esquemes
             text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let s = JSON.parse(p1.trim());
-                    let id = 'schema_' + Date.now() + Math.random().toString().substr(2, 5);
-                    s.attempts = 0; // Inicialitzem intents
+                    s.attempts = 0;
+                    let id = 'schema_' + Date.now() + idCounter;
+                    interactiveBlocks[idCounter] = { type: 'schema', data: s, id: id };
                     window.interactiveGames[id] = s;
-                    let safeData = encodeURIComponent(JSON.stringify(s));
-                    
-                    let boxesHtml = s.buits.map((item, i) => {
+                    let placeholder = `___BLOCK_${idCounter}___`;
+                    idCounter++;
+                    return placeholder;
+                } catch(e) { return "[Error Schema]"; }
+            });
+
+            let htmlContent = marked.parse(text);
+            
+            // Imatges clicables
+            htmlContent = htmlContent.replace(/<img src="(.*?)" alt="(.*?)"(.*?)>/g, '<img src="$1" alt="$2" class="w-full max-w-lg mx-auto block rounded-2xl shadow-md my-6 border border-slate-200 cursor-zoom-in hover:opacity-90 transition" onclick="openLightbox(this.src)" title="Fes clic per ampliar">');
+
+            // Renderitzar Blocs interactius
+            for (let i = 0; i < interactiveBlocks.length; i++) {
+                let block = interactiveBlocks[i];
+                let safeData = encodeURIComponent(JSON.stringify(block.data));
+                
+                if (block.type === 'kahoot') {
+                    let k = block.data;
+                    let colors = ['bg-indigo-500 hover:bg-indigo-600', 'bg-emerald-500 hover:bg-emerald-600', 'bg-amber-500 hover:bg-amber-600', 'bg-rose-500 hover:bg-rose-600'];
+                    let buttonsHtml = k.opcions.map((opt, idx) => {
+                        let safeOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        return `<button onclick="playKahoot('${block.id}', ${idx}, '${safeOpt}')" class="interactive-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-sm flex items-center gap-3 ${colors[idx % 4]} focus:outline-none"><span class="flex-1">${opt}</span></button>`;
+                    }).join('');
+
+                    htmlContent = htmlContent.replace(`___BLOCK_${i}___`, `
+                    <div id="${block.id}" class="game-container not-prose my-6 bg-slate-50 p-6 rounded-3xl border border-slate-200 w-full max-w-lg shadow-sm mx-auto" data-game="${safeData}">
+                        <div class="text-slate-500 text-[10px] font-black uppercase text-center mb-4">🎮 Joc Ràpid</div>
+                        <div class="text-slate-800 font-bold text-lg mb-5 text-center px-2">${k.pregunta}</div>
+                        <div class="grid grid-cols-1 gap-3">${buttonsHtml}</div>
+                    </div>`);
+                } 
+                else if (block.type === 'schema') {
+                    let s = block.data;
+                    let boxesHtml = s.buits.map((item, idx) => {
                         return `
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 mb-3">
-                            <div class="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl text-sm font-bold flex-1 text-center sm:text-right border border-blue-200 shadow-sm">${item.context}</div>
-                            <div class="hidden sm:block text-slate-300 font-black">➔</div>
-                            <div class="text-center sm:hidden text-slate-300 font-black">⬇</div>
-                            <input type="text" id="input_${id}_${i}" placeholder="Escriu aquí..." class="schema-input border-2 border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2 text-sm text-slate-800 flex-1 outline-none text-center sm:text-left transition shadow-inner bg-white">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="bg-blue-100 text-blue-800 px-4 py-3 rounded-xl text-sm font-bold w-1/2 text-right border border-blue-200 shadow-sm">${item.context}</div>
+                            <div class="text-slate-300 font-black text-xl">➔</div>
+                            <input type="text" id="input_${block.id}_${idx}" placeholder="Omple l'espai..." class="schema-box bg-white focus:border-blue-500 px-4 py-3 text-sm text-slate-800 w-1/2 outline-none shadow-inner transition text-center">
                         </div>`;
                     }).join('');
 
-                    return `
-                    <div id="${id}" class="game-container not-prose my-6 bg-slate-50 p-6 rounded-3xl border border-slate-200 w-full max-w-2xl shadow-sm relative overflow-hidden" data-game="${safeData}">
-                        <div id="header-${id}" class="bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0">🧩 Completa l'Esquema</div>
-                        <div class="text-slate-800 font-black text-xl mt-6 mb-6 text-center">${s.titol}</div>
-                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm mb-5">${boxesHtml}</div>
-                        <button id="btn_${id}" onclick="checkSchema('${id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">Comprovar Respostes</button>
-                    </div>`;
-                } catch(e) { return "<p class='text-red-500'>[Error Esquema]</p>"; }
-            });
-
-            // 3. Convertir Markdown normal a HTML i afegir el Lightbox a les imatges generades
-            let htmlContent = marked.parse(text);
-            htmlContent = htmlContent.replace(/<img src="(.*?)" alt="(.*?)"(.*?)>/g, '<img src="$1" alt="$2" class="w-full rounded-2xl shadow-md my-4 border border-slate-200 cursor-zoom-in hover:opacity-90 transition" onclick="openLightbox(this.src)" title="Fes clic per ampliar">');
-
+                    htmlContent = htmlContent.replace(`___BLOCK_${i}___`, `
+                    <div id="${block.id}" class="game-container not-prose my-6 bg-slate-50 p-8 rounded-3xl border border-slate-200 w-full max-w-xl mx-auto shadow-sm" data-game="${safeData}">
+                        <div id="header-${block.id}" class="text-indigo-600 text-[10px] font-black uppercase text-center mb-4">🧩 Completa el Diagrama</div>
+                        <div class="text-slate-800 font-black text-xl mb-6 text-center">${s.titol}</div>
+                        <div class="mb-6">${boxesHtml}</div>
+                        <button id="btn_${block.id}" onclick="checkSchema('${block.id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md">Comprovar i Continuar</button>
+                    </div>`);
+                }
+            }
             return htmlContent;
         }
 
-        // =========================================================================
-        // LÒGICA DELS JOCS (Kahoots i Esquemes)
-        // =========================================================================
-
+        // Accions del KAHOOT
         window.playKahoot = function(id, indexPicked, textResponded) {
             const container = document.getElementById(id);
             const buttons = container.querySelectorAll('button');
             const gameData = window.interactiveGames[id];
-            if(!gameData) return;
-
-            buttons.forEach(b => { b.disabled = true; b.style.pointerEvents = "none"; b.classList.add('opacity-50'); });
             
-            let btnClicked = buttons[indexPicked];
-            btnClicked.classList.remove('opacity-50');
+            buttons.forEach(b => { b.disabled = true; b.style.pointerEvents = "none"; b.classList.add('opacity-40'); });
+            buttons[indexPicked].classList.remove('opacity-40');
             
-            let isCorrect = (indexPicked === gameData.correcta);
-
-            if(isCorrect) {
-                btnClicked.className = "interactive-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-md flex items-center gap-3 bg-green-500 ring-4 ring-green-200";
+            if(indexPicked === gameData.correcta) {
+                buttons[indexPicked].classList.add('ring-4', 'ring-green-400');
             } else {
-                btnClicked.className = "interactive-btn w-full text-left text-white font-bold p-4 rounded-xl shadow-md flex items-center gap-3 bg-red-500 ring-4 ring-red-200";
-                buttons[gameData.correcta].classList.remove('opacity-50');
-                buttons[gameData.correcta].classList.add('bg-green-100', 'border-green-400');
+                buttons[indexPicked].classList.add('ring-4', 'ring-red-400');
+                buttons[gameData.correcta].classList.remove('opacity-40');
+                buttons[gameData.correcta].classList.add('border-4', 'border-green-400');
             }
             saveSession();
 
-            let reply = isCorrect ? `He marcat "${textResponded}". Ho he encertat! Continua explicant el següent pas.` : `He marcat "${textResponded}" i era incorrecta. Aclareix-me per què i seguim.`;
+            let reply = indexPicked === gameData.correcta ? `He marcat "${textResponded}". Ho he encertat! Continua explicant el següent pas.` : `He marcat "${textResponded}" i era incorrecta. Aclareix-me l'error i seguim.`;
             setTimeout(() => {
                 appendMessage('user', reply);
                 chatHistory.push({ role: 'user', content: reply });
                 triggerAiResponse();
-            }, 1000);
+            }, 1200);
         }
 
+        // Accions del ESQUEMA
         window.checkSchema = function(id) {
-            const container = document.getElementById(id);
             const gameData = window.interactiveGames[id];
-            if(!gameData) return;
-
             let allCorrect = true;
+            let errorsCount = 0;
             let wrongs = [];
 
             gameData.buits.forEach((buit, i) => {
                 let inputEl = document.getElementById(`input_${id}_${i}`);
-                let val = inputEl.value.trim().toLowerCase();
-                let correctVal = buit.resposta.trim().toLowerCase();
-                
-                if(val === correctVal) {
-                    inputEl.classList.replace('border-slate-200', 'border-green-500');
-                    inputEl.classList.add('bg-green-50', 'text-green-700', 'font-bold');
+                if(inputEl.disabled) return; // Ja estava correcte
+
+                if(inputEl.value.trim().toLowerCase() === buit.resposta.trim().toLowerCase()) {
+                    inputEl.classList.add('bg-green-50', 'border-green-500', 'text-green-700', 'font-bold');
                     inputEl.disabled = true;
                 } else {
                     allCorrect = false;
+                    errorsCount++;
                     wrongs.push(buit.context);
                     inputEl.classList.add('border-red-500', 'bg-red-50');
-                    // Netejar al fer clic si ens equivoquem
-                    inputEl.onclick = () => { inputEl.value = ''; inputEl.classList.remove('border-red-500', 'bg-red-50'); }
+                    
+                    // Es buida automàticament al cap de 1.5s per tornar-ho a intentar
+                    setTimeout(() => {
+                        inputEl.value = '';
+                        inputEl.classList.remove('border-red-500', 'bg-red-50');
+                    }, 1500);
                 }
             });
 
@@ -540,14 +544,13 @@
 
             if(allCorrect) {
                 btn.className = "w-full bg-green-500 text-white font-bold py-3.5 rounded-xl shadow-md";
-                btn.innerHTML = "✅ Completat Perfectament!";
+                btn.innerHTML = "✅ Completat!";
                 btn.disabled = true;
-                document.getElementById('header-'+id).innerHTML = "✅ ESQUEMA SUPERAT";
-                document.getElementById('header-'+id).className = "bg-green-600 text-white text-[10px] font-black uppercase tracking-widest text-center py-1.5 absolute top-0 left-0 right-0";
+                document.getElementById('header-'+id).innerHTML = "✅ SUPERAT";
                 saveSession();
 
                 setTimeout(() => {
-                    let msg = `He completat l'esquema de "${gameData.titol}" correctament. Ja pots continuar.`;
+                    let msg = `He completat el diagrama correctament. Ja pots continuar.`;
                     appendMessage('user', msg);
                     chatHistory.push({ role: 'user', content: msg });
                     triggerAiResponse();
@@ -556,37 +559,28 @@
                 gameData.attempts++;
                 
                 if(gameData.attempts >= 3) {
-                    // Més de 3 errors: resolem i guardem memòria per a la IA
                     gameData.buits.forEach((buit, i) => {
                         let inputEl = document.getElementById(`input_${id}_${i}`);
                         inputEl.value = buit.resposta;
-                        inputEl.className = "schema-input border-2 border-orange-400 bg-orange-50 text-orange-800 rounded-xl px-4 py-2 text-sm flex-1 font-bold outline-none text-center sm:text-left transition shadow-inner";
+                        inputEl.className = "schema-box bg-orange-100 border-orange-400 px-4 py-3 text-sm text-orange-800 font-bold w-1/2 text-center rounded-xl";
                         inputEl.disabled = true;
                     });
                     btn.className = "w-full bg-slate-300 text-slate-600 font-bold py-3.5 rounded-xl";
-                    btn.innerHTML = "Has superat els intents. Solució mostrada.";
+                    btn.innerHTML = "Solució mostrada (Límit d'intents)";
                     btn.disabled = true;
+                    
+                    // Actualitzem la memòria global oculta perquè la IA ho recordi PER SEMPRE
+                    studentContextStr += `\nALERTA: L'alumne ha fallat 3 vegades els conceptes relacionats amb: ${wrongs.join(', ')}. T'ho has d'apuntar per tornar-li a preguntar més endavant.`;
                     saveSession();
 
                     setTimeout(() => {
-                        let msg = `He fallat l'esquema sobre "${gameData.titol}" 3 vegades. Guarda A LA TEVA MEMÒRIA INTERNA que m'has de tornar a fer repassar aquests conceptes més endavant: ${wrongs.join(', ')}. Ara explica'm on he fallat.`;
+                        let msg = `He fallat l'esquema 3 vegades. Guarda-t'ho a la teva memòria per fer-me repassar aquests conceptes un altre dia. Ara explica'm on m'he equivocat i seguim.`;
                         appendMessage('user', msg);
                         chatHistory.push({ role: 'user', content: msg });
                         triggerAiResponse();
-                    }, 1500);
-
+                    }, 2000);
                 } else {
-                    // Menys de 3 errors, avisem
-                    btn.innerHTML = `Comprovar Respostes (Intent ${gameData.attempts}/3)`;
-                    Swal.fire({
-                        title: 'Ups!',
-                        text: `Tots els camps marcats en vermell són incorrectes. Et queden ${3 - gameData.attempts} intents!`,
-                        icon: 'warning',
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000
-                    });
+                    btn.innerHTML = `Comprovar de nou (Intent ${gameData.attempts}/3)`;
                 }
             }
         }
