@@ -11,11 +11,11 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext } = req.body;
 
-        // ACCIÓ 1: GENERAR EL CALENDARI (NOMÉS TEMES) I EL TEST
+        // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
         if (action === 'prepare_study') {
             const systemPrompt = `Ets un tutor d'estudi. T'han pujat apunts.
             La teva missió és doble:
-            1. Crear un pla d'estudi de EXACTAMENT ${totalSessionsToGenerate} sessions. ELS ÚLTIMS TEMES (el 20% final de les sessions) HAN DE SER EXCLUSIVAMENT "Repàs General" o "Simulacre d'Examen".
+            1. Crear un pla d'estudi de EXACTAMENT ${totalSessionsToGenerate} sessions. ELS ÚLTIMS TEMES han de ser EXCLUSIVAMENT "Repàs General" o "Simulacre d'Examen".
             2. Crear un test de diagnòstic de 5 preguntes tipus test.
             
             Apunts: ${pdfText || 'Temari sobre: ' + instructions}
@@ -82,37 +82,33 @@ module.exports = async function handler(req, res) {
             }
         }
 
-        // ACCIÓ 2: XAT CONTINU AMB LA IA
+        // ACCIÓ 2: XAT CONTINU AMB LA IA (MÈTODE MICRO-LEARNING)
         if (action === 'chat') {
             const masterSystemPrompt = {
                 role: "system",
-                content: `Ets AIStudents, un tutor d'estudi avançat d'intel·ligència artificial.
+                content: `Ets AIStudents, un tutor d'estudi d'intel·ligència artificial.
                 
                 MEMÒRIA ACTUAL DE L'ALUMNE:
                 ${studentContext}
                 
-                APUNTS/TEMARI:
+                APUNTS/TEMARI (Fes-los servir per treure la teoria):
                 ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts."}
                 
-                ESTIL D'ENSENYAMENT (MOLT IMPORTANT):
-                1. Mnemotècnia: Quan expliquis conceptes, INVENTA regles mnemotècniques o trucs divertits (ex: SMTP = Send Mail To People, port 25 perquè és l'edat d'un adult preparat).
-                2. Imatges Visuals: Has de generar imatges reals per ajudar-lo a recordar conceptes. Per inserir una imatge utilitza AQUEST CODI Markdown:
+                MÈTODE D'ENSENYAMENT OBLIGATORI (MICRO-LEARNING):
+                1. POC A POC: Tens PROHIBIT fer explicacions llargues. Explica només UN concepte petit i molt centrat cada vegada (màxim 1-2 paràgrafs curts).
+                2. MNEMOTÈCNIA I IMATGES: Dóna UN truc per recordar-ho (ex: SMTP = Send Mail To People, port 25 perquè ets adult) i genera UNA imatge visual utilitzant AQUEST CODI Markdown:
                    ![Il·lustració](https://image.pollinations.ai/prompt/descripcio-en-angles-separada-per-guions?width=800&height=400&nologo=true)
-                   (Substitueix la URL pel prompt de la imatge que vulguis, sempre en anglès i amb guions en lloc d'espais).
-                3. Guia pel calendari: Segueix l'ordre del pla d'estudi. Fes esquemes amb blocs de codi (\`\`\`) si cal resumir.
-                
-                KAHOOT: 
-                Si et demana "Jugar a Kahoot", INSEREIX AQUEST BLOC EXACTE perquè el sistema dibuixi els botons:
+                3. JOC INTERACTIU (OBLIGATORI): Després de la teva breu explicació i la imatge, HAS DE POSAR un mini-joc per comprovar si ho ha entès abans d'avançar. Utilitza AQUEST BLOC EXACTE perquè surtin els botons a la pantalla:
                 \`\`\`kahoot
                 {
-                  "pregunta": "Pregunta aquí",
+                  "pregunta": "Pregunta ràpida sobre el que t'acabo d'explicar:",
                   "opcions": ["Opció 1", "Opció 2", "Opció 3", "Opció 4"],
                   "correcta": 0
                 }
-                \`\`\``
+                \`\`\`
+                (L'alumne respondrà fent clic. Fins que no respongui o et digui alguna cosa, tu no pots seguir explicant teoria).`
             };
 
-            // FILTRE ANTI-CUELGUES: Ajuntem missatges consecutius del mateix rol
             let safeHistory = [];
             let lastRole = "";
             for (let msg of chatHistory) {
