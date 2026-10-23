@@ -13,25 +13,26 @@ module.exports = async function handler(req, res) {
 
         // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
         if (action === 'prepare_study') {
-            const systemPrompt = `Ets un tutor d'estudi. La teva missió és doble:
-            1. Crear un calendari d'estudi resumit per l'alumne basant-te en els dies que li queden (${daysLeft} dies). Avui és ${currentDate}.
+            const systemPrompt = `Ets un tutor d'estudi avançat. T'han pujat apunts. Avui és ${currentDate}.
+            La teva missió és doble:
+            1. Crear un calendari d'estudi per l'alumne dividit en els dies que li queden (${daysLeft} dies). Posa-li un títol curt al tema de cada dia.
             2. Crear un test de diagnòstic de 5 preguntes tipus test basat en el temari.
             
-            Temari/Apunts: ${pdfText || 'Temari general sobre: ' + instructions}
+            Apunts: ${pdfText || 'Temari sobre: ' + instructions}
             
-            RETORNA ÚNICAMENT UN OBJECTE JSON. Utilitza SEMPRE cometes dobles (") per les claus i valors. Els salts de línia s'han d'escriure com \\n.
+            REGLA CRÍTICA: RETORNA ÚNICAMENT UN OBJECTE JSON VÀLID. Utilitza SEMPRE cometes dobles (") per les claus i valors, MAI cometes simples (').
             
-            FORMAT EXACTE I ESPERAT:
+            FORMAT EXACTE OBLIGATORI:
             {
               "calendari_estudi": [
-                { "dia": 1, "tema": "Títol del que toca estudiar aquest dia" },
-                { "dia": 2, "tema": "Títol del dia 2..." }
+                { "dia": 1, "tema": "Fonaments i introducció" },
+                { "dia": 2, "tema": "Conceptes avançats" }
               ],
               "preguntes": [
                 {
-                  "pregunta": "Quina és la capital?",
-                  "opcions": ["A) Roma", "B) París", "C) Madrid", "D) Londres"],
-                  "resposta_correcta": "A) Roma"
+                  "pregunta": "Text de la pregunta?",
+                  "opcions": ["A) opció 1", "B) opció 2", "C) opció 3", "D) opció 4"],
+                  "resposta_correcta": "A) opció 1"
                 }
               ]
             }`;
@@ -42,21 +43,23 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
                     messages: [ { role: "system", content: systemPrompt } ],
-                    temperature: 0.2,
+                    temperature: 0.1, // Molt baixa perquè no es salti el format
                     max_tokens: 3000
                 })
             });
 
             if (!response.ok) {
                 const errText = await response.text();
-                return res.status(200).json({ error: `Falla a l'API (Prepare): ${errText}` });
+                return res.status(200).json({ error: `Error de la API: ${errText}` });
             }
 
             const data = await response.json();
             let rawContent = data.choices?.[0]?.message?.content || "";
             
             try {
-                if (!rawContent) throw new Error("La resposta està buida.");
+                if (!rawContent) throw new Error("La resposta de la IA està buida.");
+                
+                // Extracció intel·ligent del JSON ignorant text Markdown
                 let cleanedContent = rawContent.replace(/```json/gi, '').replace(/```/g, '').trim();
                 const jsonStart = cleanedContent.indexOf('{');
                 const jsonEnd = cleanedContent.lastIndexOf('}');
@@ -67,16 +70,16 @@ module.exports = async function handler(req, res) {
 
                 let result;
                 try {
-                    result = JSON.parse(cleanedContent);
+                    result = JSON.parse(cleanedContent); // Intent 1: Estricte
                 } catch (strictError) {
                     let safeJS = cleanedContent.replace(/\n/g, "\\n").replace(/\r/g, "");
-                    result = new Function("return " + safeJS)();
+                    result = new Function("return " + safeJS)(); // Intent 2: Relaxat
                 }
                 
                 return res.status(200).json(result);
             } catch (parseError) {
                 return res.status(200).json({ 
-                    error: `El format de la IA no és compatible. <br>Error de lectura: ${parseError.message}<br><br><pre style="text-align:left; white-space:pre-wrap; background:#1e293b; padding:10px; border-radius:8px; margin-top:10px; font-size:10px;">${rawContent}</pre>` 
+                    error: `Error d'estructura de la IA. <br>Motiu: ${parseError.message}<br><br><pre style="text-align:left; font-size:11px; white-space:pre-wrap;">${rawContent}</pre>` 
                 });
             }
         }
@@ -85,21 +88,25 @@ module.exports = async function handler(req, res) {
         if (action === 'chat') {
             const masterSystemPrompt = {
                 role: "system",
-                content: `Ets AIStudents, un tutor d'intel·ligència artificial. 
+                content: `Ets AIStudents, un tutor d'estudi d'intel·ligència artificial.
                 
-                DIRECTRIUS:
-                1. Tens la memòria de l'alumne als missatges anteriors. Adapta la dificultat.
-                2. Utilitza blocs de codi (\`\`\`) per fer esquemes visuals.
-                3. JOC KAHOOT: Si l'alumne et demana un joc Kahoot o preguntes ràpides, HAS DE FORMATAR LA PREGUNTA EXACTAMENT AIXÍ perquè el sistema dibuixi els botons:
+                MEMÒRIA: Llegeix l'historial del xat. Recorda la nota inicial de l'alumne i els apunts que ha pujat.
+                
+                ESTIL:
+                1. Utilitza formats Markdown (negretes, llistes, subtítols) per fer resums visuals i atractius. L'aplicació ho suporta nativament.
+                2. Adapta la dificultat al nivell que l'alumne ha demostrat.
+                
+                JOC KAHOOT: 
+                Quan l'alumne et demani "Jugar a Kahoot", fer un joc de preguntes o quan vulguis fer-li una prova interactiva, HAS D'INSERIR AQUEST BLOC EXACTE. El sistema el detectarà i pintarà els 4 botons de colors interactius a la pantalla.
                 
                 \`\`\`kahoot
                 {
-                  "pregunta": "Escriu aquí la pregunta",
+                  "pregunta": "Escriu la pregunta aquí",
                   "opcions": ["Opció 1", "Opció 2", "Opció 3", "Opció 4"],
                   "correcta": 0
                 }
                 \`\`\`
-                (El camp 'correcta' és l'índex de la resposta bona, de 0 a 3). Pots afegir text normal abans o després del bloc kahoot.`
+                (La 'correcta' és l'índex de la resposta vàlida: 0, 1, 2 o 3. Pots posar text abans i després del bloc per donar ànims).`
             };
 
             const messagesToSend = [masterSystemPrompt, ...chatHistory];
@@ -110,7 +117,8 @@ module.exports = async function handler(req, res) {
                 body: JSON.stringify({
                     model: "openai/gpt-oss-20b",
                     messages: messagesToSend,
-                    max_tokens: 2000
+                    temperature: 0.5,
+                    max_tokens: 2500
                 })
             });
 
@@ -126,6 +134,6 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ error: 'Acció no reconeguda.' });
 
     } catch (error) {
-        return res.status(200).json({ error: `Error intern: ${error.message}` });
+        return res.status(200).json({ error: `Error intern del servidor: ${error.message}` });
     }
 }
