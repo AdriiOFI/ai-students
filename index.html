@@ -417,14 +417,14 @@
             }
         }
 
-        // NOU: Generació d'imatges ultra-ràpida amb Together AI via Backend
         window.fetchImage = async function(btn, promptText) {
             const container = btn.parentElement;
-            btn.innerHTML = `⏳ Dibuixant esquema (1-2 segons)...`;
+            btn.innerHTML = `⏳ Dibuixant esquema amb Together AI (1-2 segons)...`;
             btn.disabled = true;
             btn.classList.add('opacity-70');
             
             try {
+                // Truquem al nostre backend de Vercel en lloc de Pollinations
                 const res = await fetch('/api/generate', {
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' },
