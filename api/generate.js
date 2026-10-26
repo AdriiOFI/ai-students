@@ -19,7 +19,6 @@ module.exports = async function handler(req, res) {
             if (!togetherKey) return res.status(200).json({ error: "Falta configurar TOGETHER_API_KEY a Vercel." });
             
             try {
-                // Together AI és ultra ràpid, trigarà 1-2 segons i Vercel no tallarà la connexió
                 const togetherRes = await fetch("https://api.together.xyz/v1/images/generations", {
                     method: "POST",
                     headers: { 
@@ -36,6 +35,19 @@ module.exports = async function handler(req, res) {
                         response_format: "b64_json"
                     })
                 });
+                
+                const data = await togetherRes.json();
+                
+                if (togetherRes.ok && data.data && data.data[0]) {
+                    const base64 = data.data[0].b64_json;
+                    return res.status(200).json({ image: `data:image/jpeg;base64,${base64}` });
+                } else {
+                    return res.status(200).json({ error: `Rebutjat per Together AI: ${JSON.stringify(data)}` });
+                }
+            } catch (e) {
+                return res.status(200).json({ error: `Error de xarxa: ${e.message}` });
+            }
+        }
                 
                 const data = await togetherRes.json();
                 
