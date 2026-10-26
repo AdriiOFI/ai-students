@@ -153,7 +153,7 @@ module.exports = async function handler(req, res) {
 
             const messagesToSend = [ { role: "system", content: systemPromptChat }, ...safeHistory ];
 
-            const response = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + groqApiKey.trim(), "Content-Type": "application/json" },
                 body: JSON.stringify({
