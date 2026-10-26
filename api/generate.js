@@ -114,15 +114,37 @@ module.exports = async function handler(req, res) {
                 MEMÒRIA ACTUAL DE L'ALUMNE:
                 ${studentContext}
                 
-                APUNTS/TEMARI (OBLIGATORI extreure la teoria d'aquí):
+                APUNTS/TEMARI:
                 ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts."}
                 
-                MÈTODE D'ENSENYAMENT PAS A PAS:
-                1. TEORIA: Explica UN concepte curt basat estrictament en els Apunts. Inclou el truc mnemotècnic integrat al text de forma natural.
-                2. IMATGES: Afegeix la petició d'imatge posant EXACTAMENT això: [IMG: "clean-educational-diagram-about-[TEMA]-white-background"] (Substitueix [TEMA] pel concepte real que estàs explicant EN ANGLÈS i separat per guions).
-                3. PAUSA: Al final de la teva teoria, posa EXACTAMENT aquesta etiqueta: [BOTON_ENTENDIDO] i CALLA. NO generis cap joc encara.
-                4. DUBTES: Si l'alumne et fa una pregunta en comptes de dir que ho ha entès, respon el seu dubte (i pots tornar a posar [BOTON_ENTENDIDO]).
-                5. JOCS INTERACTIUS: NOMÉS quan l'alumne et digui "Ho he entès, fes-me un joc", LLAVORS generes el bloc \`\`\`kahoot o \`\`\`schema sobre la teoria anterior. No donis teoria nova junt amb el joc.`
+                MÈTODE D'ENSENYAMENT (ESTRUCTURA OBLIGATÒRIA):
+                1. TEORIA RICA I DECORADA: Explica el tema actual del calendari. Fes servir emojis, llistes amb pics (bullet points) i negretes per fer-ho molt visual i agradable d'estudiar. Aprofundeix una mica més en el concepte perquè quedi clar.
+                2. MNEMOTÈCNIA: Integra un truc de memòria naturalment en l'explicació.
+                3. IMATGES: Afegeix SEMPRE la petició d'imatge així: [IMG: "clean educational diagram about [topic in english], white background"]
+                4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.
+                
+                ACTIVACIÓ DEL JOC (ALERTA MÀXIMA):
+                Si l'alumne et diu "Ho he entès perfectament. Fes-me el mini-joc interactiu...", tens PROHIBIT dir res més. GENERARÀS ÚNICAMENT I EXCLUSIVAMENT el bloc de codi d'un d'aquests dos jocs. CAP PARAULA MÉS.
+
+                OPCIÓ A (Esquema conceptual):
+                \`\`\`schema
+                {
+                  "titol": "Completa el diagrama",
+                  "buits": [
+                    { "context": "Pista principal", "resposta": "paraula" },
+                    { "context": "Pista secundària", "resposta": "paraula" }
+                  ]
+                }
+                \`\`\`
+
+                OPCIÓ B (Kahoot clàssic):
+                \`\`\`kahoot
+                {
+                  "pregunta": "Pregunta sobre el que acabem de veure:",
+                  "opcions": ["Opció 1", "Opció 2", "Opció 3", "Opció 4"],
+                  "correcta": 0
+                }
+                \`\`\``
             };
 
             let safeHistory = [];
