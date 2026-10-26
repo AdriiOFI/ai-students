@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext, prompt } = req.body;
 
-        // ACCIÓ: GENERAR LA IMATGE A DEMANDA
+        // ACCIÓ: GENERAR LA IMATGE AMB HUGGING FACE FLUX
         if (action === 'image') {
             if (!hfApiKey) return res.status(200).json({ error: "Falta configurar HF_API_KEY a Vercel." });
             try {
@@ -29,10 +29,10 @@ module.exports = async function handler(req, res) {
                     const mimeType = hfRes.headers.get('content-type') || 'image/jpeg';
                     return res.status(200).json({ image: `data:${mimeType};base64,${base64}` });
                 } else {
-                    return res.status(200).json({ error: "El servidor gràfic està ocupat. Torna-ho a provar." });
+                    return res.status(200).json({ error: "El servidor de Hugging Face està ocupat carregant el model FLUX. Espera 10 segons i torna a provar." });
                 }
             } catch (e) {
-                return res.status(200).json({ error: "Error de connexió en generar la imatge." });
+                return res.status(200).json({ error: "Error de connexió amb Hugging Face." });
             }
         }
 
@@ -124,8 +124,7 @@ module.exports = async function handler(req, res) {
                 4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.
                 
                 ACTIVACIÓ DEL JOC (ALERTA MÀXIMA):
-                Si l'alumne et diu "Ho he entès perfectament. Fes-me el mini-joc interactiu...", tens PROHIBIT dir res més. GENERARÀS ÚNICAMENT I EXCLUSIVAMENT el bloc de codi d'un d'aquests dos jocs. CAP PARAULA MÉS.
-                
+                Quan l'alumne et digui "Ho he entès perfectament. Fes-me el mini-joc interactiu...", RESPON OBLIGATÒRIAMENT amb un dels dos jocs següents. Pots dir una frase curta d'ànim abans del codi, però assegura't que el codi estigui PERFECTAMENT format.                
                 REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb \`\`\`kahoot o \`\`\`schema EXACTAMENT (mai amb \`\`\`json). Assegura't de tancar les claus i incloure els arrays "opcions" o "buits" complets per evitar que el sistema es bloquegi.
 
                 OPCIÓ A (Esquema conceptual):
