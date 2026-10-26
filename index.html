@@ -402,29 +402,35 @@
             }
         }
 
-        window.fetchImage = async function(btn, prompt) {
+        // NOU: Generació d'imatges ultraràpida sense dependre d'APIs saturades
+        window.fetchImage = function(btn, promptText) {
             const container = btn.parentElement;
-            btn.innerHTML = `⏳ Generant imatge (Pot trigar uns 10-15s)...`;
+            btn.innerHTML = `⏳ Carregant imatge al moment...`;
             btn.disabled = true;
             btn.classList.add('opacity-70');
             
-            try {
-                const res = await fetch('/api/generate', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'image', prompt: prompt })
-                });
-                const data = await res.json();
-                if(data.error) throw new Error(data.error);
-                
-                container.innerHTML = `<img src="${data.image}" alt="Imatge generada" class="w-full max-w-lg mx-auto block rounded-2xl shadow-md border border-slate-200 cursor-zoom-in hover:opacity-90 transition" onclick="openLightbox(this.src)" title="Fes clic per ampliar">`;
-                saveSession(); 
-            } catch (err) {
-                btn.innerHTML = `❌ Servidor d'imatges ple. Torna a intentar-ho.`;
+            // Creem la imatge utilitzant la xarxa lliure de Pollinations directament des del navegador
+            const safePrompt = encodeURIComponent(promptText);
+            const imgUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=800&height=400&nologo=true`;
+
+            const img = new Image();
+            img.src = imgUrl;
+            img.className = "w-full max-w-lg mx-auto block rounded-2xl shadow-md border border-slate-200 cursor-zoom-in hover:opacity-90 transition";
+            img.title = "Fes clic per ampliar";
+            img.onclick = () => openLightbox(imgUrl);
+
+            // Quan la imatge es descarregui, canviem el botó per la imatge
+            img.onload = () => {
+                container.innerHTML = '';
+                container.appendChild(img);
+                saveSession();
+            };
+            
+            img.onerror = () => {
+                btn.innerHTML = `❌ Error carregant la imatge`;
                 btn.classList.replace('bg-indigo-50', 'bg-red-50');
                 btn.classList.replace('text-indigo-700', 'text-red-600');
-                btn.disabled = false;
-                btn.classList.remove('opacity-70');
-            }
+            };
         };
 
         function formatMessage(text) {
