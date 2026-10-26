@@ -125,6 +125,8 @@ module.exports = async function handler(req, res) {
                 
                 ACTIVACIÓ DEL JOC (ALERTA MÀXIMA):
                 Si l'alumne et diu "Ho he entès perfectament. Fes-me el mini-joc interactiu...", tens PROHIBIT dir res més. GENERARÀS ÚNICAMENT I EXCLUSIVAMENT el bloc de codi d'un d'aquests dos jocs. CAP PARAULA MÉS.
+                
+                REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb \`\`\`kahoot o \`\`\`schema EXACTAMENT (mai amb \`\`\`json). Assegura't de tancar les claus i incloure els arrays "opcions" o "buits" complets per evitar que el sistema es bloquegi.
 
                 OPCIÓ A (Esquema conceptual):
                 \`\`\`schema
