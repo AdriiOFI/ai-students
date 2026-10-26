@@ -13,30 +13,40 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext, prompt } = req.body;
 
-        // ACCIÓ: GENERAR LA IMATGE AMB HUGGING FACE
+        // ACCIÓ: GENERAR LA IMATGE AMB TOGETHER AI (FLUX)
         if (action === 'image') {
-            if (!hfApiKey) return res.status(200).json({ error: "Falta configurar HF_API_KEY a Vercel." });
+            const togetherKey = process.env.TOGETHER_API_KEY;
+            if (!togetherKey) return res.status(200).json({ error: "Falta configurar TOGETHER_API_KEY a Vercel." });
+            
             try {
-                // Utilitzem FLUX, però estem preparats per capturar qualsevol error
-                const hfRes = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
-                    headers: { "Authorization": `Bearer ${hfApiKey.trim()}`, "Content-Type": "application/json" },
+                // Together AI és ultra ràpid, trigarà 1-2 segons i Vercel no tallarà la connexió
+                const togetherRes = await fetch("https://api.together.xyz/v1/images/generations", {
                     method: "POST",
-                    body: JSON.stringify({ inputs: prompt })
+                    headers: { 
+                        "Authorization": `Bearer ${togetherKey.trim()}`, 
+                        "Content-Type": "application/json" 
+                    },
+                    body: JSON.stringify({ 
+                        model: "black-forest-labs/FLUX.1-schnell-Free", 
+                        prompt: "clean minimalist educational diagram, " + prompt + ", white background, high quality, vector style",
+                        width: 1024,
+                        height: 768,
+                        steps: 4,
+                        n: 1,
+                        response_format: "b64_json"
+                    })
                 });
                 
-                if (hfRes.ok) {
-                    const arrayBuffer = await hfRes.arrayBuffer();
-                    const base64 = Buffer.from(arrayBuffer).toString('base64');
-                    const mimeType = hfRes.headers.get('content-type') || 'image/jpeg';
-                    return res.status(200).json({ image: `data:${mimeType};base64,${base64}` });
+                const data = await togetherRes.json();
+                
+                if (togetherRes.ok && data.data && data.data[0]) {
+                    const base64 = data.data[0].b64_json;
+                    return res.status(200).json({ image: `data:image/jpeg;base64,${base64}` });
                 } else {
-                    // Si Hugging Face rebutja la petició, llegim el motiu exacte
-                    const errData = await hfRes.text();
-                    return res.status(200).json({ error: `Rebutjat per Hugging Face: ${errData}` });
+                    return res.status(200).json({ error: `Rebutjat per Together AI: ${JSON.stringify(data)}` });
                 }
             } catch (e) {
-                // Si Vercel talla la connexió per temps (Timeout de 10s) o falla la xarxa
-                return res.status(200).json({ error: `La connexió s'ha tallat (Vercel Timeout o Xarxa): ${e.message}` });
+                return res.status(200).json({ error: `Error de xarxa: ${e.message}` });
             }
         }
         // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
