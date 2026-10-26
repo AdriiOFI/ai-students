@@ -364,8 +364,8 @@
         window.startTeaching = function() {
             document.getElementById('welcome-card').style.display = 'none';
             document.getElementById('chat-form').classList.remove('hidden');
-            const prompt = "Comença amb el primer concepte curt del calendari. Afegeix un botó d'imatge i finalitza obligatòriament amb un Esquema o Kahoot.";
-            appendMessage('user', "Comencem la primera sessió!");
+            // Dins de la funció window.startTeaching
+            const prompt = "Hola tutor! Estic preparat. **Comença explicant-me el primer tema del nostre pla d'estudi basat en els apunts** (No m'expliquis què és un calendari, explica'm la teoria del temari). Explica-ho a poc a poc, posa la imatge, i acaba només amb l'etiqueta [BOTON_ENTENDIDO].";            appendMessage('user', "Comencem la primera sessió!");
             chatHistory.push({ role: 'user', content: prompt });
             triggerAiResponse();
         }
