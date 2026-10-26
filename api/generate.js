@@ -13,7 +13,21 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext, prompt } = req.body;
 
-        // ACCIÓ: GENERAR LA IMATGE AMB TOGETHER AI (FLUX)
+        module.exports = async function handler(req, res) {
+    try {
+        if (req.method !== 'POST') {
+            return res.status(200).json({ error: 'Mètode no permès.' });
+        }
+
+        const groqApiKey = process.env.GROQ_API_KEY;
+        
+        if (!groqApiKey) {
+            return res.status(200).json({ error: 'Falta la clau GROQ_API_KEY a Vercel.' });
+        }
+
+        const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext, prompt } = req.body;
+
+        // ACCIÓ 1: GENERAR LA IMATGE AMB TOGETHER AI (FLUX)
         if (action === 'image') {
             const togetherKey = process.env.TOGETHER_API_KEY;
             if (!togetherKey) return res.status(200).json({ error: "Falta configurar TOGETHER_API_KEY a Vercel." });
@@ -48,27 +62,15 @@ module.exports = async function handler(req, res) {
                 return res.status(200).json({ error: `Error de xarxa: ${e.message}` });
             }
         }
-                
-                const data = await togetherRes.json();
-                
-                if (togetherRes.ok && data.data && data.data[0]) {
-                    const base64 = data.data[0].b64_json;
-                    return res.status(200).json({ image: `data:image/jpeg;base64,${base64}` });
-                } else {
-                    return res.status(200).json({ error: `Rebutjat per Together AI: ${JSON.stringify(data)}` });
-                }
-            } catch (e) {
-                return res.status(200).json({ error: `Error de xarxa: ${e.message}` });
-            }
-        }
-        // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
+
+        // ACCIÓ 2: GENERAR EL CALENDARI I EL TEST
         if (action === 'prepare_study') {
             const systemPrompt = `Ets un tutor d'estudi. T'han pujat apunts.
             La teva missió és doble:
             1. Crear un pla d'estudi de EXACTAMENT ${totalSessionsToGenerate} sessions. ELS ÚLTIMS TEMES han de ser EXCLUSIVAMENT "Repàs General".
             2. Crear un test de diagnòstic de 5 preguntes tipus test.
             
-            Apunts: ${pdfText || 'Temari sobre: ' + instructions}
+            Apunts: ${pdfText || 'Temari general'}
             
             REGLA CRÍTICA: RETORNA ÚNICAMENT UN OBJECTE JSON VÀLID. Utilitza SEMPRE cometes dobles (").
             
@@ -125,12 +127,12 @@ module.exports = async function handler(req, res) {
                 return res.status(200).json(result);
             } catch (parseError) {
                 return res.status(200).json({ 
-                    error: `Error d'estructura de la IA. <br>Motiu: ${parseError.message}<br><br><pre style="text-align:left; font-size:11px; white-space:pre-wrap;">${rawContent}</pre>` 
+                    error: `Error d'estructura de la IA. Motiu: ${parseError.message}` 
                 });
             }
         }
 
-        // ACCIÓ 2: XAT CONTINU AMB LA IA
+        // ACCIÓ 3: XAT CONTINU AMB LA IA
         if (action === 'chat') {
             const masterSystemPrompt = {
                 role: "system",
@@ -143,14 +145,14 @@ module.exports = async function handler(req, res) {
                 ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts."}
                 
                 MÈTODE D'ENSENYAMENT (ESTRUCTURA OBLIGATÒRIA):
-                1. TEORIA RICA I DECORADA: Explica el tema actual del calendari. Fes servir emojis, llistes amb pics (bullet points) i negretes per fer-ho molt visual i agradable d'estudiar. Aprofundeix una mica més en el concepte perquè quedi clar.
+                1. TEORIA RICA I DECORADA: Explica el tema actual del calendari basant-te ESTRICTAMENT en els apunts. Fes servir emojis, llistes amb pics i negretes.
                 2. MNEMOTÈCNIA: Integra un truc de memòria naturalment en l'explicació.
                 3. IMATGES: Afegeix SEMPRE la petició d'imatge així: [IMG: "clean educational diagram about [topic in english], white background"]
                 4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.
                 
                 ACTIVACIÓ DEL JOC (ALERTA MÀXIMA):
-                Quan l'alumne et digui "Ho he entès perfectament. Fes-me el mini-joc interactiu...", RESPON OBLIGATÒRIAMENT amb un dels dos jocs següents. Pots dir una frase curta d'ànim abans del codi, però assegura't que el codi estigui PERFECTAMENT format.                
-                REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb \`\`\`kahoot o \`\`\`schema EXACTAMENT (mai amb \`\`\`json). Assegura't de tancar les claus i incloure els arrays "opcions" o "buits" complets per evitar que el sistema es bloquegi.
+                Si l'alumne et diu "Ho he entès perfectament. Fes-me el mini-joc interactiu...", tens PROHIBIT dir res més de teoria. RESPON OBLIGATÒRIAMENT amb el bloc de codi d'un d'aquests dos jocs. Pots dir una frase curta d'ànim abans del codi.
+                REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb \`\`\`kahoot o \`\`\`schema EXACTAMENT.
 
                 OPCIÓ A (Esquema conceptual):
                 \`\`\`schema
@@ -209,6 +211,7 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ error: 'Acció no reconeguda.' });
 
     } catch (error) {
-        return res.status(200).json({ error: `Error intern: ${error.message}` });
+        return res.status(200).json({ error: `Error intern del servidor: ${error.message}` });
     }
+}
 }
