@@ -417,29 +417,40 @@
             }
         }
 
-        window.fetchImage = async function(btn, promptText) {
+        // GENERACIÓ DIRECTA AL NAVEGADOR AMB FLUX (Sense límits de Vercel)
+        window.fetchImage = function(btn, promptText) {
             const container = btn.parentElement;
-            btn.innerHTML = `⏳ Generant imatge amb FLUX (Pot trigar uns 10-15s)...`;
+            btn.innerHTML = `⏳ Generant esquema amb FLUX...`;
             btn.disabled = true;
             btn.classList.add('opacity-70');
             
-            try {
-                const res = await fetch('/api/generate', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'image', prompt: promptText })
-                });
-                const data = await res.json();
-                if(data.error) throw new Error(data.error);
-                
-                container.innerHTML = `<img src="${data.image}" alt="Imatge generada" class="w-full max-w-lg mx-auto block rounded-2xl shadow-md border border-slate-200 cursor-zoom-in hover:opacity-90 transition" onclick="openLightbox(this.src)" title="Fes clic per ampliar">`;
-                saveSession(); 
-            } catch (err) {
-                btn.innerHTML = `❌ Error: ${err.message}`;
+            // Millorem el text perquè la IA entengui que és un esquema educatiu i no un dibuix rar
+            const enhancedPrompt = "clean minimalist educational diagram, " + promptText + ", white background, high quality, vector style";
+            const safePrompt = encodeURIComponent(enhancedPrompt);
+            
+            // Cridem directament al model FLUX a través de la xarxa lliure
+            const imgUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=800&height=400&nologo=true&model=flux`;
+
+            const img = new Image();
+            img.src = imgUrl;
+            img.className = "w-full max-w-lg mx-auto block rounded-2xl shadow-md border border-slate-200 cursor-zoom-in hover:opacity-90 transition";
+            img.title = "Fes clic per ampliar";
+            img.onclick = () => openLightbox(imgUrl);
+
+            // Quan carregui la imatge, substituïm el botó
+            img.onload = () => {
+                container.innerHTML = '';
+                container.appendChild(img);
+                saveSession();
+            };
+            
+            img.onerror = () => {
+                btn.innerHTML = `❌ Error carregant la imatge.`;
                 btn.classList.replace('bg-indigo-50', 'bg-red-50');
                 btn.classList.replace('text-indigo-700', 'text-red-600');
                 btn.disabled = false;
                 btn.classList.remove('opacity-70');
-            }
+            };
         };
 
         function formatMessage(text) {
