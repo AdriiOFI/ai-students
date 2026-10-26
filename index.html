@@ -273,6 +273,12 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'prepare_study', pdfText: extractedText.substring(0, 4500), totalSessionsToGenerate: numSessions })
                 });
+                
+                // Evitem que el navegador exploti si Vercel retorna un 500 (Error de text pla)
+                if (!res.ok && res.status >= 500) {
+                    throw new Error("El servidor ha fallat. Verifica que els teus fitxers de Vercel no tenen errors de sintaxi.");
+                }
+                
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
                 
