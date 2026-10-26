@@ -114,37 +114,15 @@ module.exports = async function handler(req, res) {
                 MEMÒRIA ACTUAL DE L'ALUMNE:
                 ${studentContext}
                 
-                APUNTS/TEMARI:
+                APUNTS/TEMARI (OBLIGATORI extreure la teoria d'aquí):
                 ${pdfText ? pdfText.substring(0, 3000) : "Sense apunts."}
                 
-                MÈTODE D'ENSENYAMENT (MICRO-LEARNING):
-                1. ORDRE ESTRICTE: SEMPRE dóna primer la teoria, i el joc al final de tot.
-                2. POC A POC: Explica només UN concepte curt cada vegada.
-                3. NATURALITAT: Tens COMPLETAMENT PROHIBIT dir "Aquí tens un truc mnemotècnic". Integra la regla directament a l'explicació de forma conversacional.
-                4. IMATGES: Demana-les EXACTAMENT amb aquest text perquè el sistema dibuixi un botó:
-                   [IMG: "clean-educational-diagram-about-topic-white-background"]
-                5. EXCEPCIÓ ALS JOCS: Si l'alumne et demana un dubte, o et diu que ha FALLAT un joc i vol que l'hi expliquis, LIMITA'T a explicar-li l'error. NO afegeixis cap joc nou en aquesta resposta.
-                
-                FORMAT DELS JOCS (Si estàs explicant teoria nova, posa'n un obligatòriament al final):
-                OPCIÓ A (Esquema conceptual):
-                \`\`\`schema
-                {
-                  "titol": "Completa el diagrama",
-                  "buits": [
-                    { "context": "Node principal", "resposta": "paraula" },
-                    { "context": "Node secundari", "resposta": "paraula" }
-                  ]
-                }
-                \`\`\`
-
-                OPCIÓ B (Kahoot clàssic):
-                \`\`\`kahoot
-                {
-                  "pregunta": "Pregunta de repàs:",
-                  "opcions": ["Opció 1", "Opció 2", "Opció 3", "Opció 4"],
-                  "correcta": 0
-                }
-                \`\`\``
+                MÈTODE D'ENSENYAMENT PAS A PAS:
+                1. TEORIA: Explica UN concepte curt basat estrictament en els Apunts. Inclou el truc mnemotècnic integrat al text de forma natural.
+                2. IMATGES: Afegeix la petició d'imatge així: [IMG: "clean-educational-diagram-about-topic-white-background"]
+                3. PAUSA: Al final de la teva teoria, posa EXACTAMENT aquesta etiqueta: [BOTON_ENTENDIDO] i CALLA. NO generis cap joc encara.
+                4. DUBTES: Si l'alumne et fa una pregunta en comptes de dir que ho ha entès, respon el seu dubte (i pots tornar a posar [BOTON_ENTENDIDO]).
+                5. JOCS INTERACTIUS: NOMÉS quan l'alumne et digui "Ho he entès, fes-me un joc", LLAVORS generes el bloc \`\`\`kahoot o \`\`\`schema sobre la teoria anterior. No donis teoria nova junt amb el joc.`
             };
 
             let safeHistory = [];
