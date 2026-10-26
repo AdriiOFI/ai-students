@@ -119,7 +119,7 @@ module.exports = async function handler(req, res) {
                 
                 MÈTODE D'ENSENYAMENT PAS A PAS:
                 1. TEORIA: Explica UN concepte curt basat estrictament en els Apunts. Inclou el truc mnemotècnic integrat al text de forma natural.
-                2. IMATGES: Afegeix la petició d'imatge així: [IMG: "clean-educational-diagram-about-topic-white-background"]
+                2. IMATGES: Afegeix la petició d'imatge posant EXACTAMENT això: [IMG: "clean-educational-diagram-about-[TEMA]-white-background"] (Substitueix [TEMA] pel concepte real que estàs explicant EN ANGLÈS i separat per guions).
                 3. PAUSA: Al final de la teva teoria, posa EXACTAMENT aquesta etiqueta: [BOTON_ENTENDIDO] i CALLA. NO generis cap joc encara.
                 4. DUBTES: Si l'alumne et fa una pregunta en comptes de dir que ho ha entès, respon el seu dubte (i pots tornar a posar [BOTON_ENTENDIDO]).
                 5. JOCS INTERACTIUS: NOMÉS quan l'alumne et digui "Ho he entès, fes-me un joc", LLAVORS generes el bloc \`\`\`kahoot o \`\`\`schema sobre la teoria anterior. No donis teoria nova junt amb el joc.`
