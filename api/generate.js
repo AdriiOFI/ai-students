@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
             const togetherKey = process.env.TOGETHER_API_KEY;
             if (!togetherKey) return res.status(200).json({ error: "Falta configurar TOGETHER_API_KEY a Vercel." });
 
-            const togetherRes = await fetch("[https://api.together.xyz/v1/images/generations](https://api.together.xyz/v1/images/generations)", {
+            const togetherRes = await fetch("https://api.together.xyz/v1/images/generations", {
                 method: "POST",
                 headers: {
                     "Authorization": "Bearer " + togetherKey.trim(),
@@ -72,7 +72,7 @@ module.exports = async function handler(req, res) {
             "  \"preguntes\": [ { \"pregunta\": \"Text?\", \"opcions\": [\"A) 1\", \"B) 2\", \"C) 3\", \"D) 4\"], \"resposta_correcta\": \"A) 1\" } ]\n" +
             "}";
 
-            const response = await fetch("[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)", {
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + groqApiKey.trim(), "Content-Type": "application/json" },
                 body: JSON.stringify({
