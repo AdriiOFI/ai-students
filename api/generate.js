@@ -79,7 +79,8 @@ module.exports = async function handler(req, res) {
                     model: "openai/gpt-oss-20b", 
                     messages: [ { role: "system", content: systemPrompt } ],
                     temperature: 0.1,
-                    max_tokens: 2500
+                    max_tokens: 2500,
+                    response_format: { type: "json_object" }
                 })
             });
 
