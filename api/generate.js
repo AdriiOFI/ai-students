@@ -13,12 +13,13 @@ module.exports = async function handler(req, res) {
 
         const { action, pdfText, instructions, chatHistory, totalSessionsToGenerate, studentContext, prompt } = req.body;
 
-        // ACCIÓ: GENERAR LA IMATGE AMB HUGGING FACE FLUX
+        // ACCIÓ: GENERAR LA IMATGE AMB HUGGING FACE
         if (action === 'image') {
             if (!hfApiKey) return res.status(200).json({ error: "Falta configurar HF_API_KEY a Vercel." });
             try {
+                // Utilitzem FLUX, però estem preparats per capturar qualsevol error
                 const hfRes = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
-                    headers: { "Authorization": `Bearer ${hfApiKey}`, "Content-Type": "application/json" },
+                    headers: { "Authorization": `Bearer ${hfApiKey.trim()}`, "Content-Type": "application/json" },
                     method: "POST",
                     body: JSON.stringify({ inputs: prompt })
                 });
@@ -29,13 +30,15 @@ module.exports = async function handler(req, res) {
                     const mimeType = hfRes.headers.get('content-type') || 'image/jpeg';
                     return res.status(200).json({ image: `data:${mimeType};base64,${base64}` });
                 } else {
-                    return res.status(200).json({ error: "El servidor de Hugging Face està ocupat carregant el model FLUX. Espera 10 segons i torna a provar." });
+                    // Si Hugging Face rebutja la petició, llegim el motiu exacte
+                    const errData = await hfRes.text();
+                    return res.status(200).json({ error: `Rebutjat per Hugging Face: ${errData}` });
                 }
             } catch (e) {
-                return res.status(200).json({ error: "Error de connexió amb Hugging Face." });
+                // Si Vercel talla la connexió per temps (Timeout de 10s) o falla la xarxa
+                return res.status(200).json({ error: `La connexió s'ha tallat (Vercel Timeout o Xarxa): ${e.message}` });
             }
         }
-
         // ACCIÓ 1: GENERAR EL CALENDARI I EL TEST
         if (action === 'prepare_study') {
             const systemPrompt = `Ets un tutor d'estudi. T'han pujat apunts.
