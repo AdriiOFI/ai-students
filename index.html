@@ -541,7 +541,8 @@
                 buttons[gameData.correcta].classList.add('border-4', 'border-green-400');
             }
             saveSession();
-
+            unlockTheory(); 
+     
             let reply = indexPicked === gameData.correcta ? `He marcat "${textResponded}". Ho he encertat! Continua explicant.` : `He marcat "${textResponded}" i era incorrecta. Aclareix-me l'error (NO posis cap joc nou encara) i seguim.`;
             setTimeout(() => {
                 appendMessage('user', reply);
@@ -572,27 +573,13 @@
                 }
             });
 
-            // NOU: Funció per demanar el joc quan polsem "Ho he entès"
-        window.requestMinigame = function(btn) {
-            btn.disabled = true;
-            btn.innerHTML = "⏳ Preparant el joc...";
-            btn.classList.add('opacity-50');
-            
-            const msg = "Ho he entès perfectament. Fes-me un mini-joc interactiu (esquema amb buits o kahoot) sobre això per posar-me a prova.";
-            
-            setTimeout(() => {
-                appendMessage('user', "Ho he entès! Posa'm a prova.");
-                chatHistory.push({ role: 'user', content: msg });
-                triggerAiResponse();
-            }, 500);
-        }
-
             const btn = document.getElementById(`btn_${id}`);
 
             if(allCorrect) {
                 btn.className = "w-full bg-green-500 text-white font-bold py-3.5 rounded-xl shadow-md";
                 btn.innerHTML = "✅ Completat!";
                 btn.disabled = true;
+                unlockTheory();
                 saveSession();
 
                 setTimeout(() => {
@@ -610,6 +597,7 @@
                         inputEl.value = buit.resposta;
                         inputEl.className = "schema-box bg-orange-100 border-orange-400 px-4 py-3 text-sm text-orange-800 font-bold w-1/2 text-center rounded-xl";
                         inputEl.disabled = true;
+                        unlockTheory();
                     });
                     btn.className = "w-full bg-slate-300 text-slate-600 font-bold py-3.5 rounded-xl";
                     btn.innerHTML = "Solució mostrada (Límit d'intents)";
@@ -630,6 +618,37 @@
             }
         }
 
+           // NOU: Desbloquejar la teoria
+        window.unlockTheory = function() {
+            document.querySelectorAll('.chat-msg-ai').forEach(el => {
+                el.style.filter = 'none';
+                el.style.opacity = '1';
+                el.style.pointerEvents = 'auto';
+            });
+        }
+
+        // NOU: Demanar joc i Ocultar teoria (Mode Examen)
+        window.requestMinigame = function(btn) {
+            btn.disabled = true;
+            btn.innerHTML = "⏳ Preparant el joc (Mode Examen Activat)...";
+            btn.classList.add('opacity-50');
+            
+            // Ocultem els missatges anteriors perquè no copiï!
+            document.querySelectorAll('.chat-msg-ai').forEach(el => {
+                el.style.filter = 'blur(10px)';
+                el.style.opacity = '0.3';
+                el.style.pointerEvents = 'none';
+            });
+            
+            const msg = "Ho he entès perfectament. Fes-me el mini-joc interactiu sobre això per posar-me a prova.";
+            
+            setTimeout(() => {
+                appendMessage('user', "Ho he entès! Posa'm a prova.");
+                chatHistory.push({ role: 'user', content: msg });
+                triggerAiResponse();
+            }, 500);
+        }
+
         function appendMessage(sender, text) {
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
@@ -638,7 +657,7 @@
                 div.className = "flex justify-end w-full mb-4";
                 div.innerHTML = `<div class="bg-slate-800 text-white px-5 py-3.5 rounded-3xl rounded-tr-sm max-w-[85%] text-sm shadow-sm">${formatMessage(text)}</div>`;
             } else {
-                div.className = "flex justify-start gap-4 w-full mb-4";
+                div.className = "flex justify-start gap-4 w-full mb-4 chat-msg-ai transition-all duration-500";
                 div.innerHTML = `<div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-md">AI</div><div class="bg-white border border-slate-200 text-slate-800 px-6 py-5 rounded-3xl rounded-tl-sm max-w-[95%] shadow-md w-full overflow-hidden relative"><div class="prose prose-sm md:prose-base prose-slate max-w-none">${formatMessage(text)}</div></div>`;
             }
             box.appendChild(div);
