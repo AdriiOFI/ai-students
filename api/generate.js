@@ -158,7 +158,7 @@ module.exports = async function handler(req, res) {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + groqApiKey.trim(), "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "openai/gpt-oss-120b",
+                    model: "mixtral-8x7b-32768",
                     messages: messagesToSend,
                     temperature: 0.4,
                     max_tokens: 2500
