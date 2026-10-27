@@ -158,7 +158,7 @@ module.exports = async function handler(req, res) {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + groqApiKey.trim(), "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "mixtral-8x7b-32768",
+                    model: "qwen/qwen3.8-27b",
                     messages: messagesToSend,
                     temperature: 0.4,
                     max_tokens: 2500
