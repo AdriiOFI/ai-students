@@ -472,32 +472,36 @@
             }
         }
 
-        // GENERACIÓ D'IMATGES (HUGGING FACE SD 1.5)
-        window.fetchImage = async function(btn, promptText) {
+        // GENERACIÓ D'IMATGES DIRECTA (Sense backend, sense API keys, gratis i ràpid)
+        window.fetchImage = function(btn, promptText) {
             const container = btn.parentElement;
-            btn.innerHTML = `⏳ Dibuixant esquema (Triga uns 4-5 segons)...`;
+            btn.innerHTML = `⏳ Dibuixant esquema (Triga 2-3 segons)...`;
             btn.disabled = true;
             btn.classList.add('opacity-70');
-            
-            try {
-                const res = await fetch('/api/generate', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'image', prompt: promptText })
-                });
-                const data = await res.json();
-                
-                if(data.error) throw new Error(data.error);
-                
-                container.innerHTML = `<img src="${data.image}" alt="Imatge generada" class="w-full max-w-lg mx-auto block rounded-xl md:rounded-2xl shadow-md border border-slate-200 cursor-zoom-in hover:opacity-90 transition mt-3">`;
-                container.querySelector('img').onclick = function() { openLightbox(this.src); };
+
+            // Model estàndard de Pollinations (Ràpid, gratis i sense límits de sobrecàrrega)
+            const safePrompt = encodeURIComponent("clean minimalist educational diagram, " + promptText + ", white background");
+            const imgUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=800&height=400&nologo=true`;
+
+            const img = new Image();
+            img.src = imgUrl;
+            img.className = "w-full max-w-lg mx-auto block rounded-xl md:rounded-2xl shadow-md border border-slate-200 cursor-zoom-in hover:opacity-90 transition mt-3";
+            img.title = "Fes clic per ampliar";
+            img.onclick = () => openLightbox(imgUrl);
+
+            img.onload = () => { 
+                container.innerHTML = ''; 
+                container.appendChild(img); 
                 saveSession(); 
-            } catch (err) {
-                btn.innerHTML = `❌ Error: ${err.message}`;
+            };
+            
+            img.onerror = () => {
+                btn.innerHTML = `❌ Error carregant la imatge.`;
                 btn.classList.replace('bg-indigo-50', 'bg-red-50');
                 btn.classList.replace('text-indigo-700', 'text-red-600');
                 btn.disabled = false;
                 btn.classList.remove('opacity-70');
-            }
+            };
         };
 
         window.unlockTheory = function() {
