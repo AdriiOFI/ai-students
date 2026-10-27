@@ -28,37 +28,30 @@ module.exports = async function handler(req, res) {
         const studentContext = body.studentContext || "";
         const prompt = body.prompt || "";
 
-        // ACCIÓ 1: GENERAR LA IMATGE AMB SEGMIND (Ràpida i Gratis)
+        // ACCIÓ 1: GENERAR LA IMATGE AMB HUGGING FACE (ESTABLE I 100% GRATIS)
         if (action === 'image') {
-            const segmindKey = process.env.SEGMIND_API_KEY;
-            if (!segmindKey) return res.status(200).json({ error: "Falta configurar SEGMIND_API_KEY a Vercel." });
+            const hfKey = process.env.HF_API_KEY; 
+            if (!hfKey) return res.status(200).json({ error: "Falta configurar HF_API_KEY a Vercel." });
 
             try {
-                const segmindRes = await fetch("https://api.segmind.com/v1/ssd-1b", {
+                // Utilitzem Stable Diffusion 1.5: És molt ràpid i evita que Vercel talli la connexió
+                const hfRes = await fetch("https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5", {
                     method: "POST",
                     headers: {
-                        "x-api-key": segmindKey.trim(),
+                        "Authorization": "Bearer " + hfKey.trim(),
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        prompt: "clean minimalist educational diagram, " + prompt + ", white background, high quality, vector style",
-                        negative_prompt: "ugly, blurry, messy, text, watermark",
-                        samples: 1,
-                        scheduler: "uni_pc",
-                        num_inference_steps: 25,
-                        guidance_scale: 7.5,
-                        width: 1024,
-                        height: 768,
-                        base64: true
+                        inputs: "clean minimalist educational diagram, " + prompt + ", white background, high quality",
                     })
                 });
 
-                const data = await segmindRes.json();
-                
-                if (segmindRes.ok && data.image) {
-                    return res.status(200).json({ image: "data:image/jpeg;base64," + data.image });
+                if (hfRes.ok) {
+                    const arrayBuffer = await hfRes.arrayBuffer();
+                    const base64 = Buffer.from(arrayBuffer).toString('base64');
+                    return res.status(200).json({ image: "data:image/jpeg;base64," + base64 });
                 } else {
-                    return res.status(200).json({ error: "Rebutjat per Segmind: " + (data.message || JSON.stringify(data)) });
+                    return res.status(200).json({ error: "El servidor gratuït s'està despertant. Espera 5 segons i torna a provar." });
                 }
             } catch (e) {
                 return res.status(200).json({ error: `Error de xarxa: ${e.message}` });
