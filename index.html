@@ -8,6 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: { primaryColor: '#eff6ff', primaryBorderColor: '#3b82f6', primaryTextColor: '#1e293b', fontSize: '14px' } });
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } }
@@ -563,13 +566,23 @@
 
             let htmlContent = marked.parse(text);
 
-            htmlContent = htmlContent.replace(/\[IMG:\s*(?:&quot;|"|')(.*?)(?:&quot;|"|')\]/gi, function(match, prompt) {
-                let safePrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                return `<div class="image-container my-3 md:my-4 text-center">
-                    <button onclick="fetchImage(this, '${safePrompt}')" class="bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold py-2.5 px-4 md:py-3 md:px-5 rounded-xl text-xs md:text-base inline-flex items-center gap-2 hover:bg-indigo-100 transition shadow-sm mx-auto">
-                        🖼️ Generar Esquema Visual
-                    </button>
-                </div>`;
+            htmlContent = htmlContent.replace(/```mermaid([\s\S]*?)```/gi, function(match, code) {
+                let id = 'mermaid_' + Date.now() + Math.floor(Math.random() * 1000);
+                setTimeout(() => {
+                    try {
+                        mermaid.render(id + '_svg', code.trim()).then(result => {
+                            document.getElementById(id).innerHTML = result.svg;
+                        });
+                    } catch(e) {
+                        document.getElementById(id).innerHTML = '<span class="text-red-500 text-xs">Error dibuixant l\'esquema.</span>';
+                    }
+                }, 100);
+                return `<div id="${id}" class="my-5 flex justify-center w-full overflow-x-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition hover:shadow-md">
+                            <div class="animate-pulse flex items-center gap-2 text-slate-500 text-sm font-bold">
+                                <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                Dibuixant esquema vectorial...
+                            </div>
+                        </div>`;
             });
 
             htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, `
