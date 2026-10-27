@@ -28,36 +28,43 @@ module.exports = async function handler(req, res) {
         const studentContext = body.studentContext || "";
         const prompt = body.prompt || "";
 
-        // ACCIÓ 1: GENERAR LA IMATGE AMB TOGETHER AI
+        // ACCIÓ 1: GENERAR LA IMATGE AMB SEGMIND (Ràpida i Gratis)
         if (action === 'image') {
-            const togetherKey = process.env.TOGETHER_API_KEY;
-            if (!togetherKey) return res.status(200).json({ error: "Falta configurar TOGETHER_API_KEY a Vercel." });
+            const segmindKey = process.env.SEGMIND_API_KEY;
+            if (!segmindKey) return res.status(200).json({ error: "Falta configurar SEGMIND_API_KEY a Vercel." });
 
-            const togetherRes = await fetch("https://api.together.xyz/v1/images/generations", {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + togetherKey.trim(),
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "black-forest-labs/FLUX.1-schnell-Free",
-                    prompt: "clean minimalist educational diagram, " + prompt + ", white background, high quality, vector style",
-                    width: 1024,
-                    height: 768,
-                    steps: 4,
-                    n: 1,
-                    response_format: "b64_json"
-                })
-            });
+            try {
+                const segmindRes = await fetch("https://api.segmind.com/v1/ssd-1b", {
+                    method: "POST",
+                    headers: {
+                        "x-api-key": segmindKey.trim(),
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        prompt: "clean minimalist educational diagram, " + prompt + ", white background, high quality, vector style",
+                        negative_prompt: "ugly, blurry, messy, text, watermark",
+                        samples: 1,
+                        scheduler: "uni_pc",
+                        num_inference_steps: 25,
+                        guidance_scale: 7.5,
+                        width: 1024,
+                        height: 768,
+                        base64: true
+                    })
+                });
 
-            const data = await togetherRes.json();
-            if (togetherRes.ok && data.data && data.data[0]) {
-                return res.status(200).json({ image: "data:image/jpeg;base64," + data.data[0].b64_json });
-            } else {
-                return res.status(200).json({ error: "Rebutjat per Together AI: " + JSON.stringify(data) });
+                const data = await segmindRes.json();
+                
+                if (segmindRes.ok && data.image) {
+                    return res.status(200).json({ image: "data:image/jpeg;base64," + data.image });
+                } else {
+                    return res.status(200).json({ error: "Rebutjat per Segmind: " + (data.message || JSON.stringify(data)) });
+                }
+            } catch (e) {
+                return res.status(200).json({ error: `Error de xarxa: ${e.message}` });
             }
         }
-
+     
         // ACCIÓ 2: PREPARAR ESTUDI I TEST
         if (action === 'prepare_study') {
             const systemPrompt = "Ets un tutor d'estudi. T'han pujat apunts.\n" +
