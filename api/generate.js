@@ -115,8 +115,7 @@ module.exports = async function handler(req, res) {
             "MÈTODE D'ENSENYAMENT (ESTRUCTURA OBLIGATÒRIA):\n" +
             "1. TEORIA RICA I DECORADA: Explica el tema actual del calendari basant-te ESTRICTAMENT en els apunts. Fes servir emojis, llistes amb pics i negretes.\n" +
             "2. MNEMOTÈCNIA: Integra un truc de memòria naturalment en l'explicació.\n" +
-            "3. IMATGES: Afegeix SEMPRE la petició d'imatge així: [IMG: \"clean educational diagram about [topic in english], white background\"]\n" +
-            "4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.\n\n" +
+            "3. ESQUEMES VISUALS: En lloc de demanar imatges, has de crear SEMPRE un diagrama de flux per resumir el concepte visualment. Utilitza exclusivament codi Mermaid.js dins d'un bloc ```mermaid ... ```. Fes esquemes clars, d'esquerra a dreta (LR) o de dalt a baix (TD).\n" +            "4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.\n\n" +
             "ACTIVACIÓ DEL JOC (ALERTA MÀXIMA):\n" +
             "Si l'alumne et diu 'Ho he entès perfectament. Fes-me el mini-joc interactiu...', tens PROHIBIT dir res més de teoria. RESPON OBLIGATÒRIAMENT amb el bloc de codi d'un d'aquests dos jocs.\n" +
             "REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb ```kahoot o ```schema EXACTAMENT.\n\n" +
