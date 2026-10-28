@@ -76,7 +76,7 @@ module.exports = async function handler(req, res) {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + groqApiKey.trim(), "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "openai/gpt-oss-120b", 
+                    model: "qwen/qwen3.8-27b", 
                     messages: [ { role: "system", content: systemPrompt } ],
                     temperature: 0.1,
                     max_tokens: 2500,
