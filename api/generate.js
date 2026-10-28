@@ -26,6 +26,9 @@ module.exports = async function handler(req, res) {
         const totalSessionsToGenerate = body.totalSessionsToGenerate || 5;
         const studentContext = body.studentContext || "";
 
+        // MODEL MÉS ESTABLE ACTUALMENT A GROQ
+        const GROQ_MODEL = "qwen/qwen3.8-27b"; 
+
         // ACCIÓ 1: PREPARAR ESTUDI I TEST
         if (action === 'prepare_study') {
             const systemPrompt = "Ets un tutor d'estudi. T'han pujat apunts.\n" +
@@ -44,8 +47,12 @@ module.exports = async function handler(req, res) {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + groqApiKey.trim(), "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "qwen/qwen3.8-27b", 
-                    messages: [ { role: "system", content: systemPrompt } ],
+                    model: GROQ_MODEL, 
+                    messages: [ 
+                        { role: "system", content: systemPrompt },
+                        // SOLUCIÓ AL ERROR MINIJINJA: Afegim un 'user' obligatori
+                        { role: "user", content: "Genera el pla d'estudi i el test de diagnòstic basant-te en els meus apunts ara mateix." }
+                    ],
                     temperature: 0.1,
                     max_tokens: 2500,
                     response_format: { type: "json_object" }
@@ -126,7 +133,7 @@ module.exports = async function handler(req, res) {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + groqApiKey.trim(), "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "qwen/qwen3.8-27b",
+                    model: GROQ_MODEL,
                     messages: messagesToSend,
                     temperature: 0.4,
                     max_tokens: 2500
@@ -164,7 +171,7 @@ module.exports = async function handler(req, res) {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + groqApiKey.trim(), "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "qwen/qwen3.8-27b", 
+                    model: GROQ_MODEL, 
                     messages: messagesToSend,
                     temperature: 0.6,
                     max_tokens: 2500
