@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AIStudents - Tutor Intel·ligent</title>
+    <title>Aliat Intel·ligent - Tutor Virtual</title>
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
     <script>
         mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: { primaryColor: '#eff6ff', primaryBorderColor: '#3b82f6', primaryTextColor: '#1e293b', fontSize: '14px' } });
-    <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } }
     </script>
@@ -23,10 +22,6 @@
         .interactive-btn { transition: all 0.15s ease-in-out; }
         .interactive-btn:active { transform: scale(0.97); }
         .day-checkbox:checked + div { background-color: #eff6ff; border-color: #3b82f6; color: #2563eb; font-weight: bold; }
-        
-        #lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); justify-content: center; align-items: center; padding: 10px; cursor: zoom-out; backdrop-filter: blur(5px); }
-        #lightbox img { max-width: 100%; max-height: 95vh; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); object-fit: contain; }
-        
         .schema-box { font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
     </style>
 </head>
@@ -40,7 +35,7 @@
         <div class="p-3 md:p-4 border-b border-slate-100 flex gap-2 items-center justify-between">
             <button onclick="newSession()" class="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-3 rounded-xl transition shadow-sm text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                Nova Sessió
+                Inici / Nova Sessió
             </button>
             <button onclick="toggleSidebar()" class="md:hidden p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -48,13 +43,13 @@
         </div>
         <div class="flex-1 overflow-y-auto p-3 space-y-1" id="chat-history">
             <h3 class="text-[11px] font-semibold text-slate-400 px-3 mb-2 uppercase tracking-wider mt-2">Sessió Actual</h3>
-            <div id="history-placeholder" class="text-sm text-slate-500 italic px-3 py-2">Pendent de configurar...</div>
+            <div id="history-placeholder" class="text-sm text-slate-500 italic px-3 py-2">Tria un mode per començar...</div>
         </div>
         <div class="p-4 border-t border-slate-100 flex items-center gap-3 bg-slate-50/50 pb-safe">
             <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">AI</div>
             <div class="flex flex-col overflow-hidden">
-                <span class="text-sm font-semibold text-slate-700 truncate">AIStudents Tutor</span>
-                <span class="text-[10px] text-emerald-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> Sistema Actiu</span>
+                <span class="text-sm font-semibold text-slate-700 truncate">Aliat Intel·ligent</span>
+                <span class="text-[10px] text-emerald-600 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span> En línia</span>
             </div>
         </div>
     </aside>
@@ -62,14 +57,54 @@
     <!-- CONTINGUT PRINCIPAL -->
     <main class="flex-1 flex flex-col relative bg-slate-50/50 w-full h-full overflow-hidden">
         
-        <!-- BOTÓ GLOBAL DE MENÚ (Visible a tot arreu fins que s'entra al xat) -->
+        <!-- BOTÓ GLOBAL DE MENÚ (Visible a tot arreu) -->
         <button id="global-menu-btn" onclick="toggleSidebar()" class="absolute top-4 left-4 md:top-6 md:left-6 z-20 bg-white border border-slate-200 text-slate-700 p-2.5 rounded-xl shadow-sm hover:bg-slate-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
         </button>
 
-        <!-- VISTA 1: CONFIGURACIÓ -->
-        <div id="setup-view" class="flex-1 overflow-y-auto flex items-center justify-center p-4 pt-20 md:p-8">
-            <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-xl p-6 md:p-10">
+        <!-- VISTA 0: BENVINGUDA (NOU) -->
+        <div id="welcome-view" class="flex-1 overflow-y-auto flex items-center justify-center p-4 pt-20 md:p-8">
+            <div class="w-full max-w-5xl text-center space-y-8">
+                <div class="space-y-4">
+                    <div class="w-20 h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center text-4xl shadow-xl mx-auto mb-6 transform hover:rotate-12 transition">🤖</div>
+                    <h1 class="text-3xl md:text-5xl font-black text-slate-800 tracking-tight">Benvingut a <span class="text-blue-600">Aliat Intel·ligent</span></h1>
+                    <p class="text-slate-500 text-base md:text-lg max-w-2xl mx-auto font-medium leading-relaxed">
+                        Aquí podràs trobar el teu company d'intel·ligència artificial personalitzat. Selecciona <b>Pla d'Estudis</b> per planificar els teus exàmens a partir de PDF i generar tests automàtics, o utilitza el <b>Xat Lliure</b> per resoldre qualsevol dubte a l'instant.
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-10 max-w-4xl mx-auto px-4 md:px-0">
+                    <!-- Targeta 1: Pla d'Estudis -->
+                    <button onclick="startStudyMode()" class="bg-white border-2 border-slate-200 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 transition-all p-6 md:p-8 rounded-3xl text-left group flex flex-col h-full shadow-sm">
+                        <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-left">📅</div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Pla d'Estudis</h3>
+                        <p class="text-sm text-slate-500 flex-1">Puja els teus apunts i genera un calendari interactiu, minijocs i resums intel·ligents per aprovar.</p>
+                    </button>
+                    
+                    <!-- Targeta 2: Xat Lliure -->
+                    <button onclick="startFreeChatMode()" class="bg-white border-2 border-slate-200 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 transition-all p-6 md:p-8 rounded-3xl text-left group flex flex-col h-full shadow-sm">
+                        <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-left">💬</div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Xat Lliure</h3>
+                        <p class="text-sm text-slate-500 flex-1">Conversa oberta i directa amb l'IA. Ideal per fer consultes ràpides, demanar consells o investigar temes.</p>
+                    </button>
+                    
+                    <!-- Targeta 3: Ús Quotidià (Deshabilitada) -->
+                    <button onclick="return false" class="bg-slate-50 border-2 border-slate-100 opacity-60 p-6 md:p-8 rounded-3xl text-left flex flex-col h-full relative overflow-hidden cursor-not-allowed">
+                        <div class="absolute top-4 right-4 bg-slate-200 text-slate-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Pròximament</div>
+                        <div class="text-4xl mb-4 grayscale">🛠️</div>
+                        <h3 class="text-xl font-bold text-slate-600 mb-2">Ús Quotidià</h3>
+                        <p class="text-sm text-slate-400 flex-1">Noves eines automatitzades per facilitar el teu dia a dia fora de l'estudi. Molt aviat.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA 1: CONFIGURACIÓ PLA D'ESTUDI -->
+        <div id="setup-view" class="hidden flex-1 overflow-y-auto items-center justify-center p-4 pt-20 md:p-8">
+            <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-xl p-6 md:p-10 relative">
+                <button onclick="backToHome()" class="absolute top-6 left-6 text-slate-400 hover:text-slate-800 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
                 <div class="text-center mb-6 md:mb-8">
                     <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 mt-4 md:mt-0">Preparació de l'Estudi</h1>
                     <p class="text-slate-500 text-sm">Configura el temari i els dies d'estudi.</p>
@@ -137,18 +172,17 @@
 
         <!-- VISTA 3: XAT DE LA IA -->
         <div id="chat-view" class="hidden flex-1 flex-col h-full bg-white relative">
-            
-            <!-- CAPÇALERA DEL XAT (Amb botó de Menú i Calendari integrats) -->
+            <!-- CAPÇALERA DEL XAT -->
             <div class="p-3 md:p-4 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-20 gap-2">
                 <div class="flex items-center gap-2 md:gap-3">
                     <button onclick="toggleSidebar()" class="p-2 md:p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
                     </button>
                     <div class="font-bold text-slate-800 flex items-center gap-1.5 md:gap-2 text-[13px] md:text-base">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Classe Activa
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> <span id="chat-mode-label">Classe Activa</span>
                     </div>
                 </div>
-                <button onclick="showCalendarModal()" class="text-[11px] md:text-sm bg-slate-100 text-slate-700 font-semibold px-3 py-2 md:px-4 rounded-xl hover:bg-slate-200 transition flex items-center gap-1.5 md:gap-2 whitespace-nowrap">
+                <button id="calendar-header-btn" onclick="showCalendarModal()" class="text-[11px] md:text-sm bg-slate-100 text-slate-700 font-semibold px-3 py-2 md:px-4 rounded-xl hover:bg-slate-200 transition flex items-center gap-1.5 md:gap-2 whitespace-nowrap">
                     📅 <span class="hidden sm:inline">Pla d'Estudi</span>
                 </button>
             </div>
@@ -157,7 +191,7 @@
             
             <div class="p-3 md:p-4 bg-white border-t border-slate-200 relative z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.02)] pb-safe">
                 <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden">
-                    <input type="text" id="chat-input" placeholder="Escriu un dubte..." class="w-full pl-4 pr-12 py-3.5 md:py-4 md:pl-5 md:pr-14 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm text-sm md:text-base">
+                    <input type="text" id="chat-input" placeholder="Escriu un missatge..." class="w-full pl-4 pr-12 py-3.5 md:py-4 md:pl-5 md:pr-14 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm text-sm md:text-base">
                     <button type="submit" class="absolute right-1.5 md:right-2 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-xl transition shadow-md">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -169,27 +203,25 @@
     <script>
         let uploadedPDFs = []; 
         let extractedText = "";
-        let finalStudyText = ""; // El text final (PDF + Manual) que s'envia a la IA
+        let finalStudyText = ""; 
         let chatHistory = [];
         let currentQuizData = [];
         let generatedCalendarArray = []; 
         let validStudyDates = []; 
         let isPdfProcessing = false;
         let studentContextStr = ""; 
+        let appMode = 'none'; // Pot ser 'study' o 'free'
         
         window.interactiveGames = {};
 
-        // GESTIÓ DEL MENÚ LATERAL
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
             
             if (window.innerWidth >= 768) {
-                // En PC: s'oculta o es mostra i reorganitza l'espai
                 sidebar.classList.toggle('md:hidden');
                 sidebar.classList.toggle('md:flex');
             } else {
-                // En Mòbil: s'obre per sobre amb fons fosc
                 const isClosed = sidebar.classList.contains('-translate-x-full');
                 if (isClosed) {
                     sidebar.classList.remove('-translate-x-full');
@@ -211,36 +243,70 @@
                 generatedCalendarArray = data.calendar || [];
                 studentContextStr = data.context || "";
                 finalStudyText = data.finalText || "";
+                appMode = data.mode || 'study';
                 document.getElementById('chat-messages').innerHTML = data.html;
                 
+                document.getElementById('welcome-view').classList.add('hidden');
                 document.getElementById('setup-view').classList.add('hidden');
-                document.getElementById('global-menu-btn').classList.add('hidden'); // Amaguem botó flotant, ja hi ha el del xat
+                document.getElementById('global-menu-btn').classList.add('hidden');
+                
                 document.getElementById('chat-view').classList.remove('hidden');
                 document.getElementById('chat-view').classList.add('flex');
                 document.getElementById('chat-form').classList.remove('hidden');
+                
+                if(appMode === 'free') {
+                    document.getElementById('calendar-header-btn').classList.add('hidden');
+                    document.getElementById('chat-mode-label').innerText = "Xat Lliure";
+                }
                 
                 document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
                 
                 document.querySelectorAll('.game-container').forEach(el => {
                     let rawData = el.getAttribute('data-game');
-                    if(rawData) {
-                        try { window.interactiveGames[el.id] = JSON.parse(decodeURIComponent(rawData)); } catch(e) {}
-                    }
+                    if(rawData) { try { window.interactiveGames[el.id] = JSON.parse(decodeURIComponent(rawData)); } catch(e) {} }
                 });
             }
         };
 
         function newSession() { localStorage.removeItem('aiStudentsSession'); location.reload(); }
+        
+        function backToHome() {
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('welcome-view').classList.remove('hidden');
+            document.getElementById('global-menu-btn').classList.remove('hidden');
+        }
+
         function saveSession() {
             localStorage.setItem('aiStudentsSession', JSON.stringify({
                 history: chatHistory, html: document.getElementById('chat-messages').innerHTML,
                 calendar: generatedCalendarArray, context: studentContextStr,
-                finalText: finalStudyText
+                finalText: finalStudyText, mode: appMode
             }));
         }
 
-        function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').style.display = 'flex'; }
-        function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+        // --- RUTES D'INICI (NOU) ---
+        function startStudyMode() {
+            appMode = 'study';
+            document.getElementById('welcome-view').classList.add('hidden');
+            document.getElementById('setup-view').classList.remove('hidden');
+            document.getElementById('setup-view').classList.add('flex');
+        }
+
+        function startFreeChatMode() {
+            appMode = 'free';
+            document.getElementById('welcome-view').classList.add('hidden');
+            document.getElementById('global-menu-btn').classList.add('hidden');
+            
+            document.getElementById('chat-view').classList.remove('hidden');
+            document.getElementById('chat-view').classList.add('flex');
+            document.getElementById('chat-form').classList.remove('hidden');
+            document.getElementById('calendar-header-btn').classList.add('hidden');
+            document.getElementById('chat-mode-label').innerText = "Xat Lliure";
+            
+            appendMessage('ai', "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?");
+            chatHistory.push({ role: 'assistant', content: "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?" });
+            saveSession();
+        }
 
         document.getElementById('exam-date').addEventListener('change', (e) => {
             const diffDays = Math.ceil((new Date(e.target.value) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
@@ -301,7 +367,6 @@
 
         async function proceedToNextStep() {
             if (isPdfProcessing) return;
-            
             const examDateStr = document.getElementById('exam-date').value;
             if (!examDateStr) { Swal.fire('Atenció', 'Selecciona la data de l\'examen.', 'warning'); return; }
             
@@ -314,11 +379,8 @@
                 return; 
             }
 
-            // Unim els PDFs amb el text manual
             finalStudyText = extractedText;
-            if (manualText) {
-                finalStudyText += "\n\nNotes manuals de l'alumne:\n" + manualText;
-            }
+            if (manualText) finalStudyText += "\n\nNotes manuals de l'alumne:\n" + manualText;
 
             generatePlanAndQuiz();
         }
@@ -332,7 +394,7 @@
                     body: JSON.stringify({ action: 'prepare_study', pdfText: finalStudyText.substring(0, 4500), totalSessionsToGenerate: numSessions })
                 });
                 
-                if (!res.ok && res.status >= 500) throw new Error("El servidor ha fallat. Revisa que l'API de Vercel funcioni correctament.");
+                if (!res.ok && res.status >= 500) throw new Error("El servidor ha fallat. Revisa que l'API funcioni correctament.");
                 
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
@@ -412,7 +474,7 @@
             document.getElementById('quiz-view').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
-            document.getElementById('global-menu-btn').classList.add('hidden'); // Ocultem botó global per fer lloc a la barra
+            document.getElementById('global-menu-btn').classList.add('hidden'); 
 
             studentContextStr = `L'alumne ha tret ${score}/5 (${level}) al test inicial.`;
 
@@ -433,7 +495,7 @@
         window.startTeaching = function() {
             document.getElementById('welcome-card').style.display = 'none';
             document.getElementById('chat-form').classList.remove('hidden');
-            const prompt = "Hola tutor! Estic preparat. **Comença explicant-me el primer tema del nostre pla d'estudi basat en els apunts**. Explica-ho a poc a poc, posa la imatge, i acaba només amb l'etiqueta [BOTON_ENTENDIDO].";
+            const prompt = "Hola tutor! Estic preparat. **Comença explicant-me el primer tema del nostre pla d'estudi basat en els apunts**. Explica-ho a poc a poc i acaba només amb l'etiqueta [BOTON_ENTENDIDO].";
             appendMessage('user', "Comencem la primera sessió!");
             chatHistory.push({ role: 'user', content: prompt });
             triggerAiResponse();
@@ -454,9 +516,11 @@
             const loadingId = 'loading-' + Date.now();
             appendLoading(loadingId);
             try {
+                // IMPORTANT: Si estem en Xat Lliure, enviem una acció diferent per no cridar les normes de l'estudi
+                const actionToSend = appMode === 'free' ? 'free_chat' : 'chat';
                 const res = await fetch('/api/generate', { 
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ action: 'chat', chatHistory: chatHistory, pdfText: finalStudyText, studentContext: studentContextStr }) 
+                    body: JSON.stringify({ action: actionToSend, chatHistory: chatHistory, pdfText: finalStudyText, studentContext: studentContextStr }) 
                 });
                 
                 const loadingEl = document.getElementById(loadingId);
@@ -474,38 +538,6 @@
                 appendMessage('ai', '⚠️ Error: ' + err.message + '. Escriu alguna cosa per reintentar.');
             }
         }
-
-        // GENERACIÓ D'IMATGES DIRECTA (Sense backend, sense API keys, gratis i ràpid)
-        window.fetchImage = function(btn, promptText) {
-            const container = btn.parentElement;
-            btn.innerHTML = `⏳ Dibuixant esquema (Triga 2-3 segons)...`;
-            btn.disabled = true;
-            btn.classList.add('opacity-70');
-
-            // Model estàndard de Pollinations (Ràpid, gratis i sense límits de sobrecàrrega)
-            const safePrompt = encodeURIComponent("clean minimalist educational diagram, " + promptText + ", white background");
-            const imgUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=800&height=400&nologo=true`;
-
-            const img = new Image();
-            img.src = imgUrl;
-            img.className = "w-full max-w-lg mx-auto block rounded-xl md:rounded-2xl shadow-md border border-slate-200 cursor-zoom-in hover:opacity-90 transition mt-3";
-            img.title = "Fes clic per ampliar";
-            img.onclick = () => openLightbox(imgUrl);
-
-            img.onload = () => { 
-                container.innerHTML = ''; 
-                container.appendChild(img); 
-                saveSession(); 
-            };
-            
-            img.onerror = () => {
-                btn.innerHTML = `❌ Error carregant la imatge.`;
-                btn.classList.replace('bg-indigo-50', 'bg-red-50');
-                btn.classList.replace('text-indigo-700', 'text-red-600');
-                btn.disabled = false;
-                btn.classList.remove('opacity-70');
-            };
-        };
 
         window.unlockTheory = function() {
             document.querySelectorAll('.chat-msg-ai').forEach(el => {
