@@ -27,7 +27,7 @@ module.exports = async function handler(req, res) {
         const studentContext = body.studentContext || "";
 
         // MODEL MÉS ESTABLE ACTUALMENT A GROQ
-        const GROQ_MODEL = "qwen/qwen3.8-27b"; 
+        const GROQ_MODEL = "openai/gpt-oss-120b"; 
 
         // ACCIÓ 1: PREPARAR ESTUDI I TEST
         if (action === 'prepare_study') {
