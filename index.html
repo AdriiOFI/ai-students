@@ -22,6 +22,10 @@
         .interactive-btn { transition: all 0.15s ease-in-out; }
         .interactive-btn:active { transform: scale(0.97); }
         .day-checkbox:checked + div { background-color: #eff6ff; border-color: #3b82f6; color: #2563eb; font-weight: bold; }
+        
+        #lightbox { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); justify-content: center; align-items: center; padding: 10px; cursor: zoom-out; backdrop-filter: blur(5px); }
+        #lightbox img { max-width: 100%; max-height: 95vh; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); object-fit: contain; }
+        
         .schema-box { font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
     </style>
 </head>
@@ -31,7 +35,7 @@
     <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-30 hidden backdrop-blur-sm transition-opacity opacity-0 md:hidden"></div>
 
     <!-- BARRA LATERAL -->
-    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-40 w-72 h-full bg-white border-r border-slate-200 flex flex-col shadow-2xl md:shadow-sm shrink-0 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0">
+    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-40 w-72 h-full bg-white border-r border-slate-200 flex flex-col shadow-2xl md:shadow-sm shrink-0 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 hidden md:flex">
         <div class="p-3 md:p-4 border-b border-slate-100 flex gap-2 items-center justify-between">
             <button onclick="newSession()" class="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-3 rounded-xl transition shadow-sm text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
@@ -55,46 +59,69 @@
     </aside>
 
     <!-- CONTINGUT PRINCIPAL -->
-    <main class="flex-1 flex flex-col relative bg-slate-50/50 w-full h-full overflow-hidden">
+    <main class="flex-1 flex flex-col relative bg-slate-50 w-full h-full overflow-hidden">
         
         <!-- BOTÓ GLOBAL DE MENÚ (Visible a tot arreu) -->
         <button id="global-menu-btn" onclick="toggleSidebar()" class="absolute top-4 left-4 md:top-6 md:left-6 z-20 bg-white border border-slate-200 text-slate-700 p-2.5 rounded-xl shadow-sm hover:bg-slate-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
         </button>
 
-        <!-- VISTA 0: BENVINGUDA (NOU) -->
-        <div id="welcome-view" class="flex-1 overflow-y-auto flex items-center justify-center p-4 pt-20 md:p-8">
-            <div class="w-full max-w-5xl text-center space-y-8">
-                <div class="space-y-4">
-                    <div class="w-20 h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center text-4xl shadow-xl mx-auto mb-6 transform hover:rotate-12 transition">🤖</div>
-                    <h1 class="text-3xl md:text-5xl font-black text-slate-800 tracking-tight">Benvingut a <span class="text-blue-600">Aliat Intel·ligent</span></h1>
-                    <p class="text-slate-500 text-base md:text-lg max-w-2xl mx-auto font-medium leading-relaxed">
-                        Aquí podràs trobar el teu company d'intel·ligència artificial personalitzat. Selecciona <b>Pla d'Estudis</b> per planificar els teus exàmens a partir de PDF i generar tests automàtics, o utilitza el <b>Xat Lliure</b> per resoldre qualsevol dubte a l'instant.
+        <!-- VISTA 0: BENVINGUDA (ACTUALITZADA I DECORADA) -->
+        <div id="welcome-view" class="flex-1 overflow-y-auto flex items-center justify-center p-4 md:p-8 bg-gradient-to-b from-slate-50 to-slate-100">
+            <div class="w-full max-w-6xl text-center space-y-12 pb-10">
+                
+                <!-- Capçalera -->
+                <div class="space-y-6 pt-10">
+                    <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-[2rem] flex items-center justify-center text-5xl shadow-xl shadow-blue-500/20 mx-auto transform hover:rotate-[10deg] transition-all duration-300">🤖</div>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-slate-800 tracking-tight">
+                        Benvingut a <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Aliat Intel·ligent</span>
+                    </h1>
+                    <p class="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
+                        Quin tipus d'ajuda necessites avui? Selecciona un mode per començar a treballar de manera més eficient i organitzada.
                     </p>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-10 max-w-4xl mx-auto px-4 md:px-0">
+                <!-- Graella de Modes -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto px-2">
+                    
                     <!-- Targeta 1: Pla d'Estudis -->
-                    <button onclick="startStudyMode()" class="bg-white border-2 border-slate-200 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 transition-all p-6 md:p-8 rounded-3xl text-left group flex flex-col h-full shadow-sm">
-                        <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-left">📅</div>
-                        <h3 class="text-xl font-bold text-slate-800 mb-2">Pla d'Estudis</h3>
-                        <p class="text-sm text-slate-500 flex-1">Puja els teus apunts i genera un calendari interactiu, minijocs i resums intel·ligents per aprovar.</p>
+                    <button onclick="startStudyMode()" class="bg-white border-2 border-slate-200 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 transition-all duration-300 p-8 rounded-[2rem] text-left group flex flex-col h-full relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full -z-10 group-hover:scale-125 transition-transform duration-500"></div>
+                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">📅</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-3 group-hover:text-blue-600 transition-colors">Pla d'Estudis</h3>
+                        <p class="text-base text-slate-500 flex-1 leading-relaxed mb-6">Mètode guiat pas a pas. Puja el teu PDF i genera un calendari d'estudi amb minijocs i resums automàtics per preparar-te a fons.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto">
+                            <span class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1.5 rounded-lg">Pautat</span>
+                            <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-lg">Interactiu</span>
+                            <span class="bg-indigo-50 text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-lg">Esquemes</span>
+                        </div>
                     </button>
                     
                     <!-- Targeta 2: Xat Lliure -->
-                    <button onclick="startFreeChatMode()" class="bg-white border-2 border-slate-200 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 transition-all p-6 md:p-8 rounded-3xl text-left group flex flex-col h-full shadow-sm">
-                        <div class="text-4xl mb-4 group-hover:scale-110 transition-transform origin-left">💬</div>
-                        <h3 class="text-xl font-bold text-slate-800 mb-2">Xat Lliure</h3>
-                        <p class="text-sm text-slate-500 flex-1">Conversa oberta i directa amb l'IA. Ideal per fer consultes ràpides, demanar consells o investigar temes.</p>
+                    <button onclick="startFreeChatMode()" class="bg-white border-2 border-slate-200 hover:border-emerald-500 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 transition-all duration-300 p-8 rounded-[2rem] text-left group flex flex-col h-full relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-50 to-transparent rounded-bl-full -z-10 group-hover:scale-125 transition-transform duration-500"></div>
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">💬</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-3 group-hover:text-emerald-600 transition-colors">Xat Lliure</h3>
+                        <p class="text-base text-slate-500 flex-1 leading-relaxed mb-6">Conversa directa i sense límits. Fes preguntes ràpides, investiga conceptes o demana consell sense seguir cap estructura prèvia.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto">
+                            <span class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1.5 rounded-lg">Lliure</span>
+                            <span class="bg-emerald-50 text-emerald-600 text-xs font-bold px-3 py-1.5 rounded-lg">Ràpid</span>
+                            <span class="bg-teal-50 text-teal-600 text-xs font-bold px-3 py-1.5 rounded-lg">Flexible</span>
+                        </div>
                     </button>
                     
-                    <!-- Targeta 3: Ús Quotidià (Deshabilitada) -->
-                    <button onclick="return false" class="bg-slate-50 border-2 border-slate-100 opacity-60 p-6 md:p-8 rounded-3xl text-left flex flex-col h-full relative overflow-hidden cursor-not-allowed">
-                        <div class="absolute top-4 right-4 bg-slate-200 text-slate-600 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Pròximament</div>
-                        <div class="text-4xl mb-4 grayscale">🛠️</div>
-                        <h3 class="text-xl font-bold text-slate-600 mb-2">Ús Quotidià</h3>
-                        <p class="text-sm text-slate-400 flex-1">Noves eines automatitzades per facilitar el teu dia a dia fora de l'estudi. Molt aviat.</p>
+                    <!-- Targeta 3: Ús Quotidià -->
+                    <button onclick="return false" class="bg-slate-50 border-2 border-slate-200/60 p-8 rounded-[2rem] text-left flex flex-col h-full relative overflow-hidden cursor-not-allowed group">
+                        <div class="absolute top-5 right-5 bg-slate-200 text-slate-500 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Pròximament</div>
+                        <div class="w-16 h-16 bg-slate-200 text-slate-400 rounded-2xl flex items-center justify-center text-3xl mb-6 grayscale opacity-70">🛠️</div>
+                        <h3 class="text-2xl font-bold text-slate-400 mb-3">Ús Quotidià</h3>
+                        <p class="text-base text-slate-400 flex-1 leading-relaxed mb-6">Eines per simplificar les teves tasques diàries, automatitzar resums o gestionar el teu temps i rutines amb IA.</p>
+                        <div class="flex flex-wrap gap-2 mt-auto opacity-50">
+                            <span class="bg-slate-200 text-slate-500 text-xs font-bold px-3 py-1.5 rounded-lg">Productivitat</span>
+                            <span class="bg-slate-200 text-slate-500 text-xs font-bold px-3 py-1.5 rounded-lg">Tasques</span>
+                        </div>
                     </button>
+                    
                 </div>
             </div>
         </div>
@@ -102,11 +129,11 @@
         <!-- VISTA 1: CONFIGURACIÓ PLA D'ESTUDI -->
         <div id="setup-view" class="hidden flex-1 overflow-y-auto items-center justify-center p-4 pt-20 md:p-8">
             <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-xl p-6 md:p-10 relative">
-                <button onclick="backToHome()" class="absolute top-6 left-6 text-slate-400 hover:text-slate-800 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                <button onclick="backToHome()" class="absolute top-6 left-6 text-slate-400 hover:text-slate-800 transition bg-slate-100 p-2 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
                 </button>
                 <div class="text-center mb-6 md:mb-8">
-                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 mt-4 md:mt-0">Preparació de l'Estudi</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 mt-8 md:mt-0">Preparació de l'Estudi</h1>
                     <p class="text-slate-500 text-sm">Configura el temari i els dies d'estudi.</p>
                 </div>
                 <div class="space-y-5 md:space-y-6">
@@ -210,7 +237,7 @@
         let validStudyDates = []; 
         let isPdfProcessing = false;
         let studentContextStr = ""; 
-        let appMode = 'none'; // Pot ser 'study' o 'free'
+        let appMode = 'none'; 
         
         window.interactiveGames = {};
 
@@ -272,6 +299,7 @@
         
         function backToHome() {
             document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('setup-view').classList.remove('flex');
             document.getElementById('welcome-view').classList.remove('hidden');
             document.getElementById('global-menu-btn').classList.remove('hidden');
         }
@@ -284,7 +312,7 @@
             }));
         }
 
-        // --- RUTES D'INICI (NOU) ---
+        // --- RUTES D'INICI ---
         function startStudyMode() {
             appMode = 'study';
             document.getElementById('welcome-view').classList.add('hidden');
@@ -516,7 +544,6 @@
             const loadingId = 'loading-' + Date.now();
             appendLoading(loadingId);
             try {
-                // IMPORTANT: Si estem en Xat Lliure, enviem una acció diferent per no cridar les normes de l'estudi
                 const actionToSend = appMode === 'free' ? 'free_chat' : 'chat';
                 const res = await fetch('/api/generate', { 
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, 
