@@ -22,43 +22,11 @@ module.exports = async function handler(req, res) {
         const body = req.body || {};
         const action = body.action;
         const pdfText = body.pdfText || "";
-        const instructions = body.instructions || "";
         const chatHistory = body.chatHistory || [];
         const totalSessionsToGenerate = body.totalSessionsToGenerate || 5;
         const studentContext = body.studentContext || "";
-        const prompt = body.prompt || "";
 
-        // ACCIÓ 1: GENERAR LA IMATGE AMB HUGGING FACE (ESTABLE I 100% GRATIS)
-        if (action === 'image') {
-            const hfKey = process.env.HF_API_KEY; 
-            if (!hfKey) return res.status(200).json({ error: "Falta configurar HF_API_KEY a Vercel." });
-
-            try {
-                // Utilitzem Stable Diffusion 1.5: És molt ràpid i evita que Vercel talli la connexió
-                const hfRes = await fetch("https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": "Bearer " + hfKey.trim(),
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        inputs: "clean minimalist educational diagram, " + prompt + ", white background, high quality",
-                    })
-                });
-
-                if (hfRes.ok) {
-                    const arrayBuffer = await hfRes.arrayBuffer();
-                    const base64 = Buffer.from(arrayBuffer).toString('base64');
-                    return res.status(200).json({ image: "data:image/jpeg;base64," + base64 });
-                } else {
-                    return res.status(200).json({ error: "El servidor gratuït s'està despertant. Espera 5 segons i torna a provar." });
-                }
-            } catch (e) {
-                return res.status(200).json({ error: `Error de xarxa: ${e.message}` });
-            }
-        }
-
-        // ACCIÓ 2: PREPARAR ESTUDI I TEST
+        // ACCIÓ 1: PREPARAR ESTUDI I TEST
         if (action === 'prepare_study') {
             const systemPrompt = "Ets un tutor d'estudi. T'han pujat apunts.\n" +
             "La teva missió és doble:\n" +
@@ -107,7 +75,7 @@ module.exports = async function handler(req, res) {
             }
         }
 
-        // ACCIÓ 3: XAT CONTINU I JOCS INTERACTIUS
+        // ACCIÓ 2: XAT CONTINU I JOCS INTERACTIUS (Pla d'estudi)
         if (action === 'chat') {
             const systemPromptChat = "Ets AIStudents, un tutor d'estudi avançat.\n\n" +
             "MEMÒRIA ACTUAL DE L'ALUMNE:\n" + studentContext + "\n\n" +
@@ -115,7 +83,8 @@ module.exports = async function handler(req, res) {
             "MÈTODE D'ENSENYAMENT (ESTRUCTURA OBLIGATÒRIA):\n" +
             "1. TEORIA RICA I DECORADA: Explica el tema actual del calendari basant-te ESTRICTAMENT en els apunts. Fes servir emojis, llistes amb pics i negretes.\n" +
             "2. MNEMOTÈCNIA: Integra un truc de memòria naturalment en l'explicació.\n" +
-            "3. ESQUEMES VISUALS: En lloc de demanar imatges, has de crear SEMPRE un diagrama de flux per resumir el concepte visualment. Utilitza exclusivament codi Mermaid.js dins d'un bloc ```mermaid ... ```. Fes esquemes clars, d'esquerra a dreta (LR) o de dalt a baix (TD).\n" +            "4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.\n\n" +
+            "3. ESQUEMES VISUALS: En lloc de demanar imatges, has de crear SEMPRE un diagrama de flux per resumir el concepte visualment. Utilitza exclusivament codi Mermaid.js dins d'un bloc ```mermaid ... ```. Fes esquemes clars, d'esquerra a dreta (LR) o de dalt a baix (TD).\n" +
+            "4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.\n\n" +
             "ACTIVACIÓ DEL JOC (ALERTA MÀXIMA):\n" +
             "Si l'alumne et diu 'Ho he entès perfectament. Fes-me el mini-joc interactiu...', tens PROHIBIT dir res més de teoria. RESPON OBLIGATÒRIAMENT amb el bloc de codi d'un d'aquests dos jocs.\n" +
             "REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb ```kahoot o ```schema EXACTAMENT.\n\n" +
@@ -141,7 +110,13 @@ module.exports = async function handler(req, res) {
             let safeHistory = [];
             let lastRole = "";
             for (let msg of chatHistory) {
-	@@ -151,32 +13,25 @@ module.exports = async function handler(req, res) {
+                if (msg.role !== lastRole) {
+                    safeHistory.push({ role: msg.role, content: msg.content });
+                    lastRole = msg.role;
+                } else {
+                    if (safeHistory.length > 0) {
+                        safeHistory[safeHistory.length - 1].content += "\n\n" + msg.content;
+                    }
                 }
             }
 
@@ -167,7 +142,7 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ reply: data.choices[0].message.content });
         }
 
-        // ACCIÓ 4 (NOVA): XAT LLIURE
+        // ACCIÓ 3: XAT LLIURE
         if (action === 'free_chat') {
             let safeHistory = [];
             let lastRole = "";
