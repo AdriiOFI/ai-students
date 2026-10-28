@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
         const totalSessionsToGenerate = body.totalSessionsToGenerate || 5;
         const studentContext = body.studentContext || "";
 
-        const GROQ_MODEL = "openai/gpt-oss-120b"; 
+        const GROQ_MODEL = "openai/gpt-oss-20b"; 
 
         const safetyRules = `
 NORMES DE SEGURETAT I PROTECCIÓ (INFRANGIBLES):
