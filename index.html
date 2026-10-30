@@ -8,7 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
     <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: { primaryColor: '#eff6ff', primaryBorderColor: '#3b82f6', primaryTextColor: '#1e293b', fontSize: '14px' } });
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } }
     </script>
@@ -23,14 +25,11 @@
         .schema-box { font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
     </style>
 </head>
-<!-- Fem servir h-[100dvh] perquè la barra del mòbil no tapi l'input del xat -->
 <body class="bg-slate-50 text-slate-800 h-[100dvh] flex overflow-hidden antialiased font-sans relative w-full">
 
-    <!-- OVERLAY FOSC PER A MÒBILS (Ara en z-40) -->
     <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/60 z-40 hidden backdrop-blur-sm transition-opacity opacity-0 md:hidden"></div>
 
-    <!-- BARRA LATERAL (z-50 perquè sempre quedi per sobre de tot) -->
-    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-[85%] max-w-[280px] md:w-72 h-full bg-white border-r border-slate-200 flex flex-col shadow-2xl md:shadow-sm shrink-0 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0">
+    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-[85%] max-w-[280px] md:w-72 h-full bg-white border-r border-slate-200 flex flex-col shadow-2xl md:shadow-sm shrink-0 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 hidden md:flex">
         <div class="p-3 md:p-4 border-b border-slate-100 flex gap-2 items-center justify-between">
             <button onclick="newSession()" class="flex-1 flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-2.5 px-3 rounded-xl transition shadow-sm text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
@@ -53,15 +52,12 @@
         </div>
     </aside>
 
-    <!-- CONTINGUT PRINCIPAL -->
     <main class="flex-1 flex flex-col relative bg-slate-50 w-full h-full overflow-hidden">
         
-        <!-- BOTÓ GLOBAL DE MENÚ -->
         <button id="global-menu-btn" onclick="toggleSidebar()" class="absolute top-3 left-3 md:top-6 md:left-6 z-20 bg-white border border-slate-200 text-slate-700 p-2.5 rounded-xl shadow-sm hover:bg-slate-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
         </button>
 
-        <!-- VISTA 0: BENVINGUDA -->
         <div id="welcome-view" class="flex-1 overflow-y-auto flex items-center justify-center p-4 md:p-8 bg-gradient-to-b from-slate-50 to-slate-100">
             <div class="w-full max-w-6xl text-center space-y-8 md:space-y-12 pb-10 mt-12 md:mt-0">
                 <div class="space-y-4 md:space-y-6 pt-4 md:pt-10">
@@ -75,45 +71,30 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 max-w-5xl mx-auto px-2">
-                    <!-- Targeta 1 -->
                     <button onclick="startStudyMode()" class="bg-white border-2 border-slate-200 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-left group flex flex-col h-full relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full -z-10 group-hover:scale-125 transition-transform duration-500"></div>
                         <div class="w-12 h-12 md:w-16 md:h-16 bg-blue-100 text-blue-600 rounded-xl md:rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-4 md:mb-6 group-hover:scale-110 transition-transform">📅</div>
                         <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-2 md:mb-3 group-hover:text-blue-600 transition-colors">Pla d'Estudis</h3>
                         <p class="text-xs md:text-base text-slate-500 flex-1 leading-relaxed mb-4 md:mb-6">Puja el teu PDF i genera un calendari d'estudi amb minijocs i resums automàtics.</p>
-                        <div class="flex flex-wrap gap-1.5 md:gap-2 mt-auto">
-                            <span class="bg-slate-100 text-slate-600 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Pautat</span>
-                            <span class="bg-blue-50 text-blue-600 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Interactiu</span>
-                        </div>
                     </button>
                     
-                    <!-- Targeta 2 -->
                     <button onclick="startFreeChatMode()" class="bg-white border-2 border-slate-200 hover:border-emerald-500 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-left group flex flex-col h-full relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-bl from-emerald-50 to-transparent rounded-bl-full -z-10 group-hover:scale-125 transition-transform duration-500"></div>
                         <div class="w-12 h-12 md:w-16 md:h-16 bg-emerald-100 text-emerald-600 rounded-xl md:rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-4 md:mb-6 group-hover:scale-110 transition-transform">💬</div>
                         <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-2 md:mb-3 group-hover:text-emerald-600 transition-colors">XatBot</h3>
                         <p class="text-xs md:text-base text-slate-500 flex-1 leading-relaxed mb-4 md:mb-6">Conversa directa i segura amb la IA per fer consultes o investigar temes lliurement.</p>
-                        <div class="flex flex-wrap gap-1.5 md:gap-2 mt-auto">
-                            <span class="bg-slate-100 text-slate-600 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Lliure</span>
-                            <span class="bg-emerald-50 text-emerald-600 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Segur</span>
-                        </div>
                     </button>
                     
-                    <!-- Targeta 3 -->
                     <button onclick="return false" class="bg-slate-50 border-2 border-slate-200/60 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-left flex flex-col h-full relative overflow-hidden cursor-not-allowed group">
                         <div class="absolute top-4 right-4 bg-slate-200 text-slate-500 text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 md:py-1.5 rounded-full uppercase tracking-widest shadow-sm">Pròximament</div>
                         <div class="w-12 h-12 md:w-16 md:h-16 bg-slate-200 text-slate-400 rounded-xl md:rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-4 md:mb-6 grayscale opacity-70">🛠️</div>
                         <h3 class="text-xl md:text-2xl font-bold text-slate-400 mb-2 md:mb-3">Ús Quotidià</h3>
-                        <p class="text-xs md:text-base text-slate-400 flex-1 leading-relaxed mb-4 md:mb-6">Eines per simplificar les teves tasques diàries o gestionar el teu temps i rutines.</p>
-                        <div class="flex flex-wrap gap-1.5 md:gap-2 mt-auto opacity-50">
-                            <span class="bg-slate-200 text-slate-500 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Productivitat</span>
-                        </div>
+                        <p class="text-xs md:text-base text-slate-400 flex-1 leading-relaxed mb-4 md:mb-6">Eines per simplificar tasques diàries o gestionar temps i rutines.</p>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- VISTA 1: CONFIGURACIÓ PLA D'ESTUDI -->
         <div id="setup-view" class="hidden flex-1 overflow-y-auto items-center justify-center p-3 md:p-8">
             <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-[1.5rem] md:rounded-3xl shadow-xl p-5 md:p-10 relative mt-10 md:mt-0">
                 <button onclick="backToHome()" class="absolute top-4 left-4 md:top-6 md:left-6 text-slate-400 hover:text-slate-800 transition bg-slate-100 p-2 rounded-full">
@@ -158,7 +139,6 @@
                     </div>
                     <button id="btn-start" onclick="proceedToNextStep()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 md:py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2 text-sm md:text-base mt-2">
                         Planificar Estudi
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                     </button>
                 </div>
             </div>
@@ -204,12 +184,27 @@
                 <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden">
                     <input type="text" id="chat-input" placeholder="Escriu un missatge..." class="w-full pl-4 pr-12 py-3 md:py-4 md:pl-5 md:pr-14 rounded-2xl border border-slate-300 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition shadow-sm text-sm md:text-base">
                     <button type="submit" class="absolute right-1.5 md:right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 md:p-2.5 rounded-xl transition shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" md:width="18" md:height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
                 </form>
             </div>
         </div>
     </main>
+
+    <!-- MODAL MINIJOCS (FINESTRA NOVA) -->
+    <div id="game-modal" class="fixed inset-0 bg-slate-900/80 z-[60] hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300" id="game-modal-box">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-slate-800 flex items-center gap-2" id="game-modal-title">🕹️ Minijoc</h3>
+                <button onclick="closeGameModal()" class="text-slate-400 hover:text-red-500 transition bg-white p-2 rounded-full shadow-sm border border-slate-200">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 md:p-8 overflow-y-auto flex-1 bg-slate-50/50" id="game-modal-content">
+                <!-- S'omple amb JS -->
+            </div>
+        </div>
+    </div>
 
     <script>
         let uploadedPDFs = []; 
@@ -223,12 +218,11 @@
         let studentContextStr = ""; 
         let appMode = 'none'; 
         
-        window.interactiveGames = {};
+        window.interactiveGames = {}; // Guardem l'estat dels jocs
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
-            
             if (window.innerWidth >= 768) {
                 sidebar.classList.toggle('md:hidden');
             } else {
@@ -254,6 +248,8 @@
                 studentContextStr = data.context || "";
                 finalStudyText = data.finalText || "";
                 appMode = data.mode || 'study';
+                window.interactiveGames = data.games || {}; // Recuperem estat dels jocs
+                
                 document.getElementById('chat-messages').innerHTML = data.html;
                 
                 document.getElementById('welcome-view').classList.add('hidden');
@@ -270,11 +266,6 @@
                 }
                 
                 document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
-                
-                document.querySelectorAll('.game-container').forEach(el => {
-                    let rawData = el.getAttribute('data-game');
-                    if(rawData) { try { window.interactiveGames[el.id] = JSON.parse(decodeURIComponent(rawData)); } catch(e) {} }
-                });
             }
         };
 
@@ -291,7 +282,7 @@
             localStorage.setItem('aiStudentsSession', JSON.stringify({
                 history: chatHistory, html: document.getElementById('chat-messages').innerHTML,
                 calendar: generatedCalendarArray, context: studentContextStr,
-                finalText: finalStudyText, mode: appMode
+                finalText: finalStudyText, mode: appMode, games: window.interactiveGames
             }));
         }
 
@@ -318,6 +309,7 @@
             saveSession();
         }
 
+        // Funcions PDF i Calendari
         document.getElementById('exam-date').addEventListener('change', (e) => {
             const diffDays = Math.ceil((new Date(e.target.value) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
             const marker = document.getElementById('days-left-marker');
@@ -355,7 +347,7 @@
             const list = document.getElementById('pdf-list');
             list.innerHTML = '';
             uploadedPDFs.forEach(pdf => {
-                list.innerHTML += `<li class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 md:p-3 rounded-xl shadow-sm"><span class="text-[10px] md:text-sm text-slate-700 font-medium truncate flex-1">📄 ${pdf.name}</span><button onclick="removePdf('${pdf.id}')" class="text-red-500 p-1 md:p-2 rounded-lg text-xs md:text-base">❌</button></li>`;
+                list.innerHTML += `<li class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl shadow-sm"><span class="text-[10px] md:text-sm text-slate-700 font-medium truncate flex-1">📄 ${pdf.name}</span><button onclick="removePdf('${pdf.id}')" class="text-red-500 p-1 md:p-2 rounded-lg text-xs md:text-base">❌</button></li>`;
             });
             extractedText = uploadedPDFs.map(p => p.text).join("\n\n---\n\n");
         }
@@ -378,20 +370,13 @@
         async function proceedToNextStep() {
             if (isPdfProcessing) return;
             const examDateStr = document.getElementById('exam-date').value;
-            if (!examDateStr) { Swal.fire('Atenció', 'Selecciona la data de l\'examen.', 'warning'); return; }
-            
+            if (!examDateStr) { Swal.fire('Atenció', 'Selecciona la data.', 'warning'); return; }
             validStudyDates = calculateValidDates();
-            if(validStudyDates.length === 0) { Swal.fire('Atenció', 'No hi ha dies disponibles.', 'warning'); return; }
-            
+            if(validStudyDates.length === 0) { Swal.fire('Atenció', 'No hi ha dies.', 'warning'); return; }
             const manualText = document.getElementById('manual-topic').value.trim();
-            if (uploadedPDFs.length === 0 && manualText === '') { 
-                Swal.fire('Atenció', 'Has de pujar un PDF o escriure el teu temari manualment.', 'warning'); 
-                return; 
-            }
-
+            if (uploadedPDFs.length === 0 && manualText === '') { Swal.fire('Atenció', 'Puja PDF o escriu.', 'warning'); return; }
             finalStudyText = extractedText;
-            if (manualText) finalStudyText += "\n\nNotes manuals de l'alumne:\n" + manualText;
-
+            if (manualText) finalStudyText += "\n\nNotes manuals:\n" + manualText;
             generatePlanAndQuiz();
         }
 
@@ -403,15 +388,12 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'prepare_study', pdfText: finalStudyText.substring(0, 4500), totalSessionsToGenerate: numSessions })
                 });
-                
-                if (!res.ok && res.status >= 500) throw new Error("El servidor ha fallat. Revisa que l'API funcioni correctament.");
-                
+                if (!res.ok) throw new Error("El servidor ha fallat.");
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
                 
                 let iaTopics = Array.isArray(data.calendari_estudi) ? data.calendari_estudi : [];
                 currentQuizData = Array.isArray(data.preguntes) ? data.preguntes : [];
-                
                 generatedCalendarArray = [];
                 if (iaTopics.length > 0) {
                     validStudyDates.forEach((dateObj, index) => {
@@ -421,7 +403,6 @@
                         generatedCalendarArray.push({ num: index + 1, dia_real: dateStr, tema: topicName });
                     });
                 }
-                
                 renderCalendar();
                 renderQuiz();
                 document.getElementById('setup-view').classList.add('hidden');
@@ -438,19 +419,19 @@
                 container.innerHTML += `
                     <div class="bg-blue-50 border border-blue-200 p-3 md:p-5 rounded-2xl flex flex-col shadow-sm relative overflow-hidden">
                         <div class="absolute top-0 right-0 bg-blue-600 text-white text-[8px] md:text-[10px] font-bold px-2 py-1 rounded-bl-lg">Sessió ${item.num}</div>
-                        <span class="text-[9px] md:text-xs font-black text-blue-600 uppercase mb-1 md:mb-2 mt-1">${item.dia_real}</span>
+                        <span class="text-[9px] md:text-xs font-black text-blue-600 uppercase mb-1 mt-1">${item.dia_real}</span>
                         <span class="text-[11px] md:text-sm font-semibold text-slate-800">${item.tema}</span>
                     </div>`;
             });
         }
 
         function showCalendarModal() {
-            let htmlContent = '<div class="grid grid-cols-1 gap-2 md:gap-3 mt-3 md:mt-4 text-left overflow-y-auto max-h-[50vh] md:max-h-96">';
+            let htmlContent = '<div class="grid grid-cols-1 gap-2 mt-3 text-left overflow-y-auto max-h-[50vh] md:max-h-96">';
             generatedCalendarArray.forEach(item => {
-                htmlContent += `<div class="p-2 md:p-3 bg-slate-50 border border-slate-200 rounded-lg flex gap-3 md:gap-4 items-center"><div class="bg-blue-100 text-blue-700 font-bold rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0 text-xs md:text-base">${item.num}</div><div><div class="text-[9px] md:text-xs font-bold text-slate-500 mb-0.5">${item.dia_real}</div><div class="text-[11px] md:text-sm font-semibold text-slate-800">${item.tema}</div></div></div>`;
+                htmlContent += `<div class="p-2 bg-slate-50 border border-slate-200 rounded-lg flex gap-3 items-center"><div class="bg-blue-100 text-blue-700 font-bold rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-xs">${item.num}</div><div><div class="text-[9px] font-bold text-slate-500 mb-0.5">${item.dia_real}</div><div class="text-[11px] font-semibold text-slate-800">${item.tema}</div></div></div>`;
             });
             htmlContent += '</div>';
-            Swal.fire({ title: '📅 Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb', customClass: { popup: 'rounded-2xl' } });
+            Swal.fire({ title: '📅 Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb' });
         }
 
         function renderQuiz() {
@@ -458,12 +439,12 @@
             container.innerHTML = '';
             currentQuizData.forEach((q, idx) => {
                 container.innerHTML += `
-                    <div class="p-4 md:p-6 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm">
-                        <h3 class="font-bold text-slate-800 text-xs md:text-base mb-3 md:mb-4 flex gap-2"><span class="text-blue-600 bg-blue-100 w-5 h-5 md:w-8 md:h-8 rounded-full flex items-center justify-center shrink-0 text-[10px] md:text-sm">${idx + 1}</span> <span>${q.pregunta}</span></h3>
-                        <div class="space-y-2 md:space-y-3 pl-7 md:pl-10">
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm">
+                        <h3 class="font-bold text-slate-800 text-xs md:text-base mb-3 flex gap-2"><span class="text-blue-600 bg-blue-100 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px]">${idx + 1}</span> <span>${q.pregunta}</span></h3>
+                        <div class="space-y-2 pl-7">
                             ${q.opcions.map((opt) => `
-                                <label class="flex items-center gap-2 md:gap-3 p-2.5 md:p-4 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
-                                    <input type="radio" name="q_${idx}" value="${opt.replace(/"/g, '&quot;')}" class="w-3 h-3 md:w-4 md:h-4 text-blue-600 shrink-0">
+                                <label class="flex items-center gap-2 p-2.5 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
+                                    <input type="radio" name="q_${idx}" value="${opt.replace(/"/g, '&quot;')}" class="w-3 h-3 text-blue-600 shrink-0">
                                     <span class="text-[11px] md:text-sm font-medium text-slate-700 leading-tight">${opt}</span>
                                 </label>`).join('')}
                         </div>
@@ -485,20 +466,15 @@
             document.getElementById('chat-view').classList.remove('hidden');
             document.getElementById('chat-view').classList.add('flex');
             document.getElementById('global-menu-btn').classList.add('hidden'); 
-
-            studentContextStr = `L'alumne ha tret ${score}/5 (${level}) al test inicial.`;
-
+            studentContextStr = `L'alumne ha tret ${score}/5 (${level}).`;
             document.getElementById('chat-messages').innerHTML = `
-                <div class="w-full flex justify-center my-4 md:my-6" id="welcome-card">
-                    <div class="bg-blue-50 border border-blue-200 p-5 md:p-8 rounded-2xl md:rounded-3xl text-center shadow-sm max-w-xl w-full mx-2 md:mx-0">
-                        <h2 class="text-xl md:text-3xl font-black text-blue-800 mb-2">Pla Activat!</h2>
-                        <p class="text-blue-700 mb-4 md:mb-6 text-xs md:text-base font-medium">Nota inicial: ${score}/5. Tot preparat.</p>
-                        <button onclick="startTeaching()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 md:py-3.5 px-4 md:px-8 rounded-xl transition shadow-lg w-full text-xs md:text-lg flex items-center justify-center gap-2">
-                            ▶ Començar la Lliçó
-                        </button>
+                <div class="w-full flex justify-center my-4" id="welcome-card">
+                    <div class="bg-blue-50 border border-blue-200 p-5 rounded-2xl text-center shadow-sm max-w-xl w-full mx-2">
+                        <h2 class="text-xl font-black text-blue-800 mb-2">Pla Activat!</h2>
+                        <p class="text-blue-700 mb-4 text-xs md:text-sm font-medium">Nota: ${score}/5.</p>
+                        <button onclick="startTeaching()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg w-full text-xs md:text-sm flex items-center justify-center gap-2">▶ Començar la Lliçó</button>
                     </div>
-                </div>
-            `;
+                </div>`;
             saveSession();
         }
 
@@ -531,42 +507,29 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ action: actionToSend, chatHistory: chatHistory, pdfText: finalStudyText, studentContext: studentContextStr }) 
                 });
-                
-                const loadingEl = document.getElementById(loadingId);
-                if (loadingEl) loadingEl.remove();
-
+                document.getElementById(loadingId)?.remove();
                 const data = await res.json();
                 if(data.error) throw new Error(data.error);
-
                 appendMessage('ai', data.reply);
                 chatHistory.push({ role: 'assistant', content: data.reply });
                 saveSession();
             } catch (err) {
-                const loadingEl = document.getElementById(loadingId);
-                if (loadingEl) loadingEl.remove();
+                document.getElementById(loadingId)?.remove();
                 appendMessage('ai', '⚠️ Error: ' + err.message + '. Escriu alguna cosa per reintentar.');
             }
         }
 
         window.unlockTheory = function() {
             document.querySelectorAll('.chat-msg-ai').forEach(el => {
-                el.style.filter = 'none';
-                el.style.opacity = '1';
-                el.style.pointerEvents = 'auto';
+                el.style.filter = 'none'; el.style.opacity = '1'; el.style.pointerEvents = 'auto';
             });
         }
 
         window.requestMinigame = function(btn) {
-            btn.disabled = true;
-            btn.innerHTML = "⏳ Preparant Examen...";
-            btn.classList.add('opacity-50');
-            
+            btn.disabled = true; btn.innerHTML = "⏳ Preparant Examen..."; btn.classList.add('opacity-50');
             document.querySelectorAll('.chat-msg-ai').forEach(el => {
-                el.style.filter = 'blur(8px)';
-                el.style.opacity = '0.4';
-                el.style.pointerEvents = 'none';
+                el.style.filter = 'blur(8px)'; el.style.opacity = '0.4'; el.style.pointerEvents = 'none';
             });
-            
             const msg = "Ho he entès perfectament. Fes-me el mini-joc interactiu sobre això per posar-me a prova.";
             setTimeout(() => {
                 appendMessage('user', "Ho he entès! Posa'm a prova.");
@@ -575,6 +538,243 @@
             }, 500);
         }
 
+        // --- SISTEMA DE FINESTRES DE JOC ---
+        window.openGameModal = function(id) {
+            const game = window.interactiveGames[id];
+            const titleEl = document.getElementById('game-modal-title');
+            const contentEl = document.getElementById('game-modal-content');
+            
+            if (game.type === 'kahoot') {
+                titleEl.innerHTML = "🎮 Kahoot: Pregunta Ràpida";
+                contentEl.innerHTML = buildKahootUI(id, game);
+            } else if (game.type === 'schema') {
+                titleEl.innerHTML = "🧩 Esquema Conceptual";
+                contentEl.innerHTML = buildSchemaUI(id, game);
+            }
+            
+            const modal = document.getElementById('game-modal');
+            const box = document.getElementById('game-modal-box');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); }, 10);
+        };
+
+        window.closeGameModal = function() {
+            const modal = document.getElementById('game-modal');
+            const box = document.getElementById('game-modal-box');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        };
+
+        function buildKahootUI(id, game) {
+            let k = game.data;
+            let isDone = game.status === 'completed';
+            let colors = ['bg-indigo-500 hover:bg-indigo-600', 'bg-emerald-500 hover:bg-emerald-600', 'bg-amber-500 hover:bg-amber-600', 'bg-rose-500 hover:bg-rose-600'];
+            
+            let buttonsHtml = k.opcions.map((opt, idx) => {
+                let safeOpt = typeof opt === 'string' ? opt.replace(/'/g, "\\'").replace(/"/g, '&quot;') : opt;
+                let btnClass = `w-full text-left text-white font-bold p-3 md:p-4 rounded-xl shadow-sm transition flex items-center text-xs md:text-base focus:outline-none ${colors[idx % 4]}`;
+                
+                if (isDone) {
+                    btnClass += " opacity-50 cursor-default";
+                    if (idx === game.userPick && idx === k.correcta) {
+                        btnClass = btnClass.replace("opacity-50", "ring-4 ring-green-500 opacity-100");
+                    } else if (idx === game.userPick && idx !== k.correcta) {
+                        btnClass = btnClass.replace("opacity-50", "ring-4 ring-red-500 opacity-100");
+                    } else if (idx === k.correcta) {
+                        btnClass = btnClass.replace("opacity-50", "border-4 border-green-500 opacity-100");
+                    }
+                    return `<button class="${btnClass}">${opt}</button>`;
+                } else {
+                    return `<button onclick="playKahoot('${id}', ${idx}, '${safeOpt}')" class="${btnClass} interactive-btn">${opt}</button>`;
+                }
+            }).join('');
+            
+            let resultHtml = "";
+            if (isDone) {
+                let isWin = game.userPick === k.correcta;
+                resultHtml = `<div class="mt-6 p-4 rounded-xl font-bold text-center ${isWin ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${isWin ? '✅ Correcte!' : '❌ Incorrecte'}</div>`;
+            }
+
+            return `
+                <div class="text-slate-800 font-bold text-sm md:text-lg mb-6 text-center">${k.pregunta || 'Pregunta:'}</div>
+                <div class="grid grid-cols-1 gap-3">${buttonsHtml}</div>
+                ${resultHtml}
+            `;
+        }
+
+        window.playKahoot = function(id, indexPicked, textResponded) {
+            let game = window.interactiveGames[id];
+            game.status = 'completed';
+            game.userPick = indexPicked;
+            
+            // Actualitza l'UI de la finestra flotant
+            document.getElementById('game-modal-content').innerHTML = buildKahootUI(id, game);
+            
+            // Canvia el botó del xat
+            updateLaunchButton(id);
+            unlockTheory();
+            saveSession();
+
+            let isWin = indexPicked === game.data.correcta;
+            let reply = isWin ? `He marcat "${textResponded}". Ho he encertat! Continua.` : `He fallat, era la incorrecta. Aclareix-me l'error (NO posis cap joc nou) i seguim.`;
+            
+            setTimeout(() => {
+                closeGameModal();
+                appendMessage('user', reply);
+                chatHistory.push({ role: 'user', content: reply });
+                triggerAiResponse();
+            }, 1500);
+        }
+
+        function buildSchemaUI(id, game) {
+            let s = game.data;
+            let isDone = game.status === 'completed';
+            
+            let boxesHtml = s.buits.map((item, idx) => {
+                let inputClass = "bg-white border-2 border-slate-200 focus:border-blue-500 px-3 py-2 text-sm text-slate-800 w-1/2 outline-none rounded-xl text-center shadow-inner transition";
+                let val = "";
+                if (isDone) {
+                    val = `value="${item.resposta.replace(/"/g, '&quot;')}" disabled`;
+                    inputClass = "bg-slate-100 border-2 border-slate-300 px-3 py-2 text-sm text-slate-600 w-1/2 rounded-xl text-center font-bold";
+                }
+                return `
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-blue-100 text-blue-800 px-3 py-2 rounded-xl text-xs md:text-sm font-bold w-1/2 text-right border border-blue-200 leading-tight">${item.context || ''}</div>
+                    <div class="text-slate-300 font-black text-lg">➔</div>
+                    <input type="text" id="modal_input_${id}_${idx}" ${val} placeholder="..." class="${inputClass}">
+                </div>`;
+            }).join('');
+            
+            let actionHtml = "";
+            if (!isDone) {
+                actionHtml = `<button id="modal_btn_${id}" onclick="checkSchema('${id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-4 interactive-btn">Comprovar respostes</button>`;
+            }
+            
+            let historyHtml = "";
+            if (game.attemptsLog && game.attemptsLog.length > 0) {
+                historyHtml = `<div class="mt-6 border-t border-slate-200 pt-4"><h4 class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Historial d'intents:</h4><ul class="space-y-2 text-xs text-slate-600">`;
+                game.attemptsLog.forEach((log, i) => {
+                    historyHtml += `<li class="bg-slate-100 p-2 rounded-lg border border-slate-200 shadow-sm"><span class="font-bold text-slate-700">Intent ${i+1}:</span> ${log}</li>`;
+                });
+                historyHtml += `</ul></div>`;
+            }
+
+            let resultHtml = "";
+            if (isDone) {
+                let isWin = game.isWin;
+                resultHtml = `<div class="mt-4 p-4 rounded-xl font-bold text-center text-sm ${isWin ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'}">${isWin ? '✅ Esquema Completat!' : '❌ Intents esgotats (S\'ha mostrat la solució)'}</div>`;
+            }
+
+            return `
+                <div class="text-slate-800 font-black text-lg md:text-xl mb-6 text-center">${s.titol || 'Esquema'}</div>
+                <div class="mb-2">${boxesHtml}</div>
+                ${actionHtml}
+                ${resultHtml}
+                ${historyHtml}
+            `;
+        }
+
+        window.checkSchema = function(id) {
+            const game = window.interactiveGames[id];
+            let allCorrect = true;
+            let wrongs = [];
+            let currentAttemptWords = [];
+
+            game.data.buits.forEach((buit, i) => {
+                let inputEl = document.getElementById(`modal_input_${id}_${i}`);
+                let val = inputEl.value.trim();
+                currentAttemptWords.push(val || '(buit)');
+                
+                if(val.toLowerCase() === buit.resposta.trim().toLowerCase()) {
+                    inputEl.classList.replace('border-slate-200', 'border-green-500');
+                    inputEl.classList.replace('border-red-500', 'border-green-500');
+                    inputEl.classList.add('bg-green-50', 'text-green-700', 'font-bold');
+                    inputEl.disabled = true;
+                } else {
+                    allCorrect = false;
+                    wrongs.push(buit.context);
+                    inputEl.classList.add('border-red-500', 'bg-red-50');
+                    setTimeout(() => { 
+                        if(inputEl && !inputEl.disabled) {
+                            inputEl.value = ''; 
+                            inputEl.classList.remove('border-red-500', 'bg-red-50'); 
+                        }
+                    }, 1500);
+                }
+            });
+
+            if (!game.attemptsLog) game.attemptsLog = [];
+            const btn = document.getElementById(`modal_btn_${id}`);
+
+            if(allCorrect) {
+                game.attemptsLog.push("✅ Correcte (" + currentAttemptWords.join(', ') + ")");
+                game.status = 'completed';
+                game.isWin = true;
+                
+                btn.className = "w-full bg-green-500 text-white font-bold py-3.5 rounded-xl shadow-md";
+                btn.innerHTML = "✅ Completat!";
+                btn.disabled = true;
+                
+                updateLaunchButton(id);
+                unlockTheory();
+                saveSession();
+
+                setTimeout(() => {
+                    closeGameModal();
+                    let msg = `He completat l'esquema correctament. Ja pots continuar.`;
+                    appendMessage('user', msg);
+                    chatHistory.push({ role: 'user', content: msg });
+                    triggerAiResponse();
+                }, 1500);
+            } else {
+                game.attempts = (game.attempts || 0) + 1;
+                game.attemptsLog.push("❌ Fallat (" + currentAttemptWords.join(', ') + ")");
+                
+                if(game.attempts >= 3) {
+                    game.status = 'completed';
+                    game.isWin = false;
+                    
+                    document.getElementById('game-modal-content').innerHTML = buildSchemaUI(id, game);
+                    updateLaunchButton(id);
+                    
+                    studentContextStr += `\nALERTA: Ha fallat l'esquema 3 vegades.`;
+                    unlockTheory();
+                    saveSession();
+
+                    setTimeout(() => {
+                        closeGameModal();
+                        let msg = `He fallat l'esquema 3 vegades. Guarda-ho per un altre dia. Explica'm l'error breument i seguim.`;
+                        appendMessage('user', msg);
+                        chatHistory.push({ role: 'user', content: msg });
+                        triggerAiResponse();
+                    }, 3000);
+                } else {
+                    btn.innerHTML = `❌ Error. Comprovar de nou (Intent ${game.attempts}/3)`;
+                    btn.classList.add('bg-red-500', 'hover:bg-red-600');
+                    setTimeout(() => {
+                        if (btn) {
+                            btn.innerHTML = `Comprovar respostes (Intent ${game.attempts}/3)`;
+                            btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                        }
+                    }, 1500);
+                }
+            }
+        }
+
+        function updateLaunchButton(id) {
+            let btn = document.getElementById(`launch_btn_${id}`);
+            let game = window.interactiveGames[id];
+            if(btn && game) {
+                let isWin = game.type === 'kahoot' ? (game.userPick === game.data.correcta) : game.isWin;
+                btn.innerHTML = isWin ? "✅ Examen Superat (Veure)" : "❌ Examen Fallat (Veure)";
+                btn.className = isWin 
+                    ? "bg-green-100 border border-green-300 text-green-800 font-bold py-3.5 px-4 rounded-xl w-full flex justify-center mt-4 transition hover:bg-green-200" 
+                    : "bg-red-100 border border-red-300 text-red-800 font-bold py-3.5 px-4 rounded-xl w-full flex justify-center mt-4 transition hover:bg-red-200";
+            }
+        }
+
+        // PARSEJADOR DE MISSATGES I BOTONS
         function formatMessage(text) {
             if(!text) return "";
             let idCounter = 0;
@@ -585,31 +785,26 @@
                     let k = JSON.parse(p1.trim());
                     let id = 'kahoot_' + Date.now() + idCounter;
                     interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id };
-                    window.interactiveGames[id] = k;
-                    let placeholder = `@@@BLOCK_${idCounter}@@@`;
                     idCounter++;
-                    return placeholder;
+                    return `@@@BLOCK_${idCounter-1}@@@`;
                 } catch(e) { return "[Error Kahoot]"; }
             });
 
             text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let s = JSON.parse(p1.trim());
-                    s.attempts = 0;
                     let id = 'schema_' + Date.now() + idCounter;
                     interactiveBlocks[idCounter] = { type: 'schema', data: s, id: id };
-                    window.interactiveGames[id] = s;
-                    let placeholder = `@@@BLOCK_${idCounter}@@@`;
                     idCounter++;
-                    return placeholder;
+                    return `@@@BLOCK_${idCounter-1}@@@`;
                 } catch(e) { return "[Error Schema]"; }
             });
 
             let htmlContent = marked.parse(text);
 
             htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, `
-                <div class="my-4 md:my-5 mt-5 md:mt-6">
-                    <button onclick="requestMinigame(this)" class="bg-green-100 border border-green-300 text-green-800 font-bold py-2.5 md:py-3 px-4 md:px-6 rounded-xl hover:bg-green-200 transition shadow-sm w-full flex items-center justify-center gap-2 text-xs md:text-base">
+                <div class="my-4 mt-6">
+                    <button onclick="requestMinigame(this)" class="bg-green-100 border border-green-300 text-green-800 font-bold py-3 px-6 rounded-xl hover:bg-green-200 transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
                         ✅ Ho he entès! Posa'm a prova
                     </button>
                 </div>
@@ -620,49 +815,31 @@
                 let uiCode = "";
                 
                 try {
-                    let safeData = encodeURIComponent(JSON.stringify(block.data));
-                    
-                    if (block.type === 'kahoot') {
-                        let k = block.data;
-                        if(!k.opcions) k.opcions = ["A", "B", "C", "D"]; 
-                        if(k.correcta === undefined) k.correcta = 0;
-                        
-                        let colors = ['bg-indigo-500 hover:bg-indigo-600', 'bg-emerald-500 hover:bg-emerald-600', 'bg-amber-500 hover:bg-amber-600', 'bg-rose-500 hover:bg-rose-600'];
-                        let buttonsHtml = k.opcions.map((opt, idx) => {
-                            let safeOpt = typeof opt === 'string' ? opt.replace(/'/g, "\\'").replace(/"/g, '&quot;') : opt;
-                            return `<button onclick="playKahoot('${block.id}', ${idx}, '${safeOpt}')" class="interactive-btn w-full text-left text-white font-bold p-3 md:p-4 rounded-xl shadow-sm flex items-center gap-2 md:gap-3 text-xs md:text-base ${colors[idx % 4]} focus:outline-none"><span class="flex-1">${opt}</span></button>`;
-                        }).join('');
-
-                        uiCode = `
-                        <div id="${block.id}" class="game-container not-prose my-4 md:my-6 bg-slate-50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 w-full max-w-lg shadow-sm mx-auto" data-game="${safeData}">
-                            <div class="text-slate-500 text-[9px] md:text-[10px] font-black uppercase text-center mb-3 md:mb-4">🎮 Joc Ràpid</div>
-                            <div class="text-slate-800 font-bold text-xs md:text-lg mb-4 text-center px-1">${k.pregunta || 'Pregunta:'}</div>
-                            <div class="grid grid-cols-1 gap-2.5 md:gap-3">${buttonsHtml}</div>
-                        </div>`;
-                    } 
-                    else if (block.type === 'schema') {
-                        let s = block.data;
-                        if(!s.buits) s.buits = [{context: "Dada", resposta: "Desconeguda"}];
-                        
-                        let boxesHtml = s.buits.map((item, idx) => {
-                            return `
-                            <div class="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                                <div class="bg-blue-100 text-blue-800 px-2 py-2 md:px-4 md:py-3 rounded-lg md:rounded-xl text-[9px] md:text-sm font-bold w-1/2 text-right border border-blue-200 shadow-sm leading-tight">${item.context || ''}</div>
-                                <div class="text-slate-300 font-black text-xs md:text-xl">➔</div>
-                                <input type="text" id="input_${block.id}_${idx}" placeholder="..." class="schema-box bg-white border-2 border-slate-200 focus:border-blue-500 px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm text-slate-800 w-1/2 outline-none shadow-inner transition text-center rounded-lg md:rounded-xl">
-                            </div>`;
-                        }).join('');
-
-                        uiCode = `
-                        <div id="${block.id}" class="game-container not-prose my-4 md:my-6 bg-slate-50 p-4 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 w-full max-w-xl mx-auto shadow-sm" data-game="${safeData}">
-                            <div id="header-${block.id}" class="text-indigo-600 text-[9px] md:text-[10px] font-black uppercase text-center mb-3 md:mb-4">🧩 Completa el Diagrama</div>
-                            <div class="text-slate-800 font-black text-sm md:text-xl mb-4 md:mb-6 text-center">${s.titol || 'Esquema'}</div>
-                            <div class="mb-4 md:mb-6">${boxesHtml}</div>
-                            <button id="btn_${block.id}" onclick="checkSchema('${block.id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 md:py-3.5 rounded-xl transition shadow-md text-xs md:text-base">Comprovar i Continuar</button>
-                        </div>`;
+                    // Inicialitzem el joc si no existeix (es manté al guardar sessió)
+                    if (!window.interactiveGames[block.id]) {
+                        block.data.attempts = 0;
+                        block.data.attemptsLog = [];
+                        window.interactiveGames[block.id] = { type: block.type, data: block.data, status: 'new' };
                     }
+                    
+                    let game = window.interactiveGames[block.id];
+                    let btnClass = "bg-indigo-100 border border-indigo-300 text-indigo-800 hover:bg-indigo-200";
+                    let btnText = "🕹️ Obre l'Examen Interactiu";
+                    
+                    if (game.status === 'completed') {
+                        let isWin = game.type === 'kahoot' ? (game.userPick === game.data.correcta) : game.isWin;
+                        btnClass = isWin ? "bg-green-100 border-green-300 text-green-800 hover:bg-green-200" : "bg-red-100 border-red-300 text-red-800 hover:bg-red-200";
+                        btnText = isWin ? "✅ Examen Superat (Veure)" : "❌ Examen Fallat (Veure)";
+                    }
+
+                    uiCode = `
+                    <div class="my-4">
+                        <button id="launch_btn_${block.id}" onclick="openGameModal('${block.id}')" class="${btnClass} font-bold py-3.5 px-4 rounded-xl transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
+                            ${btnText}
+                        </button>
+                    </div>`;
                 } catch(e) {
-                    uiCode = `<div class="bg-red-50 text-red-600 p-3 md:p-4 rounded-xl text-center font-bold text-xs md:text-sm">⚠️ Error al joc. Escriu "Torna a intentar-ho".</div>`;
+                    uiCode = `<div class="bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs">⚠️ Error al generar botó.</div>`;
                 }
                 
                 htmlContent = htmlContent.replace(`@@@BLOCK_${i}@@@`, uiCode);
@@ -670,110 +847,15 @@
             return htmlContent;
         }
 
-        window.playKahoot = function(id, indexPicked, textResponded) {
-            const container = document.getElementById(id);
-            const buttons = container.querySelectorAll('button');
-            const gameData = window.interactiveGames[id];
-            
-            buttons.forEach(b => { b.disabled = true; b.style.pointerEvents = "none"; b.classList.add('opacity-40'); });
-            buttons[indexPicked].classList.remove('opacity-40');
-            
-            if(indexPicked === gameData.correcta) {
-                buttons[indexPicked].classList.add('ring-4', 'ring-green-400');
-            } else {
-                buttons[indexPicked].classList.add('ring-4', 'ring-red-400');
-                buttons[gameData.correcta].classList.remove('opacity-40');
-                buttons[gameData.correcta].classList.add('border-4', 'border-green-400');
-            }
-            
-            unlockTheory();
-            saveSession();
-
-            let reply = indexPicked === gameData.correcta ? `He marcat "${textResponded}". Ho he encertat! Continua.` : `He fallat, era la incorrecta. Aclareix-me l'error (NO posis cap joc nou) i seguim.`;
-            setTimeout(() => {
-                appendMessage('user', reply);
-                chatHistory.push({ role: 'user', content: reply });
-                triggerAiResponse();
-            }, 1200);
-        }
-
-        window.checkSchema = function(id) {
-            const gameData = window.interactiveGames[id];
-            let allCorrect = true;
-            let wrongs = [];
-
-            gameData.buits.forEach((buit, i) => {
-                let inputEl = document.getElementById(`input_${id}_${i}`);
-                if(inputEl.disabled) return; 
-
-                if(inputEl.value.trim().toLowerCase() === buit.resposta.trim().toLowerCase()) {
-                    inputEl.classList.replace('border-slate-200', 'border-green-500');
-                    inputEl.classList.replace('border-red-500', 'border-green-500');
-                    inputEl.classList.add('bg-green-50', 'text-green-700', 'font-bold');
-                    inputEl.disabled = true;
-                } else {
-                    allCorrect = false;
-                    wrongs.push(buit.context);
-                    inputEl.classList.add('border-red-500', 'bg-red-50');
-                    setTimeout(() => { inputEl.value = ''; inputEl.classList.remove('border-red-500', 'bg-red-50'); }, 1500);
-                }
-            });
-
-            const btn = document.getElementById(`btn_${id}`);
-
-            if(allCorrect) {
-                btn.className = "w-full bg-green-500 text-white font-bold py-2.5 md:py-3.5 rounded-xl shadow-md text-xs md:text-base";
-                btn.innerHTML = "✅ Completat!";
-                btn.disabled = true;
-                unlockTheory();
-                saveSession();
-
-                setTimeout(() => {
-                    let msg = `He completat l'esquema correctament. Ja pots continuar.`;
-                    appendMessage('user', msg);
-                    chatHistory.push({ role: 'user', content: msg });
-                    triggerAiResponse();
-                }, 1000);
-            } else {
-                gameData.attempts++;
-                if(gameData.attempts >= 3) {
-                    gameData.buits.forEach((buit, i) => {
-                        let inputEl = document.getElementById(`input_${id}_${i}`);
-                        inputEl.value = buit.resposta;
-                        inputEl.className = "schema-box bg-orange-100 border-orange-400 px-2 py-2 md:px-4 md:py-3 text-[10px] md:text-sm text-orange-800 font-bold w-1/2 text-center rounded-lg md:rounded-xl";
-                        inputEl.disabled = true;
-                    });
-                    btn.className = "w-full bg-slate-300 text-slate-600 font-bold py-2.5 md:py-3.5 rounded-xl text-xs md:text-base";
-                    btn.innerHTML = "Solució mostrada (Límit d'intents)";
-                    btn.disabled = true;
-                    
-                    studentContextStr += `\nALERTA: Ha fallat 3 vegades: ${wrongs.join(', ')}.`;
-                    unlockTheory();
-                    saveSession();
-
-                    setTimeout(() => {
-                        let msg = `He fallat l'esquema 3 vegades. Guarda-ho per un altre dia. Explica'm l'error breument i seguim.`;
-                        appendMessage('user', msg);
-                        chatHistory.push({ role: 'user', content: msg });
-                        triggerAiResponse();
-                    }, 2000);
-                } else {
-                    btn.innerHTML = `Comprovar de nou (Intent ${gameData.attempts}/3)`;
-                }
-            }
-        }
-
         function appendMessage(sender, text) {
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
-            
-            // Assegurem que en mòbil les bombolles facin 'break-words' si hi ha enllaços o codi molt llarg
             if (sender === 'user') {
-                div.className = "flex justify-end w-full mb-3 md:mb-4";
-                div.innerHTML = `<div class="bg-slate-800 text-white px-4 py-3 md:px-5 md:py-3.5 rounded-2xl md:rounded-3xl rounded-tr-sm max-w-[90%] md:max-w-[85%] text-[13px] md:text-sm shadow-sm break-words">${formatMessage(text)}</div>`;
+                div.className = "flex justify-end w-full mb-3";
+                div.innerHTML = `<div class="bg-slate-800 text-white px-4 py-3 rounded-2xl rounded-tr-sm max-w-[90%] text-[13px] shadow-sm break-words">${formatMessage(text)}</div>`;
             } else {
-                div.className = "flex justify-start gap-2 md:gap-4 w-full mb-3 md:mb-4 chat-msg-ai transition-all duration-500";
-                div.innerHTML = `<div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs md:text-sm shrink-0 shadow-md mt-1">AI</div><div class="bg-white border border-slate-200 text-slate-800 px-4 py-4 md:px-6 md:py-5 rounded-2xl md:rounded-3xl rounded-tl-sm max-w-[90%] md:max-w-[95%] shadow-md w-full overflow-hidden relative"><div class="prose prose-sm md:prose-base prose-slate max-w-none text-[13px] md:text-base break-words overflow-x-auto">${formatMessage(text)}</div></div>`;
+                div.className = "flex justify-start gap-2 w-full mb-3 chat-msg-ai transition-all duration-500";
+                div.innerHTML = `<div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-md mt-1">AI</div><div class="bg-white border border-slate-200 text-slate-800 px-4 py-4 rounded-2xl rounded-tl-sm max-w-[90%] shadow-md w-full overflow-hidden relative"><div class="prose prose-sm max-w-none text-[13px] break-words overflow-x-auto">${formatMessage(text)}</div></div>`;
             }
             box.appendChild(div);
             setTimeout(() => { box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' }); }, 100);
@@ -783,8 +865,8 @@
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
             div.id = id;
-            div.className = "flex justify-start gap-2 md:gap-4 w-full mb-3 md:mb-4";
-            div.innerHTML = `<div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs md:text-sm shrink-0 shadow-md mt-1">AI</div><div class="bg-white border border-slate-200 px-4 md:px-6 py-3.5 rounded-2xl rounded-tl-sm flex gap-1 md:gap-1.5 shadow-md items-center h-10 md:h-14"><div class="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-400 rounded-full animate-bounce"></div><div class="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></div><div class="w-1.5 h-1.5 md:w-2 md:h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div></div>`;
+            div.className = "flex justify-start gap-2 w-full mb-3";
+            div.innerHTML = `<div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-md mt-1">AI</div><div class="bg-white border border-slate-200 px-4 py-3.5 rounded-2xl rounded-tl-sm flex gap-1 shadow-md items-center h-10"><div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div><div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.15s"></div><div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.3s"></div></div>`;
             box.appendChild(div);
             box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
         }
