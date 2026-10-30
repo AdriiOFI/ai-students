@@ -8,9 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
     <script>
-        mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: { primaryColor: '#eff6ff', primaryBorderColor: '#3b82f6', primaryTextColor: '#1e293b', fontSize: '14px' } });
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } }
     </script>
@@ -58,6 +56,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
         </button>
 
+        <!-- BENVINGUDA -->
         <div id="welcome-view" class="flex-1 overflow-y-auto flex items-center justify-center p-4 md:p-8 bg-gradient-to-b from-slate-50 to-slate-100">
             <div class="w-full max-w-6xl text-center space-y-8 md:space-y-12 pb-10 mt-12 md:mt-0">
                 <div class="space-y-4 md:space-y-6 pt-4 md:pt-10">
@@ -76,6 +75,10 @@
                         <div class="w-12 h-12 md:w-16 md:h-16 bg-blue-100 text-blue-600 rounded-xl md:rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-4 md:mb-6 group-hover:scale-110 transition-transform">📅</div>
                         <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-2 md:mb-3 group-hover:text-blue-600 transition-colors">Pla d'Estudis</h3>
                         <p class="text-xs md:text-base text-slate-500 flex-1 leading-relaxed mb-4 md:mb-6">Puja el teu PDF i genera un calendari d'estudi amb minijocs i resums automàtics.</p>
+                        <div class="flex flex-wrap gap-1.5 md:gap-2 mt-auto">
+                            <span class="bg-slate-100 text-slate-600 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Pautat</span>
+                            <span class="bg-blue-50 text-blue-600 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Interactiu</span>
+                        </div>
                     </button>
                     
                     <button onclick="startFreeChatMode()" class="bg-white border-2 border-slate-200 hover:border-emerald-500 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-left group flex flex-col h-full relative overflow-hidden">
@@ -83,18 +86,26 @@
                         <div class="w-12 h-12 md:w-16 md:h-16 bg-emerald-100 text-emerald-600 rounded-xl md:rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-4 md:mb-6 group-hover:scale-110 transition-transform">💬</div>
                         <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-2 md:mb-3 group-hover:text-emerald-600 transition-colors">XatBot</h3>
                         <p class="text-xs md:text-base text-slate-500 flex-1 leading-relaxed mb-4 md:mb-6">Conversa directa i segura amb la IA per fer consultes o investigar temes lliurement.</p>
+                        <div class="flex flex-wrap gap-1.5 md:gap-2 mt-auto">
+                            <span class="bg-slate-100 text-slate-600 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Lliure</span>
+                            <span class="bg-emerald-50 text-emerald-600 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Segur</span>
+                        </div>
                     </button>
                     
                     <button onclick="return false" class="bg-slate-50 border-2 border-slate-200/60 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-left flex flex-col h-full relative overflow-hidden cursor-not-allowed group">
                         <div class="absolute top-4 right-4 bg-slate-200 text-slate-500 text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 md:py-1.5 rounded-full uppercase tracking-widest shadow-sm">Pròximament</div>
                         <div class="w-12 h-12 md:w-16 md:h-16 bg-slate-200 text-slate-400 rounded-xl md:rounded-2xl flex items-center justify-center text-2xl md:text-3xl mb-4 md:mb-6 grayscale opacity-70">🛠️</div>
                         <h3 class="text-xl md:text-2xl font-bold text-slate-400 mb-2 md:mb-3">Ús Quotidià</h3>
-                        <p class="text-xs md:text-base text-slate-400 flex-1 leading-relaxed mb-4 md:mb-6">Eines per simplificar tasques diàries o gestionar temps i rutines.</p>
+                        <p class="text-xs md:text-base text-slate-400 flex-1 leading-relaxed mb-4 md:mb-6">Eines per simplificar les teves tasques diàries o gestionar temps i rutines.</p>
+                        <div class="flex flex-wrap gap-1.5 md:gap-2 mt-auto opacity-50">
+                            <span class="bg-slate-200 text-slate-500 text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-lg">Productivitat</span>
+                        </div>
                     </button>
                 </div>
             </div>
         </div>
 
+        <!-- CONFIGURACIÓ PLA -->
         <div id="setup-view" class="hidden flex-1 overflow-y-auto items-center justify-center p-3 md:p-8">
             <div class="w-full max-w-2xl bg-white border border-slate-200 rounded-[1.5rem] md:rounded-3xl shadow-xl p-5 md:p-10 relative mt-10 md:mt-0">
                 <button onclick="backToHome()" class="absolute top-4 left-4 md:top-6 md:left-6 text-slate-400 hover:text-slate-800 transition bg-slate-100 p-2 rounded-full">
@@ -163,6 +174,7 @@
             </div>
         </div>
 
+        <!-- XAT VIEW -->
         <div id="chat-view" class="hidden flex-1 flex-col h-full bg-white relative">
             <div class="p-3 md:p-4 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm z-30 gap-2">
                 <div class="flex items-center gap-2 md:gap-3">
@@ -173,9 +185,16 @@
                         <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> <span id="chat-mode-label">Classe Activa</span>
                     </div>
                 </div>
-                <button id="calendar-header-btn" onclick="showCalendarModal()" class="text-[10px] md:text-sm bg-slate-100 text-slate-700 font-semibold px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl hover:bg-slate-200 transition flex items-center gap-1 md:gap-2 whitespace-nowrap">
-                    📅 <span class="hidden sm:inline">Pla d'Estudi</span>
-                </button>
+                
+                <!-- NOU BOTÓ HISTORIAL TESTS -->
+                <div class="flex items-center gap-1.5 md:gap-2">
+                    <button id="history-header-btn" onclick="showHistoryModal()" class="text-[10px] md:text-sm bg-indigo-50 text-indigo-700 font-bold px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl hover:bg-indigo-100 transition flex items-center gap-1 md:gap-2 whitespace-nowrap">
+                        📊 <span class="hidden sm:inline">Resultats</span>
+                    </button>
+                    <button id="calendar-header-btn" onclick="showCalendarModal()" class="text-[10px] md:text-sm bg-slate-100 text-slate-700 font-semibold px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl hover:bg-slate-200 transition flex items-center gap-1 md:gap-2 whitespace-nowrap">
+                        📅 <span class="hidden sm:inline">Pla d'Estudi</span>
+                    </button>
+                </div>
             </div>
             
             <div id="chat-messages" class="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 bg-slate-50 pb-2"></div>
@@ -200,9 +219,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
             </div>
-            <div class="p-5 md:p-8 overflow-y-auto flex-1 bg-slate-50/50" id="game-modal-content">
-                <!-- S'omple amb JS -->
-            </div>
+            <div class="p-5 md:p-8 overflow-y-auto flex-1 bg-slate-50/50" id="game-modal-content"></div>
         </div>
     </div>
 
@@ -218,7 +235,7 @@
         let studentContextStr = ""; 
         let appMode = 'none'; 
         
-        window.interactiveGames = {}; // Guardem l'estat dels jocs
+        window.interactiveGames = {}; 
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -248,7 +265,7 @@
                 studentContextStr = data.context || "";
                 finalStudyText = data.finalText || "";
                 appMode = data.mode || 'study';
-                window.interactiveGames = data.games || {}; // Recuperem estat dels jocs
+                window.interactiveGames = data.games || {}; 
                 
                 document.getElementById('chat-messages').innerHTML = data.html;
                 
@@ -262,6 +279,7 @@
                 
                 if(appMode === 'free') {
                     document.getElementById('calendar-header-btn').classList.add('hidden');
+                    document.getElementById('history-header-btn').classList.add('hidden');
                     document.getElementById('chat-mode-label').innerText = "XatBot";
                 }
                 
@@ -302,6 +320,7 @@
             document.getElementById('chat-view').classList.add('flex');
             document.getElementById('chat-form').classList.remove('hidden');
             document.getElementById('calendar-header-btn').classList.add('hidden');
+            document.getElementById('history-header-btn').classList.add('hidden');
             document.getElementById('chat-mode-label').innerText = "XatBot";
             
             appendMessage('ai', "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?");
@@ -309,7 +328,6 @@
             saveSession();
         }
 
-        // Funcions PDF i Calendari
         document.getElementById('exam-date').addEventListener('change', (e) => {
             const diffDays = Math.ceil((new Date(e.target.value) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
             const marker = document.getElementById('days-left-marker');
@@ -425,13 +443,82 @@
             });
         }
 
+        // NOU: Lògica del botó de resultats i historial
+        window.showHistoryModal = function() {
+            let gamesKeys = Object.keys(window.interactiveGames);
+            let htmlContent = '<div class="text-left overflow-y-auto max-h-[60vh] mt-4 space-y-4">';
+
+            if (gamesKeys.length === 0) {
+                htmlContent += '<div class="p-6 bg-slate-50 text-slate-500 text-center rounded-xl text-sm border border-slate-200">Encara no has realitzat cap test o esquema en aquesta sessió.</div>';
+            } else {
+                gamesKeys.forEach((key, index) => {
+                    let g = window.interactiveGames[key];
+                    let isCompleted = g.status === 'completed';
+                    
+                    if (g.type === 'kahoot') {
+                        let k = g.data;
+                        let isWin = g.userPick === k.correcta;
+                        let statusBadge = !isCompleted ? '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded font-bold">Pendent</span>' : (isWin ? '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded font-bold">✅ Encertat</span>' : '<span class="bg-red-100 text-red-700 text-[10px] px-2 py-1 rounded font-bold">❌ Fallat</span>');
+                        
+                        let detalls = '';
+                        if (isCompleted) {
+                            detalls = `<div class="mt-3 text-[11px] md:text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100"><span class="font-bold text-slate-600">La teva resposta:</span> ${k.opcions[g.userPick]}<br><span class="font-bold text-slate-600 mt-1 inline-block">Solució correcta:</span> ${k.opcions[k.correcta]}</div>`;
+                        }
+                        
+                        htmlContent += `
+                        <div class="border border-slate-200 p-4 rounded-xl shadow-sm bg-white">
+                            <div class="flex justify-between items-start mb-2 gap-2">
+                                <div class="font-bold text-slate-800 text-sm">🎮 Joc ${index + 1}: Pregunta Ràpida</div>
+                                ${statusBadge}
+                            </div>
+                            <div class="text-xs md:text-sm text-slate-600 font-medium mb-1">${k.pregunta}</div>
+                            ${detalls}
+                        </div>`;
+                    } else if (g.type === 'schema') {
+                        let s = g.data;
+                        let isWin = g.isWin;
+                        let statusBadge = !isCompleted ? '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded font-bold">Pendent</span>' : (isWin ? '<span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded font-bold">✅ Superat</span>' : '<span class="bg-red-100 text-red-700 text-[10px] px-2 py-1 rounded font-bold">❌ Fallat</span>');
+                        
+                        let detalls = '';
+                        if (g.attemptsLog && g.attemptsLog.length > 0) {
+                            detalls = `<div class="mt-3 text-[11px] md:text-xs space-y-1.5"><div class="font-bold text-slate-600 uppercase text-[9px] tracking-wider">Historial d'intents:</div>`;
+                            g.attemptsLog.forEach((log, i) => {
+                                detalls += `<div class="bg-slate-50 p-2 rounded-lg border border-slate-100 text-slate-600"><span class="font-bold text-slate-700">Intent ${i+1}:</span> ${log}</div>`;
+                            });
+                            detalls += `</div>`;
+                        }
+
+                        htmlContent += `
+                        <div class="border border-slate-200 p-4 rounded-xl shadow-sm bg-white">
+                            <div class="flex justify-between items-start mb-2 gap-2">
+                                <div class="font-bold text-slate-800 text-sm">🧩 Joc ${index + 1}: Esquema</div>
+                                ${statusBadge}
+                            </div>
+                            <div class="text-xs md:text-sm text-slate-600 font-medium mb-1">${s.titol || 'Esquema conceptual'}</div>
+                            ${detalls}
+                        </div>`;
+                    }
+                });
+            }
+            htmlContent += '</div>';
+
+            Swal.fire({
+                title: '📊 Resultats i Historial',
+                html: htmlContent,
+                showCloseButton: true,
+                confirmButtonText: 'Tancar',
+                confirmButtonColor: '#2563eb',
+                customClass: { popup: 'rounded-[1.5rem] md:rounded-3xl', title: 'font-black text-slate-800' }
+            });
+        }
+
         function showCalendarModal() {
             let htmlContent = '<div class="grid grid-cols-1 gap-2 mt-3 text-left overflow-y-auto max-h-[50vh] md:max-h-96">';
             generatedCalendarArray.forEach(item => {
                 htmlContent += `<div class="p-2 bg-slate-50 border border-slate-200 rounded-lg flex gap-3 items-center"><div class="bg-blue-100 text-blue-700 font-bold rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-xs">${item.num}</div><div><div class="text-[9px] font-bold text-slate-500 mb-0.5">${item.dia_real}</div><div class="text-[11px] font-semibold text-slate-800">${item.tema}</div></div></div>`;
             });
             htmlContent += '</div>';
-            Swal.fire({ title: '📅 Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb' });
+            Swal.fire({ title: '📅 Pla d\'Estudi', html: htmlContent, showCloseButton: true, confirmButtonText: 'Tancar', confirmButtonColor: '#2563eb', customClass: { popup: 'rounded-[1.5rem] md:rounded-3xl', title: 'font-black text-slate-800' } });
         }
 
         function renderQuiz() {
@@ -538,7 +625,6 @@
             }, 500);
         }
 
-        // --- SISTEMA DE FINESTRES DE JOC ---
         window.openGameModal = function(id) {
             const game = window.interactiveGames[id];
             const titleEl = document.getElementById('game-modal-title');
@@ -608,10 +694,7 @@
             game.status = 'completed';
             game.userPick = indexPicked;
             
-            // Actualitza l'UI de la finestra flotant
             document.getElementById('game-modal-content').innerHTML = buildKahootUI(id, game);
-            
-            // Canvia el botó del xat
             updateLaunchButton(id);
             unlockTheory();
             saveSession();
@@ -651,15 +734,6 @@
                 actionHtml = `<button id="modal_btn_${id}" onclick="checkSchema('${id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md text-sm mt-4 interactive-btn">Comprovar respostes</button>`;
             }
             
-            let historyHtml = "";
-            if (game.attemptsLog && game.attemptsLog.length > 0) {
-                historyHtml = `<div class="mt-6 border-t border-slate-200 pt-4"><h4 class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Historial d'intents:</h4><ul class="space-y-2 text-xs text-slate-600">`;
-                game.attemptsLog.forEach((log, i) => {
-                    historyHtml += `<li class="bg-slate-100 p-2 rounded-lg border border-slate-200 shadow-sm"><span class="font-bold text-slate-700">Intent ${i+1}:</span> ${log}</li>`;
-                });
-                historyHtml += `</ul></div>`;
-            }
-
             let resultHtml = "";
             if (isDone) {
                 let isWin = game.isWin;
@@ -671,14 +745,12 @@
                 <div class="mb-2">${boxesHtml}</div>
                 ${actionHtml}
                 ${resultHtml}
-                ${historyHtml}
             `;
         }
 
         window.checkSchema = function(id) {
             const game = window.interactiveGames[id];
             let allCorrect = true;
-            let wrongs = [];
             let currentAttemptWords = [];
 
             game.data.buits.forEach((buit, i) => {
@@ -693,7 +765,6 @@
                     inputEl.disabled = true;
                 } else {
                     allCorrect = false;
-                    wrongs.push(buit.context);
                     inputEl.classList.add('border-red-500', 'bg-red-50');
                     setTimeout(() => { 
                         if(inputEl && !inputEl.disabled) {
@@ -708,7 +779,7 @@
             const btn = document.getElementById(`modal_btn_${id}`);
 
             if(allCorrect) {
-                game.attemptsLog.push("✅ Correcte (" + currentAttemptWords.join(', ') + ")");
+                game.attemptsLog.push("✅ Correcte: " + currentAttemptWords.join(', '));
                 game.status = 'completed';
                 game.isWin = true;
                 
@@ -729,7 +800,7 @@
                 }, 1500);
             } else {
                 game.attempts = (game.attempts || 0) + 1;
-                game.attemptsLog.push("❌ Fallat (" + currentAttemptWords.join(', ') + ")");
+                game.attemptsLog.push("❌ Fallat: " + currentAttemptWords.join(', '));
                 
                 if(game.attempts >= 3) {
                     game.status = 'completed';
@@ -774,7 +845,6 @@
             }
         }
 
-        // PARSEJADOR DE MISSATGES I BOTONS
         function formatMessage(text) {
             if(!text) return "";
             let idCounter = 0;
@@ -787,7 +857,7 @@
                     interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "[Error Kahoot]"; }
+                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
             });
 
             text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
@@ -797,7 +867,7 @@
                     interactiveBlocks[idCounter] = { type: 'schema', data: s, id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "[Error Schema]"; }
+                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
             });
 
             let htmlContent = marked.parse(text);
@@ -815,7 +885,6 @@
                 let uiCode = "";
                 
                 try {
-                    // Inicialitzem el joc si no existeix (es manté al guardar sessió)
                     if (!window.interactiveGames[block.id]) {
                         block.data.attempts = 0;
                         block.data.attemptsLog = [];
@@ -834,7 +903,7 @@
 
                     uiCode = `
                     <div class="my-4">
-                        <button id="launch_btn_${block.id}" onclick="openGameModal('${block.id}')" class="${btnClass} font-bold py-3.5 px-4 rounded-xl transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
+                        <button id="launch_btn_${block.id}" onclick="openGameModal('${block.id}')" class="${btnClass} font-bold py-3.5 px-4 rounded-xl transition shadow-sm w-full flex items-center justify-center gap-2 text-sm interactive-btn">
                             ${btnText}
                         </button>
                     </div>`;
