@@ -21,7 +21,8 @@ module.exports = async function handler(req, res) {
         const totalSessionsToGenerate = body.totalSessionsToGenerate || 5;
         const studentContext = body.studentContext || "";
 
-        const GROQ_MODEL = "openai/gpt-oss-20b"; 
+        // MODEL CANVIAT A QWEN (El que volies usar). No té el bug de les "Tools" de Llama.
+        const GROQ_MODEL = "qwen-2.5-32b"; 
 
         const safetyRules = `
 NORMES DE SEGURETAT I PROTECCIÓ (INFRANGIBLES):
@@ -51,6 +52,7 @@ NORMES DE SEGURETAT I PROTECCIÓ (INFRANGIBLES):
                     model: GROQ_MODEL, 
                     messages: [ 
                         { role: "system", content: systemPrompt },
+                        // SOLUCIÓ AL ERROR MINIJINJA: Afegim un 'user' obligatori per a Qwen/Llama
                         { role: "user", content: "Genera el pla d'estudi i el test de diagnòstic basant-te en els meus apunts ara mateix." }
                     ],
                     temperature: 0.1,
@@ -94,7 +96,7 @@ NORMES DE SEGURETAT I PROTECCIÓ (INFRANGIBLES):
             "4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.\n\n" +
             "ACTIVACIÓ DEL JOC (ALERTA MÀXIMA):\n" +
             "Si l'alumne et diu 'Ho he entès perfectament. Fes-me el mini-joc interactiu...', tens PROHIBIT dir res més de teoria. RESPON OBLIGATÒRIAMENT amb el bloc de codi d'un d'aquests dos jocs.\n" +
-            "REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb ```kahoot o ```schema EXACTAMENT.\n\n" +
+            "REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb ```kahoot o ```schema EXACTAMENT. NO facis servir tools ni funcions.\n\n" +
             "OPCIÓ A (Esquema conceptual):\n" +
             "```schema\n" +
             "{\n" +
