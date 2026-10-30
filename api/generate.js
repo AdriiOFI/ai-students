@@ -91,12 +91,12 @@ NORMES DE SEGURETAT I PROTECCIÓ (INFRANGIBLES):
             "APUNTS/TEMARI:\n" + (pdfText ? pdfText.substring(0, 3000) : "Sense apunts.") + "\n\n" +
             "MÈTODE D'ENSENYAMENT (ESTRUCTURA OBLIGATÒRIA):\n" +
             "1. TEORIA RICA I DECORADA: Explica el tema actual del calendari basant-te ESTRICTAMENT en els apunts. Fes servir emojis, llistes amb pics i negretes.\n" +
-            "2. MNEMOTÈCNIA: Integra un truc de memòria naturalment en l'explicació.\n" +
-            "3. ESQUEMES VISUALS (HTML/Tailwind): Està OBLIGATORIAMENT PROHIBIT demanar imatges externes o utilitzar codi Markdown/Mermaid avorrit per fer esquemes. Has de maquetar Infografies Visuals directament usant HTML i les classes de Tailwind. Empra caixes (div), colors de fons suaus (bg-blue-50, bg-green-50), ombres (shadow-md), i arrodoniments (rounded-xl) per separar els conceptes visualment i crear targetes d'estudi atractives enmig del xat.\n" +
+            "2. MNEMOTÈCNIA I FLASHCARDS: Integra trucs de memòria. A més, genera 'Targetes d'Estudi' (Flashcards) utilitzant les etiquetes HTML <details> i <summary>. A l'etiqueta <summary> posaràs el concepte o pregunta, i a dins del <details> la resposta oculta perquè l'alumne faci clic per revelar-la (Memòria Activa).\n" +
+            "3. ESQUEMES VISUALS (HTML/Tailwind): Està OBLIGATORIAMENT PROHIBIT demanar imatges externes o utilitzar codi Markdown/Mermaid. Maqueta Infografies i Flashcards directament usant HTML i les classes de Tailwind CSS dins del xat. Fes servir flexbox, caixes amb colors suaus (bg-blue-50, bg-green-50), ombres (shadow-md) i vores arrodonides (rounded-xl). REGLA CRÍTICA: Afegeix explícitament la classe 'text-slate-900' a tots els teus textos (p, li, h2, h3, summary) perquè contrastin amb els fons clars.\n" +
             "4. ATURADA: Acaba la teva explicació amb l'etiqueta [BOTON_ENTENDIDO] i NO posis cap joc encara.\n\n" +
             "ACTIVACIÓ DEL JOC (ALERTA MÀXIMA):\n" +
             "Si l'alumne et diu 'Ho he entès perfectament. Fes-me el mini-joc interactiu...', tens PROHIBIT dir res més de teoria. RESPON OBLIGATÒRIAMENT amb el bloc de codi d'un d'aquests dos jocs.\n" +
-            "REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb ```kahoot o ```schema EXACTAMENT. NO facis servir tools ni funcions.\n\n" +
+            "REGLA CRÍTICA: Has d'obrir el bloc obligatòriament amb ```kahoot o ```schema EXACTAMENT. NO facis servir tools ni crides de funció.\n\n" +
             "OPCIÓ A (Esquema conceptual):\n" +
             "```schema\n" +
             "{\n" +
@@ -115,7 +115,7 @@ NORMES DE SEGURETAT I PROTECCIÓ (INFRANGIBLES):
             "  \"correcta\": 0\n" +
             "}\n" +
             "```";
-
+            
             let safeHistory = [];
             let lastRole = "";
             for (let msg of chatHistory) {
