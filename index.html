@@ -251,11 +251,11 @@
                 </div>
                 
                 <div class="flex items-center gap-1.5 md:gap-2">
+                    <button id="theory-header-btn" onclick="scrollToLatestTheory()" class="text-[10px] md:text-sm bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 font-bold px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/60 transition flex items-center gap-1 md:gap-2 whitespace-nowrap hidden">
+                        📖 <span class="hidden sm:inline">Última Teoria</span>
+                    </button>
                     <button id="history-header-btn" onclick="showHistoryModal()" class="text-[10px] md:text-sm bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition flex items-center gap-1 md:gap-2 whitespace-nowrap">
                         📊 <span class="hidden sm:inline">Resultats</span>
-                    </button>
-                    <button id="calendar-header-btn" onclick="showCalendarModal()" class="text-[10px] md:text-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition flex items-center gap-1 md:gap-2 whitespace-nowrap">
-                        📅 <span class="hidden sm:inline">Pla d'Estudi</span>
                     </button>
                 </div>
             </div>
@@ -476,6 +476,7 @@
             document.getElementById('welcome-view').classList.add('hidden');
             document.getElementById('setup-view').classList.remove('hidden');
             document.getElementById('setup-view').classList.add('flex');
+            document.getElementById('theory-header-btn').classList.remove('hidden');
         }
 
         function startFreeChatMode() {
@@ -866,7 +867,7 @@
             saveSession();
 
             let isWin = indexPicked === game.data.correcta;
-            let reply = isWin ? `He marcat "${textResponded}". Ho he encertat! Continua.` : `He fallat, era la incorrecta. Aclareix-me l'error (NO posis cap joc nou) i seguim.`;
+            let reply = isWin ? `He marcat "${textResponded}". Ho he encertat! Ara explica'm la SEGÜENT PART de la teoria del pla d'estudi (no posis més jocs ara).` : `He fallat, era la incorrecta. Aclareix-me l'error (NO posis cap joc nou) i seguim.`;
             
             setTimeout(() => {
                 closeGameModal();
@@ -992,11 +993,11 @@
 
                     setTimeout(() => {
                         closeGameModal();
-                        let msg = `He fallat l'esquema 3 vegades. Guarda-ho per un altre dia. Explica'm l'error breument i seguim.`;
+                        let msg = `He completat l'esquema correctament. Ara explica'm la SEGÜENT PART de la teoria del pla d'estudi (no posis més jocs ara).`;
                         appendMessage('user', msg);
                         chatHistory.push({ role: 'user', content: msg });
                         triggerAiResponse();
-                    }, 3000);
+                }, 1500);
                 } else {
                     btn.innerHTML = `❌ Error. Comprovar de nou (Intent ${game.attempts}/3)`;
                     btn.classList.add('bg-red-500', 'hover:bg-red-600');
@@ -1021,6 +1022,22 @@
                     : "bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-800/50 text-red-800 dark:text-red-400 font-bold py-3.5 px-4 rounded-xl w-full flex justify-center mt-4 transition hover:bg-red-200 dark:hover:bg-red-900/60";
             }
         }
+
+        window.scrollToLatestTheory = function() {
+            // Buscamos el último mensaje que tenía el botón de "Ho he entès"
+            const theoryButtons = document.querySelectorAll('button[onclick="requestMinigame(this)"]');
+            if(theoryButtons.length > 0) {
+                const lastTheory = theoryButtons[theoryButtons.length - 1].closest('.chat-msg-ai');
+                if(lastTheory) {
+                    lastTheory.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Hacemos un pequeño destello visual para que sepas dónde está
+                    lastTheory.classList.add('ring-2', 'ring-blue-400', 'transition-all');
+                    setTimeout(() => lastTheory.classList.remove('ring-2', 'ring-blue-400'), 1500);
+                }
+            } else {
+                Swal.fire({ title: 'Cap teoria', text: 'Encara no s\'ha generat cap lliçó de teoria.', icon: 'info' });
+            }
+        };
 
         function formatMessage(text) {
             if(!text) return "";
@@ -1050,12 +1067,9 @@
             let htmlContent = marked.parse(text);
 
             htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, `
-                <div class="my-4 mt-6 flex flex-col md:flex-row gap-3">
+                <div class="my-4 mt-6">
                     <button onclick="requestMinigame(this)" class="bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-800 text-green-800 dark:text-green-400 font-bold py-3 px-6 rounded-xl hover:bg-green-200 dark:hover:bg-green-900/60 transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
                         ✅ Ho he entès! Posa'm a prova
-                    </button>
-                    <button onclick="this.closest('.chat-msg-ai').scrollIntoView({behavior: 'smooth', block: 'start'})" class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-bold py-3 px-6 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
-                        ⬆️ Tornar a l'inici de la teoria
                     </button>
                 </div>
             `);
@@ -1082,12 +1096,9 @@
                     }
 
                     uiCode = `
-                    <div class="my-4 flex flex-col sm:flex-row gap-3">
+                    <div class="my-4">
                         <button id="launch_btn_${block.id}" onclick="openGameModal('${block.id}')" class="${btnClass} font-bold py-3.5 px-4 rounded-xl transition shadow-sm w-full flex items-center justify-center gap-2 text-sm interactive-btn border">
                             ${btnText}
-                        </button>
-                        <button onclick="this.closest('.chat-msg-ai').previousElementSibling?.previousElementSibling?.scrollIntoView({behavior: 'smooth', block: 'start'})" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold py-3.5 px-4 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm w-full sm:w-auto flex items-center justify-center gap-2 text-sm whitespace-nowrap">
-                            ⬆️ Repassar Teoria
                         </button>
                     </div>`;
                 } catch(e) {
