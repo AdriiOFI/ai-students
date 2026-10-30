@@ -482,11 +482,38 @@
         function startStudyMode() {
             appMode = 'study';
             document.getElementById('welcome-view').classList.add('hidden');
-            document.getElementById('setup-view').classList.remove('hidden');
-            document.getElementById('setup-view').classList.add('flex');
-            document.getElementById('theory-header-btn').classList.remove('hidden');
+            
+            // Si ja hi ha missatges, tornem al xat en lloc d'obrir un de nou
+            if (chatHistory.length > 0) {
+                document.getElementById('chat-view').classList.remove('hidden');
+                document.getElementById('chat-view').classList.add('flex');
+                document.getElementById('global-menu-btn').classList.add('hidden');
+            } else {
+                document.getElementById('setup-view').classList.remove('hidden');
+                document.getElementById('setup-view').classList.add('flex');
+            }
         }
 
+        function startFreeChatMode() {
+            appMode = 'free';
+            document.getElementById('welcome-view').classList.add('hidden');
+            document.getElementById('global-menu-btn').classList.add('hidden');
+            
+            document.getElementById('chat-view').classList.remove('hidden');
+            document.getElementById('chat-view').classList.add('flex');
+            document.getElementById('chat-form').classList.remove('hidden');
+            document.getElementById('calendar-header-btn').classList.add('hidden');
+            document.getElementById('history-header-btn').classList.add('hidden');
+            document.getElementById('chat-mode-label').innerText = "XatBot";
+            
+            // Només enviem el missatge de benvinguda si el xat està buit
+            if (chatHistory.length === 0) {
+                appendMessage('ai', "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?");
+                chatHistory.push({ role: 'assistant', content: "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?" });
+                saveSession();
+            }
+        }
+            
         function startFreeChatMode() {
             appMode = 'free';
             document.getElementById('welcome-view').classList.add('hidden');
@@ -575,8 +602,7 @@
         }
 
         async function generatePlanAndQuiz() {
-            Swal.fire({ title: 'Planificant...', allowOutsideClick: false, target: 'main', customClass: { popup: 'rounded-[2rem] dark:bg-slate-800 dark:text-white border dark:border-slate-700' }, didOpen: () => Swal.showLoading() });
-            try {
+                Swal.fire({ title: 'Planificant...', allowOutsideClick: false, target: 'main', heightAuto: false, customClass: { container: 'absolute', popup: 'rounded-[2rem] dark:bg-slate-800 dark:text-white border dark:border-slate-700' }, didOpen: () => Swal.showLoading() });            try {
                 let numSessions = validStudyDates.length > 15 ? 15 : validStudyDates.length;
                 const res = await fetch('/api/generate', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -684,7 +710,8 @@
                 confirmButtonText: 'Tancar',
                 confirmButtonColor: '#2563eb',
                 target: 'main',
-                customClass: { popup: 'rounded-[1.5rem] md:rounded-3xl dark:bg-slate-800 dark:text-white border dark:border-slate-700', title: 'font-black text-slate-800 dark:text-white' }
+                heightAuto: false,
+                customClass: { container: 'absolute', popup: 'rounded-[1.5rem] md:rounded-3xl dark:bg-slate-800 dark:text-white border dark:border-slate-700', title: 'font-black text-slate-800 dark:text-white' }
             });
         }
 
@@ -701,7 +728,8 @@
                 confirmButtonText: 'Tancar', 
                 confirmButtonColor: '#2563eb', 
                 target: 'main',
-                customClass: { popup: 'rounded-[1.5rem] md:rounded-3xl dark:bg-slate-800 dark:text-white border dark:border-slate-700', title: 'font-black text-slate-800 dark:text-white' } 
+                heightAuto: false,
+                customClass: { container: 'absolute', popup: 'rounded-[1.5rem] md:rounded-3xl dark:bg-slate-800 dark:text-white border dark:border-slate-700', title: 'font-black text-slate-800 dark:text-white' } 
             });
         }
 
@@ -820,6 +848,8 @@
             } else if (game.type === 'schema') {
                 titleEl.innerHTML = "🧩 Esquema Conceptual";
                 contentEl.innerHTML = buildSchemaUI(id, game);
+            } else if (block.type === 'html') {
+                        uiCode = `<div class="my-5 w-full bg-white dark:bg-slate-800 rounded-[1.5rem] p-4 md:p-6 shadow-md border border-slate-200 dark:border-slate-700 overflow-x-auto">${block.data}</div>`;
             }
             
             const modal = document.getElementById('game-modal');
@@ -1060,22 +1090,21 @@
             if(!text) return "";
             let idCounter = 0;
             const interactiveBlocks = [];
+
+            text = text.replace(/```html([\s\S]*?)```/gi, function(match, p1) {
+                try {
+                    let id = 'html_' + Date.now() + idCounter;
+                    interactiveBlocks[idCounter] = { type: 'html', data: p1, id: id };
+                    idCounter++;
+                    return `@@@BLOCK_${idCounter-1}@@@`;
+                } catch(e) { return match; }
+            });
             
             text = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let k = JSON.parse(p1.trim());
                     let id = 'kahoot_' + Date.now() + idCounter;
                     interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id };
-                    idCounter++;
-                    return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
-            });
-
-            text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
-                try {
-                    let s = JSON.parse(p1.trim());
-                    let id = 'schema_' + Date.now() + idCounter;
-                    interactiveBlocks[idCounter] = { type: 'schema', data: s, id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
                 } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
