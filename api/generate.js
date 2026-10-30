@@ -22,7 +22,7 @@ module.exports = async function handler(req, res) {
         const studentContext = body.studentContext || "";
 
         // MODEL CANVIAT A QWEN (El que volies usar). No té el bug de les "Tools" de Llama.
-        const GROQ_MODEL = "qwen-2.5-32b"; 
+        const GROQ_MODEL = "openai/gpt-oss-120b"; 
 
         const safetyRules = `
 NORMES DE SEGURETAT I PROTECCIÓ (INFRANGIBLES):
