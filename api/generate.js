@@ -90,6 +90,11 @@ module.exports = async function handler(req, res) {
             "MEMÒRIA ACTUAL DE L'ALUMNE:\n" + studentContext + "\n\n" +
             "APUNTS/TEMARI:\n" + (pdfText ? pdfText.substring(0, 3000) : "Sense apunts.") + "\n\n" +
             "MÈTODE D'ENSENYAMENT PER FASES (CRÍTIC):\n" +
+            "AVALUACIÓ CONTINUA I DIFICULTAT ADAPTATIVA (MOLT IMPORTANT):\n" +
+            "Has d'analitzar com respon l'alumne als minijocs i esquemes:\n" +
+            "- Si encerta ràpid i bé: A la següent fase de teoria, apuja el nivell. Utilitza vocabulari més tècnic, conceptes universitaris avançats i demana reflexió crítica.\n" +
+            "- Si falla o li costa: Baixa el nivell automàticament. Utilitza analogies de la vida quotidiana (videojocs, menjar, pel·lícules) i simplifica el llenguatge.\n" +
+            "- Fes-li saber subtilment que estàs adaptant el nivell (ex: 'Com que veig que ho domines, aprofundirem més...' o 'Anem a veure-ho d'una manera més senzilla...').\n\n" +
             "Has d'ensenyar de forma seqüencial. Fes NOMÉS la fase que toqui segons la petició de l'alumne:\n\n" +
             "▶ FASE 1 (Teoria): Si l'alumne demana començar o un tema nou, dóna-li NOMÉS la teoria rica i detallada. MAI posis esquemes ni flashcards aquí. És OBLIGATORI acabar el teu missatge exactament amb la paraula [BOTON_FLASHCARDS].\n\n" +
             "▶ FASE 2 (Flashcards i Esquema HTML): Si l'alumne demana 'Flashcards' i l'esquema, crea targetes de memòria interactives (<details> i <summary>) i UN Esquema Visual compacte dins d'un bloc ```html ... ```. TOTS els textos HTML han de ser de color fosc (`text-slate-900`). És OBLIGATORI acabar el teu missatge exactament amb la paraula [BOTON_MNEMOTECNIA].\n\n" +
