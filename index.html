@@ -1055,21 +1055,38 @@
         }
 
         window.scrollToLatestTheory = function() {
-            // Busquem l'últim marcador d'inici de teoria
-            const markers = document.querySelectorAll('.theory-start-marker');
-            if(markers.length > 0) {
-                const lastTheory = markers[markers.length - 1].closest('.chat-msg-ai');
-                if(lastTheory) {
-                    lastTheory.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    lastTheory.classList.add('ring-2', 'ring-blue-400', 'transition-all');
-                    setTimeout(() => lastTheory.classList.remove('ring-2', 'ring-blue-400'), 1500);
-                    return;
-                }
+            // Busquem tots els marcadors ocults que ha generat la IA
+            const markers = document.querySelectorAll('.theory-marker');
+            if(markers.length === 0) {
+                Swal.fire({ title: 'Cap lliçó activa', text: 'Encara no s\'ha generat contingut a la sessió.', icon: 'info', confirmButtonColor: '#2563eb', target: 'main', customClass: { container: 'absolute', popup: 'rounded-[1.5rem] dark:bg-slate-800 dark:text-white border dark:border-slate-700' } });
+                return;
             }
-            Swal.fire({ title: 'Cap teoria', text: 'Encara no s\'ha generat cap lliçó de teoria.', icon: 'info', confirmButtonColor: '#2563eb' });
+            
+            let htmlContent = '<div class="flex flex-col gap-3 mt-4 max-h-[50vh] overflow-y-auto px-1">';
+            let recentMarkers = Array.from(markers).reverse(); // Més recents a dalt
+            
+            recentMarkers.forEach(m => {
+                let type = m.getAttribute('data-type');
+                let mId = m.id;
+                // Al clicar un botó, tanca el modal, fa scroll fins al missatge de la IA i l'il·lumina
+                htmlContent += `
+                <button onclick="Swal.close(); const el = document.getElementById('${mId}').closest('.chat-msg-ai'); el.scrollIntoView({behavior: 'smooth', block: 'start'}); el.classList.add('ring-4', 'ring-blue-400', 'transition-all', 'duration-500'); setTimeout(()=>el.classList.remove('ring-4', 'ring-blue-400'), 2000);" class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition text-left w-full shadow-sm">
+                    <div class="font-bold text-slate-700 dark:text-slate-200 text-sm md:text-base">${type}</div>
+                </button>`;
+            });
+            htmlContent += '</div>';
+
+            Swal.fire({ 
+                title: '📖 Índex de Lliçons', 
+                html: htmlContent, 
+                showCloseButton: true, 
+                showConfirmButton: false,
+                target: 'main',
+                heightAuto: false,
+                customClass: { container: 'absolute', popup: 'rounded-[1.5rem] md:rounded-3xl dark:bg-slate-800 dark:text-white border dark:border-slate-700', title: 'font-black text-slate-800 dark:text-white' }
+            });
         };
 
-        // NOVA FUNCIÓ PER AVANÇAR DE FASE (Teoria -> Flashcards -> Mnemotècnia)
         window.requestNextPhase = function(btn, promptText) {
             btn.disabled = true;
             btn.classList.add('opacity-50');
@@ -1080,7 +1097,7 @@
                 chatHistory.push({ role: 'user', content: promptText });
                 triggerAiResponse();
             }, 300);
-        }
+        };
 
         function formatMessage(text) {
             if(!text) return "";
@@ -1103,7 +1120,7 @@
                     interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible.</div>\n"; }
+                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
             });
 
             text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
@@ -1113,36 +1130,44 @@
                     interactiveBlocks[idCounter] = { type: 'schema', data: s, id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible.</div>\n"; }
+                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
             });
 
             let htmlContent = marked.parse(text);
 
-            // SUBSTITUCIONS PELS NOUS BOTONS DE FASE
-            htmlContent = htmlContent.replace(/\[BOTON_FLASHCARDS\]/gi, `
-                <div class="theory-start-marker"></div>
+            // SUBSTITUCIONS PELS NOUS BOTONS DE FASE I MARCADORS
+            htmlContent = htmlContent.replace(/\[BOTON_FLASHCARDS\]/gi, function() {
+                let mId = 'marker_' + Date.now() + Math.floor(Math.random() * 1000);
+                return `
+                <div id="${mId}" class="theory-marker hidden" data-type="📖 Teoria General"></div>
                 <div class="my-4 mt-5 flex justify-end">
                     <button onclick="requestNextPhase(this, 'Molt bé, teoria entesa. Ara dóna\\'m les Flashcards i l\\'Esquema visual d\\'aquest tema.')" class="bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-400 font-bold py-2.5 px-5 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-900/60 transition shadow-sm flex items-center gap-2 text-sm">
-                        Siguiente: Esquema i Flashcards ➔
+                        Següent: Esquema i Flashcards ➔
                     </button>
-                </div>
-            `);
+                </div>`;
+            });
 
-            htmlContent = htmlContent.replace(/\[BOTON_MNEMOTECNIA\]/gi, `
+            htmlContent = htmlContent.replace(/\[BOTON_MNEMOTECNIA\]/gi, function() {
+                let mId = 'marker_' + Date.now() + Math.floor(Math.random() * 1000);
+                return `
+                <div id="${mId}" class="theory-marker hidden" data-type="🗂️ Esquema i Flashcards"></div>
                 <div class="my-4 mt-5 flex justify-end">
                     <button onclick="requestNextPhase(this, 'Perfecte. Ara explica\\'m un truc de mnemotècnia per recordar això fàcilment.')" class="bg-purple-100 dark:bg-purple-900/40 border border-purple-300 dark:border-purple-800 text-purple-800 dark:text-purple-400 font-bold py-2.5 px-5 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-900/60 transition shadow-sm flex items-center gap-2 text-sm">
-                        Siguiente: Truc de Memòria ➔
+                        Següent: Truc de Memòria ➔
                     </button>
-                </div>
-            `);
+                </div>`;
+            });
 
-            htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, `
+            htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, function() {
+                let mId = 'marker_' + Date.now() + Math.floor(Math.random() * 1000);
+                return `
+                <div id="${mId}" class="theory-marker hidden" data-type="🧠 Mnemotècnia"></div>
                 <div class="my-4 mt-5 flex justify-end">
                     <button onclick="requestMinigame(this)" class="bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-800 text-green-800 dark:text-green-400 font-bold py-2.5 px-5 rounded-xl hover:bg-green-200 dark:hover:bg-green-900/60 transition shadow-sm flex items-center gap-2 text-sm">
                         ✅ Posar-me a prova
                     </button>
-                </div>
-            `);
+                </div>`;
+            });
 
             for (let i = 0; i < interactiveBlocks.length; i++) {
                 let block = interactiveBlocks[i];
@@ -1150,7 +1175,7 @@
                 
                 try {
                     if (block.type === 'html') {
-                        // NOU DISSENY HTML: Més petit (max-w-lg), centrat (mx-auto), i textos foscos blindats.
+                        // NOU DISSENY HTML COMPACTE: Més petit (max-w-lg), centrat (mx-auto), i textos foscos blindats.
                         uiCode = `<div class="my-6 w-full max-w-lg mx-auto bg-slate-50 rounded-[1.2rem] p-4 md:p-5 shadow border border-slate-200 overflow-x-auto text-slate-900 text-sm [&_*]:!text-slate-900 [&_summary]:cursor-pointer [&_summary]:font-bold [&_summary]:text-base [&_details]:bg-white [&_details]:p-3 [&_details]:rounded-lg [&_details]:border [&_details]:border-slate-200 [&_details]:mt-1.5 [&_h2]:text-lg [&_h3]:text-base">${block.data}</div>`;
                     } else {
                         if (!window.interactiveGames[block.id]) {
@@ -1177,7 +1202,7 @@
                         </div>`;
                     }
                 } catch(e) {
-                    uiCode = `<div class="bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs">⚠️ Error al generar.</div>`;
+                    uiCode = `<div class="bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs">⚠️ Error al generar botó.</div>`;
                 }
                 
                 htmlContent = htmlContent.replace(`@@@BLOCK_${i}@@@`, uiCode);
