@@ -297,12 +297,30 @@
                 
                 <div id="chat-messages" class="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 pb-2 scroll-smooth"></div>
                 
-                <div class="p-3 md:p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800 relative z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.02)] pb-safe md:pb-4">
-                    <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center hidden">
-                        <input type="text" id="chat-input" placeholder="Escriu un missatge..." class="w-full pl-4 pr-12 py-3 md:py-4 md:pl-5 md:pr-14 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition shadow-sm text-sm md:text-base">
-                        <button type="submit" class="absolute right-1.5 md:right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 md:p-2.5 rounded-xl transition shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                        </button>
+                <div class="p-3 md:p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800 relative z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.02)] pb-safe md:pb-4 transition-colors duration-300">
+                    <!-- Contenidor per previsualitzar la imatge adjunta -->
+                    <div id="attachment-preview" class="hidden mx-auto max-w-4xl mb-2 px-2">
+                        <div class="relative inline-block bg-slate-100 dark:bg-slate-700 p-2 rounded-xl border border-slate-200 dark:border-slate-600">
+                            <img id="preview-img" src="" class="h-16 w-auto rounded-lg object-cover">
+                            <button type="button" onclick="removeAttachment()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <form id="chat-form" class="max-w-4xl mx-auto relative flex items-center gap-2 hidden">
+                        <!-- Botó d'Adjuntar -->
+                        <label class="cursor-pointer p-2 md:p-3 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 transition shadow-sm shrink-0">
+                            <input type="file" id="chat-attachment" accept="image/*,.pdf" class="hidden" onchange="handleAttachment(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                        </label>
+                        
+                        <div class="relative flex-1">
+                            <input type="text" id="chat-input" placeholder="Escriu un missatge o adjunta una imatge..." class="w-full pl-4 pr-12 py-3 md:py-4 md:pl-5 md:pr-14 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition shadow-sm text-sm md:text-base">
+                            <button type="submit" class="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-2 md:p-2.5 rounded-xl transition shadow-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -918,14 +936,54 @@
             triggerAiResponse();
         }
 
+        let currentAttachmentBase64 = null;
+
+        function handleAttachment(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            // Si és una imatge, la convertim a Base64 per enviar-la a la IA
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentAttachmentBase64 = e.target.result;
+                    document.getElementById('preview-img').src = currentAttachmentBase64;
+                    document.getElementById('attachment-preview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                Swal.fire('Atenció', 'De moment només es poden adjuntar imatges al xat ràpid.', 'info');
+            }
+            input.value = ''; // Resetejar input
+        }
+
+        function removeAttachment() {
+            currentAttachmentBase64 = null;
+            document.getElementById('attachment-preview').classList.add('hidden');
+            document.getElementById('preview-img').src = '';
+        }
+
         document.getElementById('chat-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
-            if (!msg) return;
-            appendMessage('user', msg);
+            
+            if (!msg && !currentAttachmentBase64) return;
+            
+            let displayMsg = msg;
+            let aiPayloadMsg = msg;
+            
+            // Si hi ha imatge, la mostrem a l'historial
+            if (currentAttachmentBase64) {
+                displayMsg = `<img src="${currentAttachmentBase64}" class="max-w-[200px] rounded-lg mb-2 border border-slate-600"><br>` + msg;
+                aiPayloadMsg = `[L'alumne ha adjuntat una imatge. Analitza-la]. ` + msg; // Aquí, en el futur, es passarà la imatge real en Base64 al backend segons l'API que usis (Groq/OpenAI).
+            }
+            
+            appendMessage('user', displayMsg);
             input.value = '';
-            chatHistory.push({ role: 'user', content: msg });
+            chatHistory.push({ role: 'user', content: aiPayloadMsg });
+            removeAttachment(); // Netejar després d'enviar
+            
             triggerAiResponse();
         });
 
