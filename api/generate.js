@@ -90,13 +90,12 @@ module.exports = async function handler(req, res) {
             "MEMÒRIA ACTUAL DE L'ALUMNE:\n" + studentContext + "\n\n" +
             "APUNTS/TEMARI:\n" + (pdfText ? pdfText.substring(0, 3000) : "Sense apunts.") + "\n\n" +
             "MÈTODE D'ENSENYAMENT PER FASES (CRÍTIC):\n" +
-            "Sempre ensenyaràs PAS A PAS. Depenent del que et demani l'alumne, faràs NOMÉS UNA d'aquestes fases:\n\n" +
-            "FASE 1 (Teoria): Si l'alumne demana començar o demana teoria, dóna-li NOMÉS LA TEORIA RICA (text, negretes, llistes). MAI posis esquemes ni flashcards aquí. Acaba el missatge EXACTAMENT amb l'etiqueta [BOTON_FLASHCARDS].\n\n" +
-            "FASE 2 (Visual): Si l'alumne demana les Flashcards i l'esquema, crea les Flashcards (<details> i <summary>) i UN Esquema Visual (```html). Fes-los COMPACTES. REGLA DE COLORS: TOTS els textos dins de l'HTML han de tenir la classe `text-slate-900`. MAI lletra blanca. Acaba el missatge EXACTAMENT amb [BOTON_MNEMOTECNIA].\n\n" +
-            "FASE 3 (Mnemotècnia): Si l'alumne demana un truc de memòria, explica'n un de breu. Acaba el missatge EXACTAMENT amb [BOTON_ENTENDIDO].\n\n" +
-            "BLOC HTML CRÍTIC: L'esquema i les flashcards han d'anar DINS d'un bloc que comenci per ```html i acabi per ```.\n\n" +
+            "Has d'ensenyar de forma seqüencial. Fes NOMÉS la fase que toqui segons la petició de l'alumne:\n\n" +
+            "▶ FASE 1 (Teoria): Si l'alumne demana començar o un tema nou, dóna-li NOMÉS la teoria rica i detallada. MAI posis esquemes ni flashcards aquí. És OBLIGATORI acabar el teu missatge exactament amb la paraula [BOTON_FLASHCARDS].\n\n" +
+            "▶ FASE 2 (Flashcards i Esquema HTML): Si l'alumne demana 'Flashcards' i l'esquema, crea targetes de memòria interactives (<details> i <summary>) i UN Esquema Visual compacte dins d'un bloc ```html ... ```. TOTS els textos HTML han de ser de color fosc (`text-slate-900`). És OBLIGATORI acabar el teu missatge exactament amb la paraula [BOTON_MNEMOTECNIA].\n\n" +
+            "▶ FASE 3 (Mnemotècnia): Si l'alumne demana un 'truc de memòria' o mnemotècnia, explica'n un de breu. És OBLIGATORI acabar el teu missatge exactament amb la paraula [BOTON_ENTENDIDO].\n\n" +
             "ACTIVACIÓ DEL JOC:\n" +
-            "Si l'alumne et diu 'Ho he entès perfectament. Posa'm a prova...', tens PROHIBIT dir res de teoria. RESPON OBLIGATÒRIAMENT amb el bloc ```kahoot o ```schema EXACTAMENT.\n\n" +
+            "Si l'alumne demana 'Posar-me a prova', RESPON OBLIGATÒRIAMENT amb el bloc ```kahoot o ```schema EXACTAMENT. Cap altra cosa.\n\n" +
             "OPCIÓ A (Esquema conceptual):\n" +
             "```schema\n" +
             "{\n" +
