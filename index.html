@@ -447,21 +447,91 @@
             initPreferences();
             
             if (!authToken) {
-                // No hi ha sessió -> Mostrar pantalla de Login
                 document.getElementById('auth-view').classList.remove('hidden');
                 document.getElementById('app-container').classList.add('hidden');
-                
             } else {
-                // Hi ha sessió -> Sincronitzar amb el núvol i carregar l'App
                 updateProfileUI();
-                
                 document.getElementById('auth-view').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
-                setTimeout(() => document.getElementById('app-container').classList.remove('opacity-0'), 50);
+                setTimeout(() => document.getElementById('app-container').classList.remove('opacity-0'), 10);
                 
+                // 1. CARREGAR A L'INSTANT (Evita que salti a la pantalla principal)
+                const backup = localStorage.getItem('aliat_sessions_backup');
+                if (backup) {
+                    allSessions = JSON.parse(backup);
+                    currentSessionId = localStorage.getItem('aliat_current_id');
+                    if (currentSessionId) loadActiveSessionData(); 
+                    renderSidebarHistory();
+                }
+                
+                // 2. Sincronitzar amb Turso en segon pla
                 syncCloudSessions();
             }
         };
+
+        async function syncCloudSessions() {
+            try {
+                const res = await fetch('/api/sessions/get', {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    allSessions = data.sessions;
+                    localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
+                    renderSidebarHistory();
+                    
+                    // Si no hi havia backup local previ, carreguem ara
+                    if (!localStorage.getItem('aliat_sessions_backup')) {
+                        currentSessionId = localStorage.getItem('aliat_current_id');
+                        if (!currentSessionId && allSessions.length > 0) currentSessionId = allSessions[0].id;
+                        else if (!currentSessionId) currentSessionId = 'sess_' + Date.now();
+                        localStorage.setItem('aliat_current_id', currentSessionId);
+                        loadActiveSessionData();
+                    }
+                } else {
+                    if (res.status === 401) logout();
+                }
+            } catch(e) { console.warn("Treballant offline o carregant...", e); }
+        }
+
+        function loadActiveSessionData() {
+            let activeSession = allSessions.find(s => s.id === currentSessionId);
+            
+            if (activeSession && activeSession.history && activeSession.history.length > 0) {
+                chatHistory = activeSession.history;
+                generatedCalendarArray = activeSession.calendar || [];
+                appMode = activeSession.mode || 'study';
+                window.interactiveGames = activeSession.games || {}; 
+                
+                studentContextStr = localStorage.getItem('aliat_local_context_' + currentSessionId) || "";
+                finalStudyText = localStorage.getItem('aliat_local_text_' + currentSessionId) || "";
+                
+                document.getElementById('chat-messages').innerHTML = activeSession.html || localStorage.getItem('aliat_local_html_' + currentSessionId) || '';
+                
+                document.getElementById('welcome-view').classList.add('hidden');
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('global-menu-btn').classList.add('hidden');
+                
+                document.getElementById('chat-view').classList.remove('hidden');
+                document.getElementById('chat-view').classList.add('flex');
+                document.getElementById('chat-form').classList.remove('hidden');
+                
+                if(appMode === 'free') {
+                    document.getElementById('calendar-header-btn').classList.add('hidden');
+                    document.getElementById('history-header-btn').classList.add('hidden');
+                    document.getElementById('theory-header-btn').classList.add('hidden');
+                    document.getElementById('chat-mode-label').innerText = "XatBot";
+                } else {
+                    document.getElementById('theory-header-btn').classList.remove('hidden');
+                }
+                
+                setTimeout(() => {
+                    const box = document.getElementById('chat-messages');
+                    if(box) box.scrollTop = box.scrollHeight;
+                }, 50);
+            }
+        }
 
         // --- SISTEMA D'AUTENTICACIÓ (NOU) ---
         let authMode = 'login';
@@ -1030,16 +1100,20 @@
             let displayMsg = msg;
             let aiPayloadMsg = msg;
             
-            // Si hi ha imatge, la mostrem a l'historial
             if (currentAttachmentBase64) {
                 displayMsg = `<img src="${currentAttachmentBase64}" class="max-w-[200px] rounded-lg mb-2 border border-slate-600"><br>` + msg;
-                aiPayloadMsg = `[L'alumne ha adjuntat una imatge. Analitza-la]. ` + msg; // Aquí, en el futur, es passarà la imatge real en Base64 al backend segons l'API que usis (Groq/OpenAI).
+                aiPayloadMsg = `[L'alumne ha adjuntat una imatge. Analitza-la]. ` + msg;
             }
             
             appendMessage('user', displayMsg);
             input.value = '';
+            input.style.height = 'auto'; // Retorna el textarea a la mida original
+            
             chatHistory.push({ role: 'user', content: aiPayloadMsg });
-            removeAttachment(); // Netejar després d'enviar
+            removeAttachment();
+            
+            // GUARDAT INSTANTANI DEL TEU MISSATGE! (Abans de que l'IA respongui)
+            saveSession();
             
             triggerAiResponse();
         });
