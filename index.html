@@ -336,7 +336,7 @@
                         </label>
                         
                         <div class="relative flex-1">
-                            <input type="text" id="chat-input" placeholder="Escriu un missatge o adjunta una imatge..." class="w-full pl-4 pr-12 py-3 md:py-4 md:pl-5 md:pr-14 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition shadow-sm text-sm md:text-base">
+                            <textarea id="chat-input" rows="1" placeholder="Escriu un missatge o adjunta una imatge..." class="w-full pl-4 pr-12 py-3 md:py-4 md:pl-5 md:pr-14 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-slate-800 outline-none transition shadow-sm text-sm md:text-base resize-none overflow-y-auto min-h-[48px] max-h-[150px]" oninput="this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 150) + 'px'" onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.getElementById('chat-form').requestSubmit(); }"></textarea>
                             <button type="submit" class="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-2 md:p-2.5 rounded-xl transition shadow-md">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                             </button>
@@ -413,13 +413,13 @@
                 cardEl.classList.replace('dark:bg-slate-800', 'dark:bg-emerald-900/30');
                 cardEl.classList.replace('border-slate-200', 'border-emerald-300');
                 cardEl.classList.replace('dark:border-slate-700', 'dark:border-emerald-800/50');
-                contentEl.innerHTML = `<span class="text-[10px] uppercase text-emerald-600 block mb-2 tracking-widest">Resposta</span><span class="text-base font-medium text-emerald-900 dark:text-emerald-100">${deck.cards[deck.current].a}</span>`;
+                contentEl.innerHTML = `<span class="text-[10px] uppercase text-emerald-600 block mb-2 tracking-widest">Resposta</span><div class="text-base font-medium text-emerald-900 dark:text-emerald-100 prose prose-sm max-w-none dark:prose-invert text-center leading-snug">${marked.parseInline(deck.cards[deck.current].a)}</div>`;
             } else {
                 cardEl.classList.replace('bg-emerald-50', 'bg-white');
                 cardEl.classList.replace('dark:bg-emerald-900/30', 'dark:bg-slate-800');
                 cardEl.classList.replace('border-emerald-300', 'border-slate-200');
                 cardEl.classList.replace('dark:border-emerald-800/50', 'dark:border-slate-700');
-                contentEl.innerHTML = `<span class="text-[10px] uppercase text-slate-400 block mb-2 tracking-widest">Pregunta</span><span class="text-lg font-bold text-slate-800 dark:text-slate-100">${deck.cards[deck.current].q}</span>`;
+                contentEl.innerHTML = `<span class="text-[10px] uppercase text-slate-400 block mb-2 tracking-widest">Pregunta</span><div class="text-lg font-bold text-slate-800 dark:text-slate-100 prose prose-sm max-w-none dark:prose-invert text-center leading-tight">${marked.parseInline(deck.cards[deck.current].q)}</div>`;
             }
         };
 
@@ -1593,7 +1593,14 @@
                 div.innerHTML = `<div class="bg-slate-800 text-white px-4 py-3 rounded-2xl rounded-tr-sm max-w-[90%] text-[13px] shadow-sm break-words">${formatMessage(text)}</div>`;
             } else {
                 div.className = "flex justify-start gap-2 w-full mb-3 chat-msg-ai transition-all duration-500";
-                div.innerHTML = `<div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-md mt-1">AI</div><div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 px-4 py-4 rounded-2xl rounded-tl-sm max-w-[90%] shadow-md w-full overflow-hidden relative"><div class="prose prose-sm dark:prose-invert max-w-none text-[13px] break-words overflow-x-auto">${formatMessage(text)}</div></div>`;
+                div.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-md mt-1">AI</div>
+                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 px-4 py-4 rounded-2xl rounded-tl-sm max-w-[90%] shadow-md w-full overflow-hidden relative group">
+                    <button onclick="navigator.clipboard.writeText(this.nextElementSibling.innerText); Swal.fire({toast:true, position:'top-end', icon:'success', title:'Copiat!', showConfirmButton:false, timer:1500, background: '#1e293b', color: '#fff'});" class="absolute top-2 right-2 p-1.5 bg-slate-100 dark:bg-slate-700 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                    <div class="prose prose-sm dark:prose-invert max-w-none text-[13px] break-words overflow-x-auto">${formatMessage(text)}</div>
+                </div>`;
             }
             box.appendChild(div);
             setTimeout(() => { box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' }); }, 100);
