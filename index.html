@@ -40,8 +40,28 @@
         .dark .swal2-popup { background-color: #1e293b !important; color: #f1f5f9 !important; border: 1px solid #334155; }
         .dark .swal2-title, .dark .swal2-html-container { color: #f8fafc !important; }
     </style>
+    <script>
+        // Anti-Parpadeig (FOUC): Apliquem classes ABANS de que es dibuixi la web
+        if (localStorage.getItem('aliat_theme') === 'dark' || (!localStorage.getItem('aliat_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        if (localStorage.getItem('aliat_token')) {
+            document.documentElement.classList.add('is-logged-in');
+        }
+    </script>
+    <style>
+        /* Si l'usuari ja està loguejat, amaguem el Login completament des del milisegon 0 */
+        html.is-logged-in #auth-view { display: none !important; }
+        html.is-logged-in #app-container { display: flex !important; opacity: 1 !important; }
+    </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 h-[100dvh] flex overflow-hidden antialiased font-sans relative w-full transition-colors duration-300">
+
+    <script>
+        if (localStorage.getItem('aliat_sidebar_collapsed') === 'true' && window.innerWidth >= 768) {
+            document.body.classList.add('sidebar-collapsed');
+        }
+    </script>
 
     <!-- ============================================== -->
     <!-- PANTALLA D'AUTENTICACIÓ (LOGIN / REGISTRE)     -->
@@ -601,12 +621,29 @@
         }
 
         function saveSession() {
+            // 1. Generar títol dinàmic
+            let currentTitle = 'Nova Conversa';
+            if (appMode === 'free' && chatHistory.length > 1) {
+                 currentTitle = "💬 " + chatHistory[1].content.substring(0, 25) + "...";
+            } else if (appMode === 'study') {
+                 let manual = document.getElementById('manual-topic')?.value;
+                 if (uploadedPDFs.length > 0) {
+                     currentTitle = "📚 " + uploadedPDFs.map(p => p.name).join(', ').substring(0, 25);
+                 } else if (manual) {
+                     currentTitle = "📚 " + manual.substring(0, 25) + "...";
+                 } else {
+                     currentTitle = "📚 Pla d'Estudis";
+                 }
+            }
+
             const sessionData = {
                 id: currentSessionId,
                 mode: appMode,
+                title: currentTitle,
                 chat_history: chatHistory, 
                 calendar: generatedCalendarArray, 
                 games: window.interactiveGames,
+                html: document.getElementById('chat-messages').innerHTML,
                 date: new Date().getTime()
             };
             
@@ -616,17 +653,11 @@
             else allSessions.push(sessionData);
             renderSidebarHistory();
             
-            // Enviament real a la base de dades (Turso)
-            saveSessionToCloud({
-                id: sessionData.id,
-                mode: sessionData.mode,
-                chat_history: sessionData.chat_history,
-                calendar: sessionData.calendar,
-                games: sessionData.games
-            });
+            // Enviament real a la base de dades
+            saveSessionToCloud(sessionData);
             
-            // Guardem el HTML del xat només en memòria local pel renderitzat ràpid (per no saturar Turso)
-            localStorage.setItem('aliat_local_html_' + currentSessionId, document.getElementById('chat-messages').innerHTML);
+            // Backups locals extres
+            localStorage.setItem('aliat_local_html_' + currentSessionId, sessionData.html);
             localStorage.setItem('aliat_local_context_' + currentSessionId, studentContextStr);
             localStorage.setItem('aliat_local_text_' + currentSessionId, finalStudyText);
         }
@@ -639,10 +670,11 @@
                 appMode = activeSession.mode || 'study';
                 window.interactiveGames = activeSession.games || {}; 
                 
-                // Recollir memòries locals complementàries (context, HTML renderitzat)
                 studentContextStr = localStorage.getItem('aliat_local_context_' + currentSessionId) || "";
                 finalStudyText = localStorage.getItem('aliat_local_text_' + currentSessionId) || "";
-                document.getElementById('chat-messages').innerHTML = localStorage.getItem('aliat_local_html_' + currentSessionId) || '';
+                
+                // Ara agafem el HTML directament del núvol si existeix
+                document.getElementById('chat-messages').innerHTML = activeSession.html || localStorage.getItem('aliat_local_html_' + currentSessionId) || '';
                 
                 document.getElementById('welcome-view').classList.add('hidden');
                 document.getElementById('setup-view').classList.add('hidden');
@@ -665,23 +697,11 @@
             }
         }
 
-        function newSession() { 
-            currentSessionId = 'sess_' + Date.now();
-            localStorage.setItem('aliat_current_id', currentSessionId);
-            location.reload(); 
-        }
-
-        function loadSession(id) {
-            localStorage.setItem('aliat_current_id', id);
-            location.reload();
-        }
-
         function renderSidebarHistory() {
             const list = document.getElementById('history-list');
             list.innerHTML = '';
             
             const sortedSessions = [...allSessions].sort((a, b) => b.date - a.date);
-            
             if (sortedSessions.length === 0) {
                 list.innerHTML = '<div class="text-[11px] text-slate-600 px-3 py-2 italic">Cap conversa guardada</div>';
                 return;
@@ -690,7 +710,7 @@
             sortedSessions.forEach(s => {
                 if (!s.history || s.history.length === 0) return;
                 
-                let title = s.mode === 'study' ? '📚 Pla d\'Estudis' : '💬 XatBot lliure';
+                let title = s.title || (s.mode === 'study' ? '📚 Pla d\'Estudis' : '💬 XatBot lliure');
                 let dateStr = new Date(s.date).toLocaleDateString('ca-ES', { day: '2-digit', month: 'short' });
                 
                 let activeClass = (s.id === currentSessionId) 
