@@ -90,32 +90,27 @@ module.exports = async function handler(req, res) {
             "MEMÒRIA ACTUAL DE L'ALUMNE:\n" + studentContext + "\n\n" +
             "APUNTS/TEMARI:\n" + (pdfText ? pdfText.substring(0, 3000) : "Sense apunts.") + "\n\n" +
             "MÈTODE D'ENSENYAMENT PER FASES (CRÍTIC):\n" +
-            "AVALUACIÓ CONTINUA I DIFICULTAT ADAPTATIVA (MOLT IMPORTANT):\n" +
-            "Has d'analitzar com respon l'alumne als minijocs i esquemes:\n" +
-            "- Si encerta ràpid i bé: A la següent fase de teoria, apuja el nivell. Utilitza vocabulari més tècnic, conceptes universitaris avançats i demana reflexió crítica.\n" +
-            "- Si falla o li costa: Baixa el nivell automàticament. Utilitza analogies de la vida quotidiana (videojocs, menjar, pel·lícules) i simplifica el llenguatge.\n" +
-            "- Fes-li saber subtilment que estàs adaptant el nivell (ex: 'Com que veig que ho domines, aprofundirem més...' o 'Anem a veure-ho d'una manera més senzilla...').\n\n" +
-            "Has d'ensenyar de forma seqüencial. Fes NOMÉS la fase que toqui segons la petició de l'alumne:\n\n" +
-            "▶ FASE 1 (Teoria): Si l'alumne demana començar o un tema nou, dóna-li NOMÉS la teoria rica i detallada. MAI posis esquemes ni flashcards aquí. És OBLIGATORI acabar el teu missatge exactament amb la paraula [BOTON_FLASHCARDS].\n\n" +
-            "▶ FASE 2 (Flashcards i Esquema HTML): Si l'alumne demana 'Flashcards' i l'esquema, crea targetes de memòria interactives (<details> i <summary>) i UN Esquema Visual compacte dins d'un bloc ```html ... ```. TOTS els textos HTML han de ser de color fosc (`text-slate-900`). És OBLIGATORI acabar el teu missatge exactament amb la paraula [BOTON_MNEMOTECNIA].\n\n" +
-            "▶ FASE 3 (Mnemotècnia): Si l'alumne demana un 'truc de memòria' o mnemotècnia, explica'n un de breu. És OBLIGATORI acabar el teu missatge exactament amb la paraula [BOTON_ENTENDIDO].\n\n" +
+            "Has d'ensenyar de forma seqüencial:\n\n" +
+            "▶ FASE 1 (Teoria): Dóna NOMÉS la teoria rica. Acaba el teu missatge exactament amb [BOTON_FLASHCARDS].\n\n" +
+            "▶ FASE 2 (Flashcards i Esquema): OBLIGATORIAMENT has de crear aquest bloc de dades exactament així perquè el sistema generi el Carrusel de Targetes:\n" +
+            "```flashcards\n" +
+            "[\n" +
+            "  {\"q\": \"Pregunta 1?\", \"a\": \"Resposta oculta 1\"},\n" +
+            "  {\"q\": \"Pregunta 2?\", \"a\": \"Resposta oculta 2\"}\n" +
+            "]\n" +
+            "```\n" +
+            "Després de les flashcards, pots fer un Esquema Visual compacte dins d'un bloc ```html ... ``` (textos color `text-slate-900`). Acaba amb [BOTON_MNEMOTECNIA].\n\n" +
+            "▶ FASE 3 (Mnemotècnia): Explica un truc de memòria. Acaba el missatge amb [BOTON_ENTENDIDO].\n\n" +
             "ACTIVACIÓ DEL JOC:\n" +
-            "Si l'alumne demana 'Posar-me a prova', RESPON OBLIGATÒRIAMENT amb el bloc ```kahoot o ```schema EXACTAMENT. Cap altra cosa.\n\n" +
-            "OPCIÓ A (Esquema conceptual):\n" +
-            "```schema\n" +
-            "{\n" +
-            "  \"titol\": \"Completa el diagrama\",\n" +
-            "  \"buits\": [ { \"context\": \"Pista\", \"resposta\": \"paraula\" } ]\n" +
-            "}\n" +
-            "```\n\n" +
-            "OPCIÓ B (Kahoot clàssic):\n" +
-            "```kahoot\n" +
-            "{\n" +
-            "  \"pregunta\": \"Pregunta:\",\n" +
-            "  \"opcions\": [\"Opció 1\", \"Opció 2\", \"Opció 3\", \"Opció 4\"],\n" +
-            "  \"correcta\": 0\n" +
-            "}\n" +
-            "```";
+            "Quan l'alumne demani 'Posar-me a prova', tria ALEATÒRIAMENT un d'aquests 4 minijocs i RESPON NOMÉS AMB AQUELL BLOC:\n\n" +
+            "OPCIÓ 1 (Kahoot - 4 Opcions):\n" +
+            "```kahoot\n{\"pregunta\": \"...\", \"opcions\": [\"A\", \"B\", \"C\", \"D\"], \"correcta\": 0}\n```\n\n" +
+            "OPCIÓ 2 (Veritat o Fals):\n" +
+            "```tf\n{\"pregunta\": \"L'afirmació X és correcta?\", \"resposta\": true}\n```\n\n" +
+            "OPCIÓ 3 (Troba l'Intrús - 1 Incorrecte):\n" +
+            "```intrus\n{\"pregunta\": \"Quin concepte és INCORRECTE?\", \"opcions\": [\"Bé\", \"Bé\", \"Malament\", \"Bé\"], \"correcta\": 2}\n```\n\n" +
+            "OPCIÓ 4 (Esquema buit):\n" +
+            "```schema\n{\"titol\": \"Completa\", \"buits\": [ { \"context\": \"Pista\", \"resposta\": \"paraula\" } ]}\n```\n";
             
             let safeHistory = [];
             let lastRole = "";
