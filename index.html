@@ -453,46 +453,47 @@
                 updateProfileUI();
                 document.getElementById('auth-view').classList.add('hidden');
                 document.getElementById('app-container').classList.remove('hidden');
-                setTimeout(() => document.getElementById('app-container').classList.remove('opacity-0'), 10);
+                setTimeout(() => document.getElementById('app-container').classList.remove('opacity-0'), 50);
                 
-                // 1. CARREGAR A L'INSTANT (Evita que salti a la pantalla principal)
+                // 1. CARGA INSTANTÁNEA LOCAL (Evita ir a la pantalla principal al hacer F5)
                 const backup = localStorage.getItem('aliat_sessions_backup');
                 if (backup) {
                     allSessions = JSON.parse(backup);
                     currentSessionId = localStorage.getItem('aliat_current_id');
-                    if (currentSessionId) loadActiveSessionData(); 
+                    if (currentSessionId) loadActiveSessionData();
                     renderSidebarHistory();
                 }
-                
-                // 2. Sincronitzar amb Turso en segon pla
+
+                // 2. Sincronización silenciosa en la nube
                 syncCloudSessions();
             }
         };
 
         async function syncCloudSessions() {
             try {
-                const res = await fetch('/api/sessions/get', {
-                    headers: { 'Authorization': 'Bearer ' + authToken }
-                });
+                const res = await fetch('/api/sessions/get', { headers: { 'Authorization': 'Bearer ' + authToken } });
                 const data = await res.json();
-                
                 if (data.success) {
                     allSessions = data.sessions;
                     localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
-                    renderSidebarHistory();
                     
-                    // Si no hi havia backup local previ, carreguem ara
-                    if (!localStorage.getItem('aliat_sessions_backup')) {
-                        currentSessionId = localStorage.getItem('aliat_current_id');
-                        if (!currentSessionId && allSessions.length > 0) currentSessionId = allSessions[0].id;
-                        else if (!currentSessionId) currentSessionId = 'sess_' + Date.now();
-                        localStorage.setItem('aliat_current_id', currentSessionId);
-                        loadActiveSessionData();
+                    currentSessionId = localStorage.getItem('aliat_current_id');
+                    if (!currentSessionId && allSessions.length > 0) { 
+                        currentSessionId = allSessions[0].id; 
+                        localStorage.setItem('aliat_current_id', currentSessionId); 
+                    } else if (!currentSessionId) { 
+                        currentSessionId = 'sess_' + Date.now(); 
+                        localStorage.setItem('aliat_current_id', currentSessionId); 
                     }
+                    
+                    renderSidebarHistory(); 
+                    loadActiveSessionData();
                 } else {
-                    if (res.status === 401) logout();
+                    if (res.status === 401) return logout();
                 }
-            } catch(e) { console.warn("Treballant offline o carregant...", e); }
+            } catch(e) {
+                console.warn("Error de xarxa. Treballant en mode local.", e);
+            }
         }
 
         function loadActiveSessionData() {
@@ -691,7 +692,6 @@
         }
 
         function saveSession() {
-            // 1. Generar títol dinàmic
             let currentTitle = 'Nova Conversa';
             if (appMode === 'free' && chatHistory.length > 1) {
                  currentTitle = "💬 " + chatHistory[1].content.substring(0, 25) + "...";
@@ -710,23 +710,22 @@
                 id: currentSessionId,
                 mode: appMode,
                 title: currentTitle,
-                chat_history: chatHistory, 
-                calendar: generatedCalendarArray, 
+                history: chatHistory,       // <-- CRUCIAL: Això fa que aparegui al menú esquerre
+                chat_history: chatHistory,  // <-- CRUCIAL: Això fa que es guardi a la base de dades
+                calendar: generatedCalendarArray,
                 games: window.interactiveGames,
                 html: document.getElementById('chat-messages').innerHTML,
                 date: new Date().getTime()
             };
             
-            // Actualització visual ràpida
             const idx = allSessions.findIndex(s => s.id === currentSessionId);
             if(idx >= 0) allSessions[idx] = sessionData;
             else allSessions.push(sessionData);
-            renderSidebarHistory();
             
-            // Enviament real a la base de dades
+            localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
+            renderSidebarHistory();
             saveSessionToCloud(sessionData);
             
-            // Backups locals extres
             localStorage.setItem('aliat_local_html_' + currentSessionId, sessionData.html);
             localStorage.setItem('aliat_local_context_' + currentSessionId, studentContextStr);
             localStorage.setItem('aliat_local_text_' + currentSessionId, finalStudyText);
