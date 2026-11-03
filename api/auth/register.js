@@ -1,4 +1,4 @@
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 const bcrypt = require('bcryptjs');
 
 module.exports = async function handler(req, res) {
