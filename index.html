@@ -1073,15 +1073,17 @@
             let idCounter = 0;
             const interactiveBlocks = [];
             
-            text = text.replace(/```html([\s\S]*?)```/gi, function(match, p1) {
+            // Capturar codi HTML (Infografies i Flashcards)
+            text = text.replace(/```(?:html|xml)?\s*(<[\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let id = 'html_' + Date.now() + idCounter;
-                    interactiveBlocks[idCounter] = { type: 'html', data: p1, id: id };
+                    interactiveBlocks[idCounter] = { type: 'html', data: p1.trim(), id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
                 } catch(e) { return match; }
             });
 
+            // Capturar Kahoot
             text = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let k = JSON.parse(p1.trim());
@@ -1092,6 +1094,7 @@
                 } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
             });
 
+            // Capturar Schema
             text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let s = JSON.parse(p1.trim());
@@ -1104,10 +1107,14 @@
 
             let htmlContent = marked.parse(text);
 
+            // REPARAT: Afegim de nou els botons de teoria i de continuar al xat
             htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, `
                 <div class="my-4 mt-6 flex flex-col md:flex-row gap-3">
                     <button onclick="requestMinigame(this)" class="bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-800 text-green-800 dark:text-green-400 font-bold py-3 px-6 rounded-xl hover:bg-green-200 dark:hover:bg-green-900/60 transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
                         ✅ Ho he entès! Posa'm a prova
+                    </button>
+                    <button onclick="scrollToLatestTheory()" class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-bold py-3 px-6 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
+                        ⬆️ Tornar a l'inici de la teoria
                     </button>
                 </div>
             `);
@@ -1118,7 +1125,8 @@
                 
                 try {
                     if (block.type === 'html') {
-                        uiCode = `<div class="my-5 w-full bg-white rounded-[1.5rem] p-4 md:p-6 shadow-md border border-slate-200 overflow-x-auto [&_p]:!text-slate-800 [&_li]:!text-slate-800 [&_h2]:!text-slate-900 [&_h3]:!text-slate-900 [&_summary]:!text-slate-900 [&_summary]:font-bold [&_summary]:cursor-pointer [&_details]:bg-white/50 [&_details]:p-3 [&_details]:rounded-xl [&_details]:shadow-sm">${block.data}</div>`;
+                        // REPARAT: L'etiqueta [&_*]:!text-slate-900 força que QUALSEVOL cosa dins d'aquesta caixa tingui text negre, anul·lant el blanc del Mode Fosc.
+                        uiCode = `<div class="my-5 w-full bg-slate-50 rounded-[1.5rem] p-5 shadow-lg border border-slate-200 overflow-x-auto text-slate-900 [&_*]:!text-slate-900 [&_summary]:cursor-pointer [&_summary]:font-bold [&_summary]:text-lg [&_details]:bg-white [&_details]:p-4 [&_details]:rounded-xl [&_details]:border [&_details]:border-slate-200 [&_details]:mt-2">${block.data}</div>`;
                     } else {
                         if (!window.interactiveGames[block.id]) {
                             block.data.attempts = 0;
@@ -1137,9 +1145,12 @@
                         }
 
                         uiCode = `
-                        <div class="my-4">
+                        <div class="my-4 flex flex-col sm:flex-row gap-3">
                             <button id="launch_btn_${block.id}" onclick="openGameModal('${block.id}')" class="${btnClass} font-bold py-3.5 px-4 rounded-xl transition shadow-sm w-full flex items-center justify-center gap-2 text-sm interactive-btn border">
                                 ${btnText}
+                            </button>
+                            <button onclick="scrollToLatestTheory()" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold py-3.5 px-4 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm w-full sm:w-auto flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                                ⬆️ Repassar Teoria
                             </button>
                         </div>`;
                     }
