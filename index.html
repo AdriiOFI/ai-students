@@ -692,26 +692,30 @@
         }
 
         function saveSession() {
+            // SENSE EMOJIS al títol
             let currentTitle = 'Nova Conversa';
             if (appMode === 'free' && chatHistory.length > 1) {
-                 currentTitle = "💬 " + chatHistory[1].content.substring(0, 25) + "...";
+                 currentTitle = chatHistory[1].content.substring(0, 25) + "...";
             } else if (appMode === 'study') {
                  let manual = document.getElementById('manual-topic')?.value;
                  if (uploadedPDFs.length > 0) {
-                     currentTitle = "📚 " + uploadedPDFs.map(p => p.name).join(', ').substring(0, 25);
+                     currentTitle = uploadedPDFs.map(p => p.name).join(', ').substring(0, 25);
                  } else if (manual) {
-                     currentTitle = "📚 " + manual.substring(0, 25) + "...";
+                     currentTitle = manual.substring(0, 25) + "...";
                  } else {
-                     currentTitle = "📚 Pla d'Estudis";
+                     currentTitle = "Pla d'Estudis";
                  }
             }
+
+            // Actualitzem el títol de la barra superior a l'instant
+            document.getElementById('chat-mode-label').innerText = currentTitle;
 
             const sessionData = {
                 id: currentSessionId,
                 mode: appMode,
                 title: currentTitle,
-                history: chatHistory,       // <-- CRUCIAL: Això fa que aparegui al menú esquerre
-                chat_history: chatHistory,  // <-- CRUCIAL: Això fa que es guardi a la base de dades
+                history: chatHistory, 
+                chat_history: chatHistory,
                 calendar: generatedCalendarArray,
                 games: window.interactiveGames,
                 html: document.getElementById('chat-messages').innerHTML,
@@ -742,7 +746,6 @@
                 studentContextStr = localStorage.getItem('aliat_local_context_' + currentSessionId) || "";
                 finalStudyText = localStorage.getItem('aliat_local_text_' + currentSessionId) || "";
                 
-                // Ara agafem el HTML directament del núvol si existeix
                 document.getElementById('chat-messages').innerHTML = activeSession.html || localStorage.getItem('aliat_local_html_' + currentSessionId) || '';
                 
                 document.getElementById('welcome-view').classList.add('hidden');
@@ -753,17 +756,30 @@
                 document.getElementById('chat-view').classList.add('flex');
                 document.getElementById('chat-form').classList.remove('hidden');
                 
+                // Actualitzar Títol Superior segons la sessió
+                let displayTitle = activeSession.title || (appMode === 'study' ? "Pla d'Estudis" : "XatBot");
+                document.getElementById('chat-mode-label').innerText = displayTitle;
+
                 if(appMode === 'free') {
                     document.getElementById('calendar-header-btn').classList.add('hidden');
                     document.getElementById('history-header-btn').classList.add('hidden');
                     document.getElementById('theory-header-btn').classList.add('hidden');
-                    document.getElementById('chat-mode-label').innerText = "XatBot";
                 } else {
                     document.getElementById('theory-header-btn').classList.remove('hidden');
+                    document.getElementById('calendar-header-btn').classList.remove('hidden');
+                    document.getElementById('history-header-btn').classList.remove('hidden');
                 }
                 
                 setTimeout(() => document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight, 100);
             }
+        }
+
+        // CARREGA INSTANTÀNIA SENSE RECARREGAR LA PÀGINA
+        window.loadSession = function(id) { 
+            localStorage.setItem('aliat_current_id', id); 
+            currentSessionId = id;
+            renderSidebarHistory(); 
+            loadActiveSessionData();
         }
 
         function renderSidebarHistory() {
@@ -779,22 +795,63 @@
             sortedSessions.forEach(s => {
                 if (!s.history || s.history.length === 0) return;
                 
-                let title = s.title || (s.mode === 'study' ? '📚 Pla d\'Estudis' : '💬 XatBot lliure');
+                let title = s.title || (s.mode === 'study' ? 'Pla d\'Estudis' : 'XatBot lliure');
                 let dateStr = new Date(s.date).toLocaleDateString('ca-ES', { day: '2-digit', month: 'short' });
                 
                 let activeClass = (s.id === currentSessionId) 
                     ? "bg-slate-800 text-white font-bold" 
                     : "text-slate-400 hover:bg-slate-800 hover:text-slate-200 font-medium";
 
+                // Botó amagat amb la PAPERERA (grup-hover)
                 list.innerHTML += `
-                    <button onclick="loadSession('${s.id}')" class="w-full text-left p-2.5 rounded-xl text-[13px] truncate transition ${activeClass} flex justify-between items-center group relative">
-                        <span class="truncate pr-2 sidebar-text">${title}</span>
-                        <span class="text-[10px] opacity-60 shrink-0 sidebar-text">${dateStr}</span>
-                        <span class="sidebar-tooltip absolute left-[4.5rem] bg-slate-700 text-white text-xs px-2.5 py-1.5 rounded-lg shadow-xl whitespace-nowrap z-[100] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-medium">
-                            ${title} (${dateStr})
-                        </span>
-                    </button>
+                    <div class="relative group mb-1">
+                        <button onclick="loadSession('${s.id}')" class="w-full text-left p-2.5 rounded-xl text-[13px] truncate transition ${activeClass} flex justify-between items-center pr-8">
+                            <span class="truncate pr-2">${title}</span>
+                            <span class="text-[10px] opacity-60 shrink-0 group-hover:hidden">${dateStr}</span>
+                        </button>
+                        <button onclick="deleteSession('${s.id}')" class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-10">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                    </div>
                 `;
+            });
+        }
+
+        window.deleteSession = function(id) {
+            Swal.fire({
+                title: 'Eliminar conversa?',
+                text: "No podràs revertir aquesta acció.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#3b82f6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancel·lar',
+                background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fff' : '#1e293b',
+                customClass: { popup: 'rounded-3xl border dark:border-slate-700' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    // 1. Esborrar localment
+                    allSessions = allSessions.filter(s => s.id !== id);
+                    localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
+                    
+                    // 2. Si esborres el xat on estàs ara mateix, crear un de nou
+                    if (currentSessionId === id) {
+                        newSession();
+                    } else {
+                        renderSidebarHistory();
+                    }
+                    
+                    // 3. Esborrar de Turso
+                    try {
+                        await fetch('/api/sessions/delete', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+                            body: JSON.stringify({ id: id })
+                        });
+                    } catch (e) { console.error(e); }
+                }
             });
         }
 
