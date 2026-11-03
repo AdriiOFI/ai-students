@@ -1055,25 +1055,38 @@
         }
 
         window.scrollToLatestTheory = function() {
-            const theoryButtons = document.querySelectorAll('button[onclick="requestMinigame(this)"]');
-            if(theoryButtons.length > 0) {
-                const lastTheory = theoryButtons[theoryButtons.length - 1].closest('.chat-msg-ai');
+            // Busquem l'últim marcador d'inici de teoria
+            const markers = document.querySelectorAll('.theory-start-marker');
+            if(markers.length > 0) {
+                const lastTheory = markers[markers.length - 1].closest('.chat-msg-ai');
                 if(lastTheory) {
                     lastTheory.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     lastTheory.classList.add('ring-2', 'ring-blue-400', 'transition-all');
                     setTimeout(() => lastTheory.classList.remove('ring-2', 'ring-blue-400'), 1500);
+                    return;
                 }
-            } else {
-                Swal.fire({ title: 'Cap teoria', text: 'Encara no s\'ha generat cap lliçó de teoria.', icon: 'info' });
             }
+            Swal.fire({ title: 'Cap teoria', text: 'Encara no s\'ha generat cap lliçó de teoria.', icon: 'info', confirmButtonColor: '#2563eb' });
         };
+
+        // NOVA FUNCIÓ PER AVANÇAR DE FASE (Teoria -> Flashcards -> Mnemotècnia)
+        window.requestNextPhase = function(btn, promptText) {
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            btn.innerHTML = "⏳ Generant...";
+            
+            setTimeout(() => {
+                appendMessage('user', promptText);
+                chatHistory.push({ role: 'user', content: promptText });
+                triggerAiResponse();
+            }, 300);
+        }
 
         function formatMessage(text) {
             if(!text) return "";
             let idCounter = 0;
             const interactiveBlocks = [];
             
-            // Capturar codi HTML (Infografies i Flashcards)
             text = text.replace(/```(?:html|xml)?\s*(<[\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let id = 'html_' + Date.now() + idCounter;
@@ -1083,7 +1096,6 @@
                 } catch(e) { return match; }
             });
 
-            // Capturar Kahoot
             text = text.replace(/```kahoot([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let k = JSON.parse(p1.trim());
@@ -1091,10 +1103,9 @@
                     interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
+                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible.</div>\n"; }
             });
 
-            // Capturar Schema
             text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let s = JSON.parse(p1.trim());
@@ -1102,19 +1113,33 @@
                     interactiveBlocks[idCounter] = { type: 'schema', data: s, id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible. Escriu 'Torna a crear el joc' per reintentar.</div>\n"; }
+                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible.</div>\n"; }
             });
 
             let htmlContent = marked.parse(text);
 
-            // REPARAT: Afegim de nou els botons de teoria i de continuar al xat
-            htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, `
-                <div class="my-4 mt-6 flex flex-col md:flex-row gap-3">
-                    <button onclick="requestMinigame(this)" class="bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-800 text-green-800 dark:text-green-400 font-bold py-3 px-6 rounded-xl hover:bg-green-200 dark:hover:bg-green-900/60 transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
-                        ✅ Ho he entès! Posa'm a prova
+            // SUBSTITUCIONS PELS NOUS BOTONS DE FASE
+            htmlContent = htmlContent.replace(/\[BOTON_FLASHCARDS\]/gi, `
+                <div class="theory-start-marker"></div>
+                <div class="my-4 mt-5 flex justify-end">
+                    <button onclick="requestNextPhase(this, 'Molt bé, teoria entesa. Ara dóna\\'m les Flashcards i l\\'Esquema visual d\\'aquest tema.')" class="bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-400 font-bold py-2.5 px-5 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-900/60 transition shadow-sm flex items-center gap-2 text-sm">
+                        Siguiente: Esquema i Flashcards ➔
                     </button>
-                    <button onclick="scrollToLatestTheory()" class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 font-bold py-3 px-6 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition shadow-sm w-full flex items-center justify-center gap-2 text-sm">
-                        ⬆️ Tornar a l'inici de la teoria
+                </div>
+            `);
+
+            htmlContent = htmlContent.replace(/\[BOTON_MNEMOTECNIA\]/gi, `
+                <div class="my-4 mt-5 flex justify-end">
+                    <button onclick="requestNextPhase(this, 'Perfecte. Ara explica\\'m un truc de mnemotècnia per recordar això fàcilment.')" class="bg-purple-100 dark:bg-purple-900/40 border border-purple-300 dark:border-purple-800 text-purple-800 dark:text-purple-400 font-bold py-2.5 px-5 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-900/60 transition shadow-sm flex items-center gap-2 text-sm">
+                        Siguiente: Truc de Memòria ➔
+                    </button>
+                </div>
+            `);
+
+            htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, `
+                <div class="my-4 mt-5 flex justify-end">
+                    <button onclick="requestMinigame(this)" class="bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-800 text-green-800 dark:text-green-400 font-bold py-2.5 px-5 rounded-xl hover:bg-green-200 dark:hover:bg-green-900/60 transition shadow-sm flex items-center gap-2 text-sm">
+                        ✅ Posar-me a prova
                     </button>
                 </div>
             `);
@@ -1125,8 +1150,8 @@
                 
                 try {
                     if (block.type === 'html') {
-                        // REPARAT: L'etiqueta [&_*]:!text-slate-900 força que QUALSEVOL cosa dins d'aquesta caixa tingui text negre, anul·lant el blanc del Mode Fosc.
-                        uiCode = `<div class="my-5 w-full bg-slate-50 rounded-[1.5rem] p-5 shadow-lg border border-slate-200 overflow-x-auto text-slate-900 [&_*]:!text-slate-900 [&_summary]:cursor-pointer [&_summary]:font-bold [&_summary]:text-lg [&_details]:bg-white [&_details]:p-4 [&_details]:rounded-xl [&_details]:border [&_details]:border-slate-200 [&_details]:mt-2">${block.data}</div>`;
+                        // NOU DISSENY HTML: Més petit (max-w-lg), centrat (mx-auto), i textos foscos blindats.
+                        uiCode = `<div class="my-6 w-full max-w-lg mx-auto bg-slate-50 rounded-[1.2rem] p-4 md:p-5 shadow border border-slate-200 overflow-x-auto text-slate-900 text-sm [&_*]:!text-slate-900 [&_summary]:cursor-pointer [&_summary]:font-bold [&_summary]:text-base [&_details]:bg-white [&_details]:p-3 [&_details]:rounded-lg [&_details]:border [&_details]:border-slate-200 [&_details]:mt-1.5 [&_h2]:text-lg [&_h3]:text-base">${block.data}</div>`;
                     } else {
                         if (!window.interactiveGames[block.id]) {
                             block.data.attempts = 0;
@@ -1145,12 +1170,9 @@
                         }
 
                         uiCode = `
-                        <div class="my-4 flex flex-col sm:flex-row gap-3">
+                        <div class="my-4">
                             <button id="launch_btn_${block.id}" onclick="openGameModal('${block.id}')" class="${btnClass} font-bold py-3.5 px-4 rounded-xl transition shadow-sm w-full flex items-center justify-center gap-2 text-sm interactive-btn border">
                                 ${btnText}
-                            </button>
-                            <button onclick="scrollToLatestTheory()" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold py-3.5 px-4 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition shadow-sm w-full sm:w-auto flex items-center justify-center gap-2 text-sm whitespace-nowrap">
-                                ⬆️ Repassar Teoria
                             </button>
                         </div>`;
                     }
