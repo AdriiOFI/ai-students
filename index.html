@@ -379,6 +379,43 @@
         let studentContextStr = ""; 
         let appMode = 'none'; 
         window.interactiveGames = {}; 
+
+        window.flashcardDecks = {};
+        
+        window.flipFC = function(id) {
+            let deck = window.flashcardDecks[id];
+            let cardEl = document.getElementById(id + '_card');
+            let contentEl = document.getElementById(id + '_content');
+            deck.flipped = !deck.flipped;
+            
+            if(deck.flipped) {
+                cardEl.classList.replace('bg-white', 'bg-emerald-50');
+                cardEl.classList.replace('dark:bg-slate-800', 'dark:bg-emerald-900/30');
+                cardEl.classList.replace('border-slate-200', 'border-emerald-300');
+                cardEl.classList.replace('dark:border-slate-700', 'dark:border-emerald-800/50');
+                contentEl.innerHTML = `<span class="text-[10px] uppercase text-emerald-600 block mb-2 tracking-widest">Resposta</span><span class="text-base font-medium text-emerald-900 dark:text-emerald-100">${deck.cards[deck.current].a}</span>`;
+            } else {
+                cardEl.classList.replace('bg-emerald-50', 'bg-white');
+                cardEl.classList.replace('dark:bg-emerald-900/30', 'dark:bg-slate-800');
+                cardEl.classList.replace('border-emerald-300', 'border-slate-200');
+                cardEl.classList.replace('dark:border-emerald-800/50', 'dark:border-slate-700');
+                contentEl.innerHTML = `<span class="text-[10px] uppercase text-slate-400 block mb-2 tracking-widest">Pregunta</span><span class="text-lg font-bold text-slate-800 dark:text-slate-100">${deck.cards[deck.current].q}</span>`;
+            }
+        };
+
+        window.nextFC = function(id) {
+            let deck = window.flashcardDecks[id];
+            deck.current = (deck.current + 1) % deck.cards.length;
+            deck.flipped = true; window.flipFC(id); 
+            document.getElementById(id + '_counter').innerText = (deck.current + 1) + '/' + deck.cards.length;
+        };
+
+        window.prevFC = function(id) {
+            let deck = window.flashcardDecks[id];
+            deck.current = (deck.current - 1 + deck.cards.length) % deck.cards.length;
+            deck.flipped = true; window.flipFC(id);
+            document.getElementById(id + '_counter').innerText = (deck.current + 1) + '/' + deck.cards.length;
+        };
         
         let allSessions = [];
         let currentSessionId = '';
@@ -1165,7 +1202,7 @@
             const contentEl = document.getElementById('game-modal-content');
             
             if (game.type === 'kahoot') {
-                titleEl.innerHTML = "🎮 Kahoot: Pregunta Ràpida";
+                titleEl.innerHTML = game.title || "🎮 Pregunta Ràpida";
                 contentEl.innerHTML = buildKahootUI(id, game);
             } else if (game.type === 'schema') {
                 titleEl.innerHTML = "🧩 Esquema Conceptual";
@@ -1395,6 +1432,17 @@
             let idCounter = 0;
             const interactiveBlocks = [];
             
+            // Analitzador de Flashcards
+            text = text.replace(/```flashcards([\s\S]*?)```/gi, function(match, p1) {
+                try {
+                    let deck = JSON.parse(p1.trim());
+                    let id = 'fc_' + Date.now() + idCounter;
+                    interactiveBlocks[idCounter] = { type: 'flashcards', data: deck, id: id };
+                    idCounter++;
+                    return `@@@BLOCK_${idCounter-1}@@@`;
+                } catch(e) { return match; }
+            });
+
             text = text.replace(/```(?:html|xml)?\s*(<[\s\S]*?)```/gi, function(match, p1) {
                 try {
                     let id = 'html_' + Date.now() + idCounter;
@@ -1408,10 +1456,33 @@
                 try {
                     let k = JSON.parse(p1.trim());
                     let id = 'kahoot_' + Date.now() + idCounter;
-                    interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id };
+                    interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id, title: "🎮 Kahoot: Pregunta Ràpida" };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible.</div>\n"; }
+                } catch(e) { return ""; }
+            });
+
+            // Analitzador Veritat o Fals (Es converteix en un Kahoot de 2 opcions)
+            text = text.replace(/```tf([\s\S]*?)```/gi, function(match, p1) {
+                try {
+                    let t = JSON.parse(p1.trim());
+                    let k = { pregunta: t.pregunta, opcions: ["Veritat", "Fals"], correcta: t.resposta ? 0 : 1 };
+                    let id = 'kahoot_' + Date.now() + idCounter;
+                    interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id, title: "⚖️ Veritat o Fals" };
+                    idCounter++;
+                    return `@@@BLOCK_${idCounter-1}@@@`;
+                } catch(e) { return ""; }
+            });
+
+            // Analitzador Intrús (Es converteix en un Kahoot)
+            text = text.replace(/```intrus([\s\S]*?)```/gi, function(match, p1) {
+                try {
+                    let k = JSON.parse(p1.trim());
+                    let id = 'kahoot_' + Date.now() + idCounter;
+                    interactiveBlocks[idCounter] = { type: 'kahoot', data: k, id: id, title: "🕵️ Troba l'Intrús" };
+                    idCounter++;
+                    return `@@@BLOCK_${idCounter-1}@@@`;
+                } catch(e) { return ""; }
             });
 
             text = text.replace(/```schema([\s\S]*?)```/gi, function(match, p1) {
@@ -1421,42 +1492,24 @@
                     interactiveBlocks[idCounter] = { type: 'schema', data: s, id: id };
                     idCounter++;
                     return `@@@BLOCK_${idCounter-1}@@@`;
-                } catch(e) { return "\n<div class='bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs shadow-sm mt-3'>⚠️ L'IA ha generat un joc il·legible.</div>\n"; }
+                } catch(e) { return ""; }
             });
 
             let htmlContent = marked.parse(text);
 
             htmlContent = htmlContent.replace(/\[BOTON_FLASHCARDS\]/gi, function() {
                 let mId = 'marker_' + Date.now() + Math.floor(Math.random() * 1000);
-                return `
-                <div id="${mId}" class="theory-marker hidden" data-type="📖 Teoria General"></div>
-                <div class="my-4 mt-5 flex justify-end">
-                    <button onclick="requestNextPhase(this, 'Molt bé, teoria entesa. Ara dóna\\'m les Flashcards i l\\'Esquema visual d\\'aquest tema.')" class="bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-400 font-bold py-2.5 px-5 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-900/60 transition shadow-sm flex items-center gap-2 text-sm">
-                        Següent: Esquema i Flashcards ➔
-                    </button>
-                </div>`;
+                return `<div id="${mId}" class="theory-marker hidden" data-type="📖 Teoria General"></div><div class="my-4 mt-5 flex justify-end"><button onclick="requestNextPhase(this, 'Molt bé, teoria entesa. Ara dóna\\'m les Flashcards i l\\'Esquema visual d\\'aquest tema.')" class="bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-400 font-bold py-2.5 px-5 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-900/60 transition shadow-sm flex items-center gap-2 text-sm">Següent: Esquema i Flashcards ➔</button></div>`;
             });
 
             htmlContent = htmlContent.replace(/\[BOTON_MNEMOTECNIA\]/gi, function() {
                 let mId = 'marker_' + Date.now() + Math.floor(Math.random() * 1000);
-                return `
-                <div id="${mId}" class="theory-marker hidden" data-type="🗂️ Esquema i Flashcards"></div>
-                <div class="my-4 mt-5 flex justify-end">
-                    <button onclick="requestNextPhase(this, 'Perfecte. Ara explica\\'m un truc de mnemotècnia per recordar això fàcilment.')" class="bg-purple-100 dark:bg-purple-900/40 border border-purple-300 dark:border-purple-800 text-purple-800 dark:text-purple-400 font-bold py-2.5 px-5 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-900/60 transition shadow-sm flex items-center gap-2 text-sm">
-                        Següent: Truc de Memòria ➔
-                    </button>
-                </div>`;
+                return `<div id="${mId}" class="theory-marker hidden" data-type="🗂️ Esquema i Flashcards"></div><div class="my-4 mt-5 flex justify-end"><button onclick="requestNextPhase(this, 'Perfecte. Ara explica\\'m un truc de mnemotècnia per recordar això fàcilment.')" class="bg-purple-100 dark:bg-purple-900/40 border border-purple-300 dark:border-purple-800 text-purple-800 dark:text-purple-400 font-bold py-2.5 px-5 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-900/60 transition shadow-sm flex items-center gap-2 text-sm">Següent: Truc de Memòria ➔</button></div>`;
             });
 
             htmlContent = htmlContent.replace(/\[BOTON_ENTENDIDO\]/gi, function() {
                 let mId = 'marker_' + Date.now() + Math.floor(Math.random() * 1000);
-                return `
-                <div id="${mId}" class="theory-marker hidden" data-type="🧠 Mnemotècnia"></div>
-                <div class="my-4 mt-5 flex justify-end">
-                    <button onclick="requestMinigame(this)" class="bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-800 text-green-800 dark:text-green-400 font-bold py-2.5 px-5 rounded-xl hover:bg-green-200 dark:hover:bg-green-900/60 transition shadow-sm flex items-center gap-2 text-sm">
-                        ✅ Posar-me a prova
-                    </button>
-                </div>`;
+                return `<div id="${mId}" class="theory-marker hidden" data-type="🧠 Mnemotècnia"></div><div class="my-4 mt-5 flex justify-end"><button onclick="requestMinigame(this)" class="bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-800 text-green-800 dark:text-green-400 font-bold py-2.5 px-5 rounded-xl hover:bg-green-200 dark:hover:bg-green-900/60 transition shadow-sm flex items-center gap-2 text-sm">✅ Posar-me a prova</button></div>`;
             });
 
             for (let i = 0; i < interactiveBlocks.length; i++) {
@@ -1464,13 +1517,31 @@
                 let uiCode = "";
                 
                 try {
-                    if (block.type === 'html') {
+                    if (block.type === 'flashcards') {
+                        window.flashcardDecks[block.id] = { cards: block.data, current: 0, flipped: false };
+                        uiCode = `
+                        <div class="my-6 max-w-sm mx-auto relative select-none">
+                            <div class="text-center text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Repàs Actiu (Flashcards)</div>
+                            <div id="${block.id}_card" onclick="flipFC('${block.id}')" class="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-xl rounded-[2rem] p-6 h-48 flex flex-col items-center justify-center cursor-pointer transition-all hover:shadow-2xl hover:border-blue-400 text-center relative overflow-hidden group">
+                                <span class="absolute top-4 right-4 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] px-2 py-1 rounded-lg font-bold" id="${block.id}_counter">1/${block.data.length}</span>
+                                <div id="${block.id}_content" class="flex flex-col items-center justify-center w-full h-full">
+                                    <span class="text-[10px] uppercase text-slate-400 block mb-2 tracking-widest">Pregunta</span>
+                                    <span class="text-lg font-bold text-slate-800 dark:text-slate-100">${block.data[0].q}</span>
+                                </div>
+                                <div class="absolute bottom-4 text-[10px] text-slate-400 group-hover:text-blue-500 transition-colors font-bold uppercase tracking-widest">👆 Clica per girar</div>
+                            </div>
+                            <div class="flex justify-between items-center mt-4 px-4">
+                                <button onclick="prevFC('${block.id}')" class="p-3 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-all shadow-sm"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
+                                <button onclick="nextFC('${block.id}')" class="p-3 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-all shadow-sm"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></button>
+                            </div>
+                        </div>`;
+                    } else if (block.type === 'html') {
                         uiCode = `<div class="my-6 w-full max-w-lg mx-auto bg-slate-50 rounded-[1.2rem] p-4 md:p-5 shadow border border-slate-200 overflow-x-auto text-slate-900 text-sm [&_*]:!text-slate-900 [&_summary]:cursor-pointer [&_summary]:font-bold [&_summary]:text-base [&_details]:bg-white [&_details]:p-3 [&_details]:rounded-lg [&_details]:border [&_details]:border-slate-200 [&_details]:mt-1.5 [&_h2]:text-lg [&_h3]:text-base">${block.data}</div>`;
                     } else {
                         if (!window.interactiveGames[block.id]) {
                             block.data.attempts = 0;
                             block.data.attemptsLog = [];
-                            window.interactiveGames[block.id] = { type: block.type, data: block.data, status: 'new' };
+                            window.interactiveGames[block.id] = { type: block.type, data: block.data, status: 'new', title: block.title };
                         }
                         
                         let game = window.interactiveGames[block.id];
@@ -1483,15 +1554,10 @@
                             btnText = isWin ? "✅ Examen Superat (Veure)" : "❌ Examen Fallat (Veure)";
                         }
 
-                        uiCode = `
-                        <div class="my-4">
-                            <button id="launch_btn_${block.id}" onclick="openGameModal('${block.id}')" class="${btnClass} font-bold py-3.5 px-4 rounded-xl transition shadow-sm w-full flex items-center justify-center gap-2 text-sm interactive-btn border">
-                                ${btnText}
-                            </button>
-                        </div>`;
+                        uiCode = `<div class="my-4"><button id="launch_btn_${block.id}" onclick="openGameModal('${block.id}')" class="${btnClass} font-bold py-3.5 px-4 rounded-xl transition shadow-sm w-full flex items-center justify-center gap-2 text-sm interactive-btn border">${btnText}</button></div>`;
                     }
                 } catch(e) {
-                    uiCode = `<div class="bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs">⚠️ Error al generar botó.</div>`;
+                    uiCode = `<div class="bg-red-50 text-red-600 p-3 rounded-xl text-center font-bold text-xs">⚠️ Error al generar.</div>`;
                 }
                 
                 htmlContent = htmlContent.replace(`@@@BLOCK_${i}@@@`, uiCode);
