@@ -13,7 +13,6 @@ module.exports = async function handler(req, res) {
         if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'No autoritzat' });
         
         const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
-
         const client = createClient({
             url: process.env.TURSO_DATABASE_URL,
             authToken: process.env.TURSO_AUTH_TOKEN,
@@ -27,16 +26,15 @@ module.exports = async function handler(req, res) {
         const sessions = result.rows.map(row => ({
             id: row.id,
             mode: row.mode,
-            title: row.title || (row.mode === 'study' ? "📚 Pla d'Estudis" : "💬 XatBot lliure"),
+            title: row.title,
             history: JSON.parse(row.chat_history || '[]'),
             calendar: JSON.parse(row.calendar || '[]'),
             games: JSON.parse(row.games || '{}'),
             html: row.html || '',
+            context: row.context || '',
+            pdf_text: row.pdf_text || '',
             date: new Date(row.updated_at).getTime()
         }));
-
         return res.status(200).json({ success: true, sessions });
-    } catch (error) {
-        return res.status(500).json({ error: 'Error: ' + error.message });
-    }
+    } catch (error) { return res.status(500).json({ error: 'Error: ' + error.message }); }
 }
