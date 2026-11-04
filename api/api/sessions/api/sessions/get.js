@@ -6,8 +6,6 @@ module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    // LA CLAVE PARA SINCRONIZAR: Prohibir a Vercel que congele (cachee) los datos
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
@@ -29,21 +27,29 @@ module.exports = async function handler(req, res) {
             args: [decoded.id]
         });
 
-        const sessions = result.rows.map(row => ({
-            id: row.id,
-            mode: row.mode,
-            title: row.title,
-            history: JSON.parse(row.chat_history || '[]'),
-            calendar: JSON.parse(row.calendar || '[]'),
-            games: JSON.parse(row.games || '{}'),
-            html: row.html || '',
-            context: row.context || '',
-            pdf_text: row.pdf_text || '',
-            date: new Date(row.updated_at).getTime()
-        }));
+        const sessions = result.rows.map(row => {
+            // ESCUDO ANTI-CRASH: Si algun xat antic està trencat, no trencarà la web
+            let pHistory = [], pCalendar = [], pGames = {};
+            try { pHistory = JSON.parse(row.chat_history || '[]'); } catch(e) {}
+            try { pCalendar = JSON.parse(row.calendar || '[]'); } catch(e) {}
+            try { pGames = JSON.parse(row.games || '{}'); } catch(e) {}
+            
+            return {
+                id: row.id,
+                mode: row.mode,
+                title: row.title,
+                history: pHistory,
+                calendar: pCalendar,
+                games: pGames,
+                html: row.html || '',
+                context: row.context || '',
+                pdf_text: row.pdf_text || '',
+                date: new Date(row.updated_at).getTime()
+            };
+        });
         
         return res.status(200).json({ success: true, sessions });
     } catch (error) { 
-        return res.status(500).json({ error: 'Error: ' + error.message }); 
+        return res.status(500).json({ error: 'Error intern: ' + error.message }); 
     }
 }
