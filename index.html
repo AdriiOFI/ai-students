@@ -507,29 +507,31 @@
         async function syncCloudSessions(isBackground = false) {
             try {
                 const res = await fetch('/api/sessions/get?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + authToken } });
+                
+                // CONTROL DE CRASH SEVERO
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error("Error del servidor: " + res.status);
+                }
+
                 const data = await res.json();
                 
                 if (data.success) {
                     allSessions = data.sessions;
-                    
-                    // CAÇAFANTASMES: Sobreescrivim la memòria local directament amb la veritat de Turso
                     localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
                     
-                    // Si el xat on estem posats acaba de ser esborrat en una altra finestra, tornem a l'inici
                     let sessionExists = allSessions.find(s => s.id === currentSessionId);
                     if (!sessionExists && allSessions.length > 0 && chatHistory.length === 0) { 
                         currentSessionId = allSessions[0].id; 
                         localStorage.setItem('aliat_current_id', currentSessionId); 
-                        if (!isBackground) loadActiveSessionData();
+                        if (!isBackground) loadActiveSessionData(); 
                     }
-                    
                     renderSidebarHistory(); 
                 } else {
                     if (res.status === 401) return logout();
-                    if (!isBackground) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error DB (Get): ' + data.error, showConfirmButton: false, timer: 5000, customClass: { popup: 'dark:bg-slate-800 dark:text-white border border-slate-700' } });
                 }
             } catch(e) {
-                if (!isBackground) console.warn("Treballant offline.", e);
+                if (!isBackground) console.warn("Treballant offline o error:", e);
             }
         }
 
@@ -541,42 +543,12 @@
                     body: JSON.stringify(sessionData)
                 });
                 
-                if (res.status === 404) throw new Error("L'arxiu api/sessions/save.js no s'ha pujat bé a Vercel.");
-                
-                const data = await res.json();
-                if (!res.ok || data.error) {
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al núvol: ' + (data.error || 'Desconegut'), showConfirmButton: false, timer: 5000, customClass: { popup: 'dark:bg-slate-800 dark:text-white border-red-500 border' } });
-                } else {
-                    // Tot ha anat bé. Forcem una lectura per sincronitzar la resta
-                    syncCloudSessions(true);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success) syncCloudSessions(true);
                 }
             } catch (e) { 
                 console.error("Error de xarxa al guardar:", e); 
-            }
-        }
-
-        async function syncUserSettings() {
-            try {
-                // Evitem memòria cau també en els paràmetres de l'usuari
-                const res = await fetch('/api/user/settings?t=' + Date.now(), { 
-                    headers: { 'Authorization': 'Bearer ' + authToken } 
-                });
-                
-                if (res.status === 404) return; // Si l'arxiu encara no ha pujat a Vercel, l'ignorem en silenci
-                
-                const data = await res.json();
-                if (data.success) {
-                    if (data.name) localStorage.setItem('aliat_user_name', data.name);
-                    if (data.theme) {
-                        localStorage.setItem('aliat_theme', data.theme);
-                        if (data.theme === 'dark') document.documentElement.classList.add('dark');
-                        else document.documentElement.classList.remove('dark');
-                        updateThemeIcon();
-                    }
-                    updateProfileUI();
-                }
-            } catch(e) { 
-                console.error("Error carregant settings:", e); 
             }
         }
 
@@ -796,46 +768,29 @@
         }
 
         function saveSession() {
-            let currentTitle = 'Nova Conversa';
-            
-            // Si el usuario ya ha enviado su primer mensaje, cogemos ese texto como título
-            if (appMode === 'free' && chatHistory.length > 1) {
-                 currentTitle = chatHistory[1].content.substring(0, 25) + "...";
-            } else if (appMode === 'study') {
-                 let manual = document.getElementById('manual-topic')?.value;
-                 if (uploadedPDFs.length > 0) currentTitle = uploadedPDFs.map(p => p.name).join(', ').substring(0, 25);
-                 else if (manual) currentTitle = manual.substring(0, 25) + "...";
-                 else currentTitle = "Pla d'Estudis";
+            // EL FORAT NEGRE SOLUCIONAT: Si el xat no té ID, li donem un d'immediat
+            if (!currentSessionId || currentSessionId === 'null') {
+                currentSessionId = 'sess_' + Date.now();
+                localStorage.setItem('aliat_current_id', currentSessionId);
             }
 
+            let currentTitle = 'Nova Conversa';
+            if (appMode === 'free' && chatHistory.length > 1) { currentTitle = chatHistory[1].content.substring(0, 25) + "..."; } 
+            else if (appMode === 'study') { let manual = document.getElementById('manual-topic')?.value; if (uploadedPDFs.length > 0) currentTitle = uploadedPDFs.map(p => p.name).join(', ').substring(0, 25); else if (manual) currentTitle = manual.substring(0, 25) + "..."; else currentTitle = "Pla d'Estudis"; }
+            
             document.getElementById('chat-mode-label').innerText = currentTitle;
-
-            const sessionData = {
-                id: currentSessionId,
-                mode: appMode,
-                title: currentTitle,
-                history: chatHistory, 
-                chat_history: chatHistory,
-                calendar: generatedCalendarArray,
-                games: window.interactiveGames,
-                html: document.getElementById('chat-messages').innerHTML,
-                context: studentContextStr,       
-                pdf_text: finalStudyText,         
-                date: new Date().getTime()
-            };
+            
+            const sessionData = { id: currentSessionId, mode: appMode, title: currentTitle, history: chatHistory, chat_history: chatHistory, calendar: generatedCalendarArray, games: window.interactiveGames, html: document.getElementById('chat-messages').innerHTML, context: studentContextStr, pdf_text: finalStudyText, date: new Date().getTime() };
             
             const idx = allSessions.findIndex(s => s.id === currentSessionId);
-            if(idx >= 0) allSessions[idx] = sessionData;
-            else allSessions.push(sessionData);
+            if(idx >= 0) allSessions[idx] = sessionData; else allSessions.push(sessionData);
             
             localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
-            renderSidebarHistory();
-            
-            // Enviament instantani a Turso perquè les altres finestres ho vegin
+            renderSidebarHistory(); 
             saveSessionToCloud(sessionData);
             
-            localStorage.setItem('aliat_local_html_' + currentSessionId, sessionData.html);
-            localStorage.setItem('aliat_local_context_' + currentSessionId, studentContextStr);
+            localStorage.setItem('aliat_local_html_' + currentSessionId, sessionData.html); 
+            localStorage.setItem('aliat_local_context_' + currentSessionId, studentContextStr); 
             localStorage.setItem('aliat_local_text_' + currentSessionId, finalStudyText);
         }
 
