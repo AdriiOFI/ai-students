@@ -503,7 +503,10 @@
         // --- SISTEMA DE SESSIONS AL NÚVOL AMB BACKUP LOCAL ---
         async function syncCloudSessions() {
             try {
-                const res = await fetch('/api/sessions/get', { headers: { 'Authorization': 'Bearer ' + authToken } });
+                // Afegim ?t=Date.now() per rebentar la memòria cau (caché) del mòbil i Vercel
+                const res = await fetch('/api/sessions/get?t=' + Date.now(), { 
+                    headers: { 'Authorization': 'Bearer ' + authToken } 
+                });
                 const data = await res.json();
                 
                 if (data.success) {
@@ -523,8 +526,7 @@
                     loadActiveSessionData();
                 } else {
                     if (res.status === 401) return logout();
-                    // EL CHIVATO: Mostrem l'error real de la base de dades
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error DB (Get): ' + data.error, showConfirmButton: false, timer: 5000, customClass: { popup: 'dark:bg-slate-800 dark:text-white' } });
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error DB: ' + data.error, showConfirmButton: false, timer: 5000 });
                 }
             } catch(e) {
                 console.warn("Treballant offline.", e);
@@ -554,9 +556,12 @@
 
         async function syncUserSettings() {
             try {
-                const res = await fetch('/api/user/settings', { headers: { 'Authorization': 'Bearer ' + authToken } });
+                // Evitem memòria cau també en els paràmetres de l'usuari
+                const res = await fetch('/api/user/settings?t=' + Date.now(), { 
+                    headers: { 'Authorization': 'Bearer ' + authToken } 
+                });
                 
-                if (res.status === 404) throw new Error("L'arxiu api/user/settings.js no s'ha pujat a Vercel.");
+                if (res.status === 404) return; // Si l'arxiu encara no ha pujat a Vercel, l'ignorem en silenci
                 
                 const data = await res.json();
                 if (data.success) {
@@ -568,11 +573,9 @@
                         updateThemeIcon();
                     }
                     updateProfileUI();
-                } else if (data.error && data.error !== 'Usuari no trobat') {
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error Config: ' + data.error, showConfirmButton: false, timer: 4000 });
                 }
             } catch(e) { 
-                console.error("Error carregant settings de la nube:", e); 
+                console.error("Error carregant settings:", e); 
             }
         }
 
