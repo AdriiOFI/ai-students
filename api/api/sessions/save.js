@@ -33,7 +33,9 @@ module.exports = async function handler(req, res) {
                   pdf_text = excluded.pdf_text,
                   updated_at = CURRENT_TIMESTAMP`,
             args: [
-                id, decoded.id, mode, 
+                id || ('sess_' + Date.now()), 
+                decoded.id, 
+                mode || 'free', 
                 title || 'Nova Conversa',
                 JSON.stringify(chat_history || []), 
                 JSON.stringify(calendar || []), 
@@ -44,5 +46,7 @@ module.exports = async function handler(req, res) {
             ]
         });
         return res.status(200).json({ success: true });
-    } catch (error) { return res.status(500).json({ error: 'Error: ' + error.message }); }
+    } catch (error) { 
+        return res.status(500).json({ error: 'Error BD Guardar: ' + error.message }); 
+    }
 }
