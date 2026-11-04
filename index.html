@@ -709,7 +709,14 @@
         }
 
         function saveSession() {
-            // SENSE EMOJIS al títol
+            // Si el xat està buit i no hi ha PDFs pujats, no el guardem
+            if (chatHistory.length === 0 && uploadedPDFs.length === 0 && !document.getElementById('manual-topic')?.value) {
+                allSessions = allSessions.filter(s => s.id !== currentSessionId);
+                localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
+                renderSidebarHistory();
+                return;
+            }
+
             let currentTitle = 'Nova Conversa';
             if (appMode === 'free' && chatHistory.length > 1) {
                  currentTitle = chatHistory[1].content.substring(0, 25) + "...";
@@ -724,7 +731,6 @@
                  }
             }
 
-            // Actualitzem el títol de la barra superior a l'instant
             document.getElementById('chat-mode-label').innerText = currentTitle;
 
             const sessionData = {
@@ -800,7 +806,12 @@
         }
 
         window.newSession = function() {
-            // 1. Esborrar context actual i crear ID nova
+            // Esborrar xats buits si se'n crea un de nou i l'anterior estava buit
+            if (chatHistory.length <= 1 && uploadedPDFs.length === 0) {
+                allSessions = allSessions.filter(s => s.id !== currentSessionId);
+                localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
+            }
+
             currentSessionId = 'sess_' + Date.now();
             localStorage.setItem('aliat_current_id', currentSessionId);
             
@@ -811,7 +822,6 @@
             finalStudyText = "";
             appMode = 'none';
 
-            // 2. Netejar la interfície gràfica
             document.getElementById('chat-messages').innerHTML = '';
             document.getElementById('pdf-upload').value = '';
             document.getElementById('pdf-list').innerHTML = '';
@@ -820,20 +830,16 @@
             const manualTopic = document.getElementById('manual-topic');
             if (manualTopic) manualTopic.value = '';
 
-            // 3. Tancar vistes de xat/estudi i obrir Benvinguda
             document.getElementById('chat-view').classList.add('hidden');
             document.getElementById('chat-view').classList.remove('flex');
-            
             document.getElementById('setup-view').classList.add('hidden');
             document.getElementById('setup-view').classList.remove('flex');
-            
             document.getElementById('quiz-view').classList.add('hidden');
             document.getElementById('quiz-view').classList.remove('flex');
             
             document.getElementById('welcome-view').classList.remove('hidden');
             document.getElementById('global-menu-btn').classList.remove('hidden');
 
-            // 4. Si estem en mòbil, tancar el menú lateral automàticament
             if(window.innerWidth < 768) {
                 const sidebar = document.getElementById('sidebar');
                 if (!sidebar.classList.contains('-translate-x-full')) {
@@ -969,39 +975,55 @@
         }
 
         // --- RUTES D'INICI DE L'APP ---
-        function startStudyMode() {
-            appMode = 'study';
-            document.getElementById('welcome-view').classList.add('hidden');
+        function startStudyMode() { 
+            appMode = 'study'; 
             
-            if (chatHistory.length > 0) {
-                document.getElementById('chat-view').classList.remove('hidden');
-                document.getElementById('chat-view').classList.add('flex');
-                document.getElementById('global-menu-btn').classList.add('hidden');
-                document.getElementById('theory-header-btn').classList.remove('hidden');
-            } else {
-                document.getElementById('setup-view').classList.remove('hidden');
-                document.getElementById('setup-view').classList.add('flex');
-            }
+            // Ocultar totes les vistes
+            document.getElementById('welcome-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.remove('flex');
+            document.getElementById('quiz-view').classList.add('hidden');
+            document.getElementById('quiz-view').classList.remove('flex');
+            
+            if (chatHistory.length > 0) { 
+                document.getElementById('setup-view').classList.add('hidden');
+                document.getElementById('setup-view').classList.remove('flex');
+                document.getElementById('chat-view').classList.remove('hidden'); 
+                document.getElementById('chat-view').classList.add('flex'); 
+                document.getElementById('global-menu-btn').classList.add('hidden'); 
+                document.getElementById('theory-header-btn').classList.remove('hidden'); 
+            } else { 
+                document.getElementById('setup-view').classList.remove('hidden'); 
+                document.getElementById('setup-view').classList.add('flex'); 
+            } 
         }
 
-        function startFreeChatMode() {
-            appMode = 'free';
-            document.getElementById('welcome-view').classList.add('hidden');
-            document.getElementById('global-menu-btn').classList.add('hidden');
+        function startFreeChatMode() { 
+            appMode = 'free'; 
             
-            document.getElementById('chat-view').classList.remove('hidden');
-            document.getElementById('chat-view').classList.add('flex');
-            document.getElementById('chat-form').classList.remove('hidden');
-            document.getElementById('calendar-header-btn').classList.add('hidden');
-            document.getElementById('history-header-btn').classList.add('hidden');
-            document.getElementById('theory-header-btn').classList.add('hidden');
-            document.getElementById('chat-mode-label').innerText = "XatBot";
+            // Ocultar totes les vistes
+            document.getElementById('welcome-view').classList.add('hidden'); 
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('setup-view').classList.remove('flex');
+            document.getElementById('quiz-view').classList.add('hidden');
+            document.getElementById('quiz-view').classList.remove('flex');
             
-            if (chatHistory.length === 0) {
-                appendMessage('ai', "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?");
-                chatHistory.push({ role: 'assistant', content: "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?" });
-                saveSession();
-            }
+            document.getElementById('global-menu-btn').classList.add('hidden'); 
+            document.getElementById('chat-view').classList.remove('hidden'); 
+            document.getElementById('chat-view').classList.add('flex'); 
+            document.getElementById('chat-form').classList.remove('hidden'); 
+            
+            // Ajustar botons cabecera
+            document.getElementById('calendar-header-btn').classList.add('hidden'); 
+            document.getElementById('history-header-btn').classList.add('hidden'); 
+            document.getElementById('theory-header-btn').classList.add('hidden'); 
+            document.getElementById('chat-mode-label').innerText = "XatBot"; 
+            
+            if (chatHistory.length === 0) { 
+                appendMessage('ai', "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?"); 
+                chatHistory.push({ role: 'assistant', content: "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?" }); 
+                // Evitem fer un saveSession aquí per no guardar xats buits
+            } 
         }
         
         function backToHome() {
