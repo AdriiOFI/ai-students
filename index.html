@@ -495,41 +495,41 @@
                     renderSidebarHistory();
                 }
                 
-                syncUserSettings(); // Sincronitza Nom i Tema des de la base de dades
-                syncCloudSessions(); // Sincronitza Xats des de la base de dades
+                syncUserSettings();
+                syncCloudSessions(); 
+                
+                // RADAR AUTO-ACTUALITZABLE: Escaneja canvis d'altres dispositius cada 4 segons de fons
+                setInterval(() => syncCloudSessions(true), 4000);
             }
         };
 
         // --- SISTEMA DE SESSIONS AL NÚVOL AMB BACKUP LOCAL ---
-        async function syncCloudSessions() {
+        async function syncCloudSessions(isBackground = false) {
             try {
-                // Afegim ?t=Date.now() per rebentar la memòria cau (caché) del mòbil i Vercel
-                const res = await fetch('/api/sessions/get?t=' + Date.now(), { 
-                    headers: { 'Authorization': 'Bearer ' + authToken } 
-                });
+                const res = await fetch('/api/sessions/get?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + authToken } });
                 const data = await res.json();
                 
                 if (data.success) {
                     allSessions = data.sessions;
+                    
+                    // CAÇAFANTASMES: Sobreescrivim la memòria local directament amb la veritat de Turso
                     localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
                     
-                    currentSessionId = localStorage.getItem('aliat_current_id');
-                    if (!currentSessionId && allSessions.length > 0) { 
+                    // Si el xat on estem posats acaba de ser esborrat en una altra finestra, tornem a l'inici
+                    let sessionExists = allSessions.find(s => s.id === currentSessionId);
+                    if (!sessionExists && allSessions.length > 0 && chatHistory.length === 0) { 
                         currentSessionId = allSessions[0].id; 
                         localStorage.setItem('aliat_current_id', currentSessionId); 
-                    } else if (!currentSessionId) { 
-                        currentSessionId = 'sess_' + Date.now(); 
-                        localStorage.setItem('aliat_current_id', currentSessionId); 
+                        if (!isBackground) loadActiveSessionData();
                     }
                     
                     renderSidebarHistory(); 
-                    loadActiveSessionData();
                 } else {
                     if (res.status === 401) return logout();
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error DB: ' + data.error, showConfirmButton: false, timer: 5000 });
+                    if (!isBackground) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error DB (Get): ' + data.error, showConfirmButton: false, timer: 5000, customClass: { popup: 'dark:bg-slate-800 dark:text-white border border-slate-700' } });
                 }
             } catch(e) {
-                console.warn("Treballant offline.", e);
+                if (!isBackground) console.warn("Treballant offline.", e);
             }
         }
 
@@ -541,13 +541,14 @@
                     body: JSON.stringify(sessionData)
                 });
                 
-                // Ens assegurem que si l'API no existeix (Error 404), ens avisi
                 if (res.status === 404) throw new Error("L'arxiu api/sessions/save.js no s'ha pujat bé a Vercel.");
                 
                 const data = await res.json();
                 if (!res.ok || data.error) {
-                    // EL CHIVATO: Error de Turso en guardar
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error guardant al núvol: ' + (data.error || 'Desconegut'), showConfirmButton: false, timer: 5000, customClass: { popup: 'dark:bg-slate-800 dark:text-white border-red-500' } });
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al núvol: ' + (data.error || 'Desconegut'), showConfirmButton: false, timer: 5000, customClass: { popup: 'dark:bg-slate-800 dark:text-white border-red-500 border' } });
+                } else {
+                    // Tot ha anat bé. Forcem una lectura per sincronitzar la resta
+                    syncCloudSessions(true);
                 }
             } catch (e) { 
                 console.error("Error de xarxa al guardar:", e); 
