@@ -101,6 +101,12 @@
                 <button type="submit" id="auth-submit-btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all hover:shadow-lg hover:shadow-blue-500/25 mt-6 flex items-center justify-center gap-2">
                     Accedir
                 </button>
+                <div class="mt-5 flex items-start gap-2 p-3 bg-blue-50 dark:bg-slate-800/50 border border-blue-100 dark:border-slate-700 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-500 shrink-0 mt-0.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight">
+                        Privadesa garantida: No necessites un correu real. Pots inventar-te un correu (ex: <i>usuari@prova.com</i>) i una contrasenya per entrar.
+                    </p>
+                </div>
             </form>
         </div>
     </div>
@@ -181,7 +187,7 @@
                     <div class="space-y-4 md:space-y-6 pt-4 md:pt-10">
                         <div class="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center text-4xl md:text-5xl shadow-xl shadow-blue-500/20 mx-auto transform hover:rotate-[10deg] transition-all duration-300">🤖</div>
                         <h1 class="text-3xl md:text-5xl lg:text-6xl font-black text-slate-800 dark:text-white tracking-tight px-2">
-                            Benvingut a <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Aliat Intel·ligent</span>
+                            Benvingut <span id="welcome-user-name" class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500"></span>,<br class="md:hidden"> a <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Aliat Intel·ligent</span>
                         </h1>
                         <p class="text-slate-600 dark:text-slate-400 text-sm md:text-xl max-w-2xl mx-auto font-medium leading-relaxed px-4">
                             Quin tipus d'ajuda necessites avui? Selecciona un mode per començar a treballar.
@@ -628,7 +634,7 @@
             box.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
-
+        
         function saveSettings() {
             const newName = document.getElementById('setting-name').value.trim();
             localStorage.setItem('aliat_user_name', newName);
@@ -640,13 +646,14 @@
         function updateProfileUI() {
             if (!authUser) return;
             let savedName = localStorage.getItem('aliat_user_name');
-            // Si no hi ha nom, posem la part esquerra de l'email
             let displayName = savedName ? savedName : authUser.email.split('@')[0];
             
             document.getElementById('profile-email').innerText = displayName;
             document.getElementById('profile-initial').innerText = displayName.charAt(0).toUpperCase();
+            
+            const welcomeNameEl = document.getElementById('welcome-user-name');
+            if(welcomeNameEl) welcomeNameEl.innerText = displayName;
         }
-
         // --- SISTEMA DE SESSIONS AL NÚVOL (NOU) ---
         async function syncCloudSessions() {
             try {
@@ -780,6 +787,51 @@
             currentSessionId = id;
             renderSidebarHistory(); 
             loadActiveSessionData();
+        }
+
+        window.newSession = function() {
+            // 1. Esborrar context actual i crear ID nova
+            currentSessionId = 'sess_' + Date.now();
+            localStorage.setItem('aliat_current_id', currentSessionId);
+            
+            chatHistory = [];
+            generatedCalendarArray = [];
+            window.interactiveGames = {};
+            studentContextStr = "";
+            finalStudyText = "";
+            appMode = 'none';
+
+            // 2. Netejar la interfície gràfica
+            document.getElementById('chat-messages').innerHTML = '';
+            document.getElementById('pdf-upload').value = '';
+            document.getElementById('pdf-list').innerHTML = '';
+            uploadedPDFs = [];
+            
+            const manualTopic = document.getElementById('manual-topic');
+            if (manualTopic) manualTopic.value = '';
+
+            // 3. Tancar vistes de xat/estudi i obrir Benvinguda
+            document.getElementById('chat-view').classList.add('hidden');
+            document.getElementById('chat-view').classList.remove('flex');
+            
+            document.getElementById('setup-view').classList.add('hidden');
+            document.getElementById('setup-view').classList.remove('flex');
+            
+            document.getElementById('quiz-view').classList.add('hidden');
+            document.getElementById('quiz-view').classList.remove('flex');
+            
+            document.getElementById('welcome-view').classList.remove('hidden');
+            document.getElementById('global-menu-btn').classList.remove('hidden');
+
+            // 4. Si estem en mòbil, tancar el menú lateral automàticament
+            if(window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
+                }
+            }
+            
+            renderSidebarHistory();
         }
 
         function renderSidebarHistory() {
