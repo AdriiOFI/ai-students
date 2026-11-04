@@ -15,6 +15,9 @@ module.exports = async function handler(req, res) {
         const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
         const { id, mode, title, chat_history, calendar, games, html, context, pdf_text } = req.body;
 
+        // Assegurem que l'ID sempre existeix per evitar bloquejos a la BD
+        if (!id) return res.status(400).json({ error: 'Falta ID de sessió' });
+
         const client = createClient({
             url: process.env.TURSO_DATABASE_URL,
             authToken: process.env.TURSO_AUTH_TOKEN,
@@ -33,7 +36,7 @@ module.exports = async function handler(req, res) {
                   pdf_text = excluded.pdf_text,
                   updated_at = CURRENT_TIMESTAMP`,
             args: [
-                id || ('sess_' + Date.now()), 
+                id,
                 decoded.id, 
                 mode || 'free', 
                 title || 'Nova Conversa',
