@@ -796,14 +796,9 @@
         }
 
         function saveSession() {
-            if (chatHistory.length === 0 && uploadedPDFs.length === 0 && !document.getElementById('manual-topic')?.value) {
-                allSessions = allSessions.filter(s => s.id !== currentSessionId);
-                localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
-                renderSidebarHistory();
-                return;
-            }
-
             let currentTitle = 'Nova Conversa';
+            
+            // Si el usuario ya ha enviado su primer mensaje, cogemos ese texto como título
             if (appMode === 'free' && chatHistory.length > 1) {
                  currentTitle = chatHistory[1].content.substring(0, 25) + "...";
             } else if (appMode === 'study') {
@@ -824,8 +819,8 @@
                 calendar: generatedCalendarArray,
                 games: window.interactiveGames,
                 html: document.getElementById('chat-messages').innerHTML,
-                context: studentContextStr,       // <-- GUARDAT AL NÚVOL
-                pdf_text: finalStudyText,         // <-- GUARDAT AL NÚVOL
+                context: studentContextStr,       
+                pdf_text: finalStudyText,         
                 date: new Date().getTime()
             };
             
@@ -835,6 +830,8 @@
             
             localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
             renderSidebarHistory();
+            
+            // Enviament instantani a Turso perquè les altres finestres ho vegin
             saveSessionToCloud(sessionData);
             
             localStorage.setItem('aliat_local_html_' + currentSessionId, sessionData.html);
@@ -1099,8 +1096,8 @@
             }
         }
 
-        function startFreeChatMode() { 
-            // 1. Si estàvem en un Pla d'Estudis actiu, creem una sessió nova per no barrejar
+        ffunction startFreeChatMode() { 
+            // Si estàvem en un Pla d'Estudis actiu, creem una sessió nova per no barrejar
             if (chatHistory.length > 0 && appMode === 'study') {
                 newSession();
             }
@@ -1128,6 +1125,9 @@
             if (chatHistory.length === 0) { 
                 appendMessage('ai', "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?"); 
                 chatHistory.push({ role: 'assistant', content: "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?" }); 
+                
+                // LA CLAVE: Forzamos el guardado en la nube en este exacto momento
+                saveSession();
             } 
 
             // Si estàs al mòbil, tanca el menú lateral
