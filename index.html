@@ -1647,6 +1647,9 @@
 
             let htmlContent = marked.parse(text);
 
+            // Fer que els enllaços siguin blaus i s'obrin en una pestanya nova
+            htmlContent = htmlContent.replace(/<a href="/g, '<a target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-600 underline font-semibold transition-colors" href="');
+
             htmlContent = htmlContent.replace(/\[BOTON_FLASHCARDS\]/gi, function() {
                 let mId = 'marker_' + Date.now() + Math.floor(Math.random() * 1000);
                 return `<div id="${mId}" class="theory-marker hidden" data-type="📖 Teoria General"></div><div class="my-4 mt-5 flex justify-end"><button onclick="requestNextPhase(this, 'Molt bé, teoria entesa. Ara dóna\\'m les Flashcards i l\\'Esquema visual d\\'aquest tema.')" class="bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-400 font-bold py-2.5 px-5 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-900/60 transition shadow-sm flex items-center gap-2 text-sm">Següent: Esquema i Flashcards ➔</button></div>`;
