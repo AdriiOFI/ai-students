@@ -976,6 +976,11 @@
 
         // --- RUTES D'INICI DE L'APP ---
         function startStudyMode() { 
+            // 1. Si estàvem en un XatBot actiu amb missatges, creem una sessió nova per no barrejar
+            if (chatHistory.length > 0 && appMode === 'free') {
+                newSession();
+            }
+
             appMode = 'study'; 
             
             // Ocultar totes les vistes
@@ -985,20 +990,36 @@
             document.getElementById('quiz-view').classList.add('hidden');
             document.getElementById('quiz-view').classList.remove('flex');
             
-            if (chatHistory.length > 0) { 
+            // 2. NOMÉS anem al xat directe si ja s'ha generat el calendari (Pla Actiu)
+            if (generatedCalendarArray.length > 0) { 
                 document.getElementById('setup-view').classList.add('hidden');
                 document.getElementById('setup-view').classList.remove('flex');
                 document.getElementById('chat-view').classList.remove('hidden'); 
                 document.getElementById('chat-view').classList.add('flex'); 
                 document.getElementById('global-menu-btn').classList.add('hidden'); 
-                document.getElementById('theory-header-btn').classList.remove('hidden'); 
+                
+                document.getElementById('theory-header-btn').classList.remove('hidden');
+                document.getElementById('calendar-header-btn').classList.remove('hidden');
+                document.getElementById('history-header-btn').classList.remove('hidden');
             } else { 
+                // Si no hi ha calendari, anem a la pantalla de pujar el PDF
                 document.getElementById('setup-view').classList.remove('hidden'); 
                 document.getElementById('setup-view').classList.add('flex'); 
             } 
+
+            // Si estàs al mòbil, tanca el menú lateral automàticament perquè no molesti
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar();
+            }
         }
 
         function startFreeChatMode() { 
+            // 1. Si estàvem en un Pla d'Estudis actiu, creem una sessió nova per no barrejar
+            if (chatHistory.length > 0 && appMode === 'study') {
+                newSession();
+            }
+
             appMode = 'free'; 
             
             // Ocultar totes les vistes
@@ -1013,7 +1034,7 @@
             document.getElementById('chat-view').classList.add('flex'); 
             document.getElementById('chat-form').classList.remove('hidden'); 
             
-            // Ajustar botons cabecera
+            // Amagar botons propis del Pla d'Estudis
             document.getElementById('calendar-header-btn').classList.add('hidden'); 
             document.getElementById('history-header-btn').classList.add('hidden'); 
             document.getElementById('theory-header-btn').classList.add('hidden'); 
@@ -1022,8 +1043,13 @@
             if (chatHistory.length === 0) { 
                 appendMessage('ai', "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?"); 
                 chatHistory.push({ role: 'assistant', content: "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?" }); 
-                // Evitem fer un saveSession aquí per no guardar xats buits
             } 
+
+            // Si estàs al mòbil, tanca el menú lateral
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar();
+            }
         }
         
         function backToHome() {
