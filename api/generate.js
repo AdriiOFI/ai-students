@@ -147,7 +147,7 @@ module.exports = async function handler(req, res) {
             return res.status(200).json({ reply: data.choices[0].message.content });
         }
 
-        // ACCIÓ 3: XATBOT (Xat Lliure Segur)
+        // ACCIÓ 3: XATBOT (Xat Lliure Segur amb TAVILY / Accés a Internet)
         if (action === 'free_chat') {
             let safeHistory = [];
             let lastRole = "";
@@ -162,8 +162,36 @@ module.exports = async function handler(req, res) {
                 }
             }
 
+            let searchContext = "";
+            const lastUserMessage = safeHistory.length > 0 ? safeHistory[safeHistory.length - 1].content : "";
+            
+            // Connexió amb l'API de Tavily per obtenir dades actualitzades
+            if (process.env.TAVILY_API_KEY && lastUserMessage) {
+                try {
+                    const searchReq = await fetch('https://api.tavily.com/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            api_key: process.env.TAVILY_API_KEY, 
+                            query: lastUserMessage, 
+                            search_depth: "basic", 
+                            max_results: 3 
+                        })
+                    });
+                    
+                    if (searchReq.ok) {
+                        const searchRes = await searchReq.json();
+                        if (searchRes.results && searchRes.results.length > 0) {
+                            searchContext = "\n\n### INFORMACIÓ ACTUALITZADA D'INTERNET (TEMPS REAL) ###\n" + 
+                                searchRes.results.map(r => `Font: [${r.title}](${r.url})\nContingut: ${r.content}`).join('\n\n') + 
+                                "\n\nREGLA OBLIGATORIA: Respon la pregunta de l'usuari basant-te exclusivament en aquesta informació actualitzada. Afegeix enllaços a les teves respostes perquè l'usuari pugui fer-hi clic, usant estrictament aquest format Markdown: [Text a clicar](URL).";
+                        }
+                    }
+                } catch(e) { console.error("Error buscant a internet amb Tavily:", e); }
+            }
+
             const systemPromptFree = "Ets Aliat Intel·ligent, el XatBot assistent personal i tutor virtual.\n" + safetyRules + "\n\n" + 
-            "La teva funció és respondre de forma natural, útil i amigable en català, aplicant sempre els filtres de seguretat establerts.";
+            "La teva funció és respondre de forma natural, útil i amigable en català, aplicant sempre els filtres de seguretat establerts." + searchContext;
             
             const messagesToSend = [ { role: "system", content: systemPromptFree }, ...safeHistory ];
 
