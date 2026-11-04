@@ -503,55 +503,6 @@
             }
         };
 
-        // --- SISTEMA DE SESSIONS AL NÚVOL AMB BACKUP LOCAL ---
-        async function syncCloudSessions(isBackground = false) {
-            try {
-                const res = await fetch('/api/sessions/get?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + authToken } });
-                
-                // CONTROL DE CRASH SEVERO
-                if (!res.ok) {
-                    const txt = await res.text();
-                    throw new Error("Error del servidor: " + res.status);
-                }
-
-                const data = await res.json();
-                
-                if (data.success) {
-                    allSessions = data.sessions;
-                    localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
-                    
-                    let sessionExists = allSessions.find(s => s.id === currentSessionId);
-                    if (!sessionExists && allSessions.length > 0 && chatHistory.length === 0) { 
-                        currentSessionId = allSessions[0].id; 
-                        localStorage.setItem('aliat_current_id', currentSessionId); 
-                        if (!isBackground) loadActiveSessionData(); 
-                    }
-                    renderSidebarHistory(); 
-                } else {
-                    if (res.status === 401) return logout();
-                }
-            } catch(e) {
-                if (!isBackground) console.warn("Treballant offline o error:", e);
-            }
-        }
-
-        async function saveSessionToCloud(sessionData) {
-            try {
-                const res = await fetch('/api/sessions/save', {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
-                    body: JSON.stringify(sessionData)
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.success) syncCloudSessions(true);
-                }
-            } catch (e) { 
-                console.error("Error de xarxa al guardar:", e); 
-            }
-        }
-
         function loadActiveSessionData() {
             let activeSession = allSessions.find(s => s.id === currentSessionId);
             
@@ -768,7 +719,7 @@
         }
 
         function saveSession() {
-            // EL FORAT NEGRE SOLUCIONAT: Si el xat no té ID, li donem un d'immediat
+            // Assegurem que el xat té un ID abans d'enviar-lo al servidor
             if (!currentSessionId || currentSessionId === 'null') {
                 currentSessionId = 'sess_' + Date.now();
                 localStorage.setItem('aliat_current_id', currentSessionId);
@@ -792,6 +743,60 @@
             localStorage.setItem('aliat_local_html_' + currentSessionId, sessionData.html); 
             localStorage.setItem('aliat_local_context_' + currentSessionId, studentContextStr); 
             localStorage.setItem('aliat_local_text_' + currentSessionId, finalStudyText);
+        }
+
+        async function syncCloudSessions(isBackground = false) {
+            try {
+                const res = await fetch('/api/sessions/get?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + authToken } });
+                
+                if (!res.ok) {
+                    if (!isBackground) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error Servidor (Get): ' + res.status, showConfirmButton: false, timer: 6000 });
+                    return;
+                }
+
+                const data = await res.json();
+                
+                if (data.success) {
+                    allSessions = data.sessions;
+                    localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
+                    
+                    let sessionExists = allSessions.find(s => s.id === currentSessionId);
+                    if (!sessionExists && allSessions.length > 0 && chatHistory.length === 0) { 
+                        currentSessionId = allSessions[0].id; 
+                        localStorage.setItem('aliat_current_id', currentSessionId); 
+                        if (!isBackground) loadActiveSessionData(); 
+                    }
+                    renderSidebarHistory(); 
+                } else {
+                    if (res.status === 401) return logout();
+                    if (!isBackground) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error DB (Get): ' + data.error, showConfirmButton: false, timer: 5000 });
+                }
+            } catch(e) {}
+        }
+
+        async function saveSessionToCloud(sessionData) {
+            try {
+                const res = await fetch('/api/sessions/save', {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+                    body: JSON.stringify(sessionData)
+                });
+                
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error de Vercel (Save): ' + (data.error || res.status), showConfirmButton: false, timer: 6000, customClass: { popup: 'dark:bg-slate-800 dark:text-white border border-red-500' } });
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.error) {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error Turso: ' + data.error, showConfirmButton: false, timer: 6000, customClass: { popup: 'dark:bg-slate-800 dark:text-white border border-red-500' } });
+                } else {
+                    syncCloudSessions(true);
+                }
+            } catch (e) { 
+                Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error de connexió al guardar', showConfirmButton: false, timer: 3000 });
+            }
         }
 
         function loadActiveSessionData() {
