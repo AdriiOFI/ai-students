@@ -500,10 +500,12 @@
             }
         };
 
+        // --- SISTEMA DE SESSIONS AL NÚVOL AMB BACKUP LOCAL ---
         async function syncCloudSessions() {
             try {
                 const res = await fetch('/api/sessions/get', { headers: { 'Authorization': 'Bearer ' + authToken } });
                 const data = await res.json();
+                
                 if (data.success) {
                     allSessions = data.sessions;
                     localStorage.setItem('aliat_sessions_backup', JSON.stringify(allSessions));
@@ -521,9 +523,56 @@
                     loadActiveSessionData();
                 } else {
                     if (res.status === 401) return logout();
+                    // EL CHIVATO: Mostrem l'error real de la base de dades
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error DB (Get): ' + data.error, showConfirmButton: false, timer: 5000, customClass: { popup: 'dark:bg-slate-800 dark:text-white' } });
                 }
             } catch(e) {
-                console.warn("Error de xarxa. Treballant en mode local.", e);
+                console.warn("Treballant offline.", e);
+            }
+        }
+
+        async function saveSessionToCloud(sessionData) {
+            try {
+                const res = await fetch('/api/sessions/save', {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+                    body: JSON.stringify(sessionData)
+                });
+                
+                // Ens assegurem que si l'API no existeix (Error 404), ens avisi
+                if (res.status === 404) throw new Error("L'arxiu api/sessions/save.js no s'ha pujat bé a Vercel.");
+                
+                const data = await res.json();
+                if (!res.ok || data.error) {
+                    // EL CHIVATO: Error de Turso en guardar
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error guardant al núvol: ' + (data.error || 'Desconegut'), showConfirmButton: false, timer: 5000, customClass: { popup: 'dark:bg-slate-800 dark:text-white border-red-500' } });
+                }
+            } catch (e) { 
+                console.error("Error de xarxa al guardar:", e); 
+            }
+        }
+
+        async function syncUserSettings() {
+            try {
+                const res = await fetch('/api/user/settings', { headers: { 'Authorization': 'Bearer ' + authToken } });
+                
+                if (res.status === 404) throw new Error("L'arxiu api/user/settings.js no s'ha pujat a Vercel.");
+                
+                const data = await res.json();
+                if (data.success) {
+                    if (data.name) localStorage.setItem('aliat_user_name', data.name);
+                    if (data.theme) {
+                        localStorage.setItem('aliat_theme', data.theme);
+                        if (data.theme === 'dark') document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                        updateThemeIcon();
+                    }
+                    updateProfileUI();
+                } else if (data.error && data.error !== 'Usuari no trobat') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error Config: ' + data.error, showConfirmButton: false, timer: 4000 });
+                }
+            } catch(e) { 
+                console.error("Error carregant settings de la nube:", e); 
             }
         }
 
@@ -672,14 +721,18 @@
             // Guardar al núvol immediatament
             if (authToken) {
                 try {
-                    await fetch('/api/user/settings', {
+                    const res = await fetch('/api/user/settings', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
                         body: JSON.stringify({ name: newName, theme: themeStr })
                     });
+                    const data = await res.json();
+                    if(data.error) {
+                        Swal.fire('Error de Turso', data.error, 'error');
+                        return; // No tanquem el modal si hi ha error
+                    }
                 } catch(e) { console.error(e); }
             }
-            
             closeSettings();
             Swal.fire({ title: 'Guardat!', text: 'La teva configuració s\'ha actualitzat.', icon: 'success', timer: 1500, showConfirmButton: false, target: 'main', customClass: { popup: 'rounded-[1.5rem] dark:bg-slate-800 dark:text-white border dark:border-slate-700' }});
         }
