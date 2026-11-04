@@ -1057,8 +1057,9 @@
         }
 
         function startFreeChatMode() { 
-            // Si estàvem en un Pla d'Estudis actiu, creem una sessió nova per no barrejar
-            if (chatHistory.length > 0 && appMode === 'study') {
+            // LA CLAU: Si ja teníem un xat obert (sigui d'estudi o un altre XatBot lliure previ),
+            // creem una sessió nova per donar-te un llenç en blanc immediat.
+            if (chatHistory.length > 0) {
                 newSession();
             }
 
@@ -1086,7 +1087,7 @@
                 appendMessage('ai', "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?"); 
                 chatHistory.push({ role: 'assistant', content: "Hola! Sóc l'Aliat Intel·ligent. T'escolto, de què vols parlar o què necessites investigar avui?" }); 
                 
-                // LA CLAVE: Forzamos el guardado en la nube en este exacto momento
+                // Forcem el guardat al núvol a l'instant
                 saveSession();
             } 
 
