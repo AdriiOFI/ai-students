@@ -677,9 +677,8 @@
         }
 
         function logout() {
-            localStorage.removeItem('aliat_token');
-            localStorage.removeItem('aliat_user');
-            localStorage.removeItem('aliat_current_id');
+            // Això esborra ABSOLUTAMENT TOTA la memòria local (zombis inclosos)
+            localStorage.clear();
             location.reload();
         }
 
