@@ -6,6 +6,8 @@ module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Prohibim a Vercel cachear res
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
@@ -28,7 +30,6 @@ module.exports = async function handler(req, res) {
         });
 
         const sessions = result.rows.map(row => {
-            // ESCUDO ANTI-CRASH: Si algun xat antic està trencat, no trencarà la web
             let pHistory = [], pCalendar = [], pGames = {};
             try { pHistory = JSON.parse(row.chat_history || '[]'); } catch(e) {}
             try { pCalendar = JSON.parse(row.calendar || '[]'); } catch(e) {}
