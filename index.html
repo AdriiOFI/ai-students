@@ -1,9 +1,15 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Aliat Intel·ligent - Tutor Virtual</title>
+    
+    <!-- Fonts d'Inter (Fora del script!) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -14,7 +20,7 @@
         tailwind.config = { 
             darkMode: 'class', 
             theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } 
-        }
+        };
     </script>
     <style>
         ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -39,6 +45,59 @@
         /* Ajustes per SweetAlert en Mode Fosc */
         .dark .swal2-popup { background-color: #1e293b !important; color: #f1f5f9 !important; border: 1px solid #334155; }
         .dark .swal2-title, .dark .swal2-html-container { color: #f8fafc !important; }
+
+        /* Mejora profesional para respuestas de la IA */
+        .prose pre {
+            background-color: #0f172a !important;
+            border: 1px solid #1e293b;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            overflow-x: auto;
+         }
+        .prose code {
+            color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+            padding: 0.15rem 0.35rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+         }
+        .prose pre code {
+            color: #e2e8f0;
+            background-color: transparent;
+            padding: 0;
+         }
+        .prose table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+        .prose th, .prose td {
+            border: 1px solid #cbd5e1;
+            padding: 0.5rem 0.75rem;
+        }
+        .dark .prose th, .dark .prose td {
+            border-color: #334155;
+        }
+        .prose th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+        }
+        .dark .prose th {
+            background-color: #1e293b;
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg-animate {
+            animation: fadeSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Si l'usuari ja està loguejat, amaguem el Login completament des del milisegon 0 */
+        html.is-logged-in #auth-view { display: none !important; }
+        html.is-logged-in #app-container { display: flex !important; opacity: 1 !important; }
     </style>
     <script>
         // Anti-Parpadeig (FOUC): Apliquem classes ABANS de que es dibuixi la web
@@ -49,11 +108,6 @@
             document.documentElement.classList.add('is-logged-in');
         }
     </script>
-    <style>
-        /* Si l'usuari ja està loguejat, amaguem el Login completament des del milisegon 0 */
-        html.is-logged-in #auth-view { display: none !important; }
-        html.is-logged-in #app-container { display: flex !important; opacity: 1 !important; }
-    </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 h-[100dvh] flex overflow-hidden antialiased font-sans relative w-full transition-colors duration-300">
 
@@ -308,7 +362,7 @@
 
             <!-- XAT VIEW -->
             <div id="chat-view" class="hidden flex-1 flex-col h-full bg-slate-50 dark:bg-slate-900 relative">
-                <div class="p-3 md:p-4 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shadow-sm z-30 gap-2">
+                <div class="p-3 md:p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-700/60 flex justify-between items-center sticky top-0 z-30 gap-2">
                     <div class="flex items-center gap-2 md:gap-3">
                         <button onclick="toggleSidebar()" class="p-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition md:hidden">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
@@ -398,6 +452,21 @@
                 <button onclick="saveSettings()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md text-sm">
                     Guardar Canvis
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MINIJOCS (KAHOOT / ESQUEMA) -->
+    <div id="game-modal" class="fixed inset-0 bg-slate-900/80 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        <div id="game-modal-box" class="bg-white dark:bg-slate-800 rounded-[2rem] w-full max-w-lg flex flex-col overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300 border border-slate-200 dark:border-slate-700 max-h-[90vh]">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <h3 id="game-modal-title" class="font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 text-lg">🕹️ Minijoc</h3>
+                <button onclick="closeGameModal()" class="text-slate-400 dark:text-slate-500 hover:text-red-500 transition bg-white dark:bg-slate-800 p-2 rounded-full shadow-sm border border-slate-200 dark:border-slate-600">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <div id="game-modal-content" class="p-6 overflow-y-auto">
+                <!-- Contingut dinàmic del minijoc -->
             </div>
         </div>
     </div>
@@ -502,44 +571,6 @@
                 setInterval(() => syncCloudSessions(true), 4000);
             }
         };
-
-        function loadActiveSessionData() {
-            let activeSession = allSessions.find(s => s.id === currentSessionId);
-            
-            if (activeSession && activeSession.history && activeSession.history.length > 0) {
-                chatHistory = activeSession.history;
-                generatedCalendarArray = activeSession.calendar || [];
-                appMode = activeSession.mode || 'study';
-                window.interactiveGames = activeSession.games || {}; 
-                
-                studentContextStr = localStorage.getItem('aliat_local_context_' + currentSessionId) || "";
-                finalStudyText = localStorage.getItem('aliat_local_text_' + currentSessionId) || "";
-                
-                document.getElementById('chat-messages').innerHTML = activeSession.html || localStorage.getItem('aliat_local_html_' + currentSessionId) || '';
-                
-                document.getElementById('welcome-view').classList.add('hidden');
-                document.getElementById('setup-view').classList.add('hidden');
-                document.getElementById('global-menu-btn').classList.add('hidden');
-                
-                document.getElementById('chat-view').classList.remove('hidden');
-                document.getElementById('chat-view').classList.add('flex');
-                document.getElementById('chat-form').classList.remove('hidden');
-                
-                if(appMode === 'free') {
-                    document.getElementById('calendar-header-btn').classList.add('hidden');
-                    document.getElementById('history-header-btn').classList.add('hidden');
-                    document.getElementById('theory-header-btn').classList.add('hidden');
-                    document.getElementById('chat-mode-label').innerText = "XatBot";
-                } else {
-                    document.getElementById('theory-header-btn').classList.remove('hidden');
-                }
-                
-                setTimeout(() => {
-                    const box = document.getElementById('chat-messages');
-                    if(box) box.scrollTop = box.scrollHeight;
-                }, 50);
-            }
-        }
 
         // --- SISTEMA D'AUTENTICACIÓ (NOU) ---
         let authMode = 'login';
@@ -718,20 +749,38 @@
             } catch (e) { console.error("Error guardant al núvol:", e); }
         }
 
+// --- SISTEMA DE SESSIONS AL NÚVOL ---
         function saveSession() {
-            // Assegurem que el xat té un ID abans d'enviar-lo al servidor
             if (!currentSessionId || currentSessionId === 'null') {
                 currentSessionId = 'sess_' + Date.now();
                 localStorage.setItem('aliat_current_id', currentSessionId);
             }
 
             let currentTitle = 'Nova Conversa';
-            if (appMode === 'free' && chatHistory.length > 1) { currentTitle = chatHistory[1].content.substring(0, 25) + "..."; } 
-            else if (appMode === 'study') { let manual = document.getElementById('manual-topic')?.value; if (uploadedPDFs.length > 0) currentTitle = uploadedPDFs.map(p => p.name).join(', ').substring(0, 25); else if (manual) currentTitle = manual.substring(0, 25) + "..."; else currentTitle = "Pla d'Estudis"; }
+            if (appMode === 'free' && chatHistory.length > 1) { 
+                currentTitle = chatHistory[1].content.substring(0, 25) + "..."; 
+            } else if (appMode === 'study') { 
+                let manual = document.getElementById('manual-topic')?.value; 
+                if (uploadedPDFs.length > 0) currentTitle = uploadedPDFs.map(p => p.name).join(', ').substring(0, 25); 
+                else if (manual) currentTitle = manual.substring(0, 25) + "..."; 
+                else currentTitle = "Pla d'Estudis"; 
+            }
             
             document.getElementById('chat-mode-label').innerText = currentTitle;
             
-            const sessionData = { id: currentSessionId, mode: appMode, title: currentTitle, history: chatHistory, chat_history: chatHistory, calendar: generatedCalendarArray, games: window.interactiveGames, html: document.getElementById('chat-messages').innerHTML, context: studentContextStr, pdf_text: finalStudyText, date: new Date().getTime() };
+            const sessionData = { 
+                id: currentSessionId, 
+                mode: appMode, 
+                title: currentTitle, 
+                history: chatHistory, 
+                chat_history: chatHistory, 
+                calendar: generatedCalendarArray, 
+                games: window.interactiveGames, 
+                html: document.getElementById('chat-messages').innerHTML, 
+                context: studentContextStr, 
+                pdf_text: finalStudyText, 
+                date: new Date().getTime() 
+            };
             
             const idx = allSessions.findIndex(s => s.id === currentSessionId);
             if(idx >= 0) allSessions[idx] = sessionData; else allSessions.push(sessionData);
@@ -750,6 +799,7 @@
                 const res = await fetch('/api/sessions/get?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + authToken } });
                 
                 if (!res.ok) {
+                    if (res.status === 401) return logout();
                     if (!isBackground) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error Servidor (Get): ' + res.status, showConfirmButton: false, timer: 6000 });
                     return;
                 }
@@ -768,10 +818,11 @@
                     }
                     renderSidebarHistory(); 
                 } else {
-                    if (res.status === 401) return logout();
                     if (!isBackground) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error DB (Get): ' + data.error, showConfirmButton: false, timer: 5000 });
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error("Error sincronitzant: ", e);
+            }
         }
 
         async function saveSessionToCloud(sessionData) {
@@ -807,7 +858,6 @@
                 appMode = activeSession.mode || 'study';
                 window.interactiveGames = activeSession.games || {}; 
                 
-                // Ara llegeix de la base de dades (activeSession.context) i si no hi és, busca al local
                 studentContextStr = activeSession.context || localStorage.getItem('aliat_local_context_' + currentSessionId) || "";
                 finalStudyText = activeSession.pdf_text || localStorage.getItem('aliat_local_text_' + currentSessionId) || "";
                 
@@ -1878,10 +1928,10 @@
             const box = document.getElementById('chat-messages');
             const div = document.createElement('div');
             if (sender === 'user') {
-                div.className = "flex justify-end w-full mb-3";
+                div.className = "flex justify-end w-full mb-3 msg-animate";
                 div.innerHTML = `<div class="bg-slate-800 text-white px-4 py-3 rounded-2xl rounded-tr-sm max-w-[90%] text-[13px] shadow-sm break-words">${formatMessage(text)}</div>`;
             } else {
-                div.className = "flex justify-start gap-2 w-full mb-3 chat-msg-ai transition-all duration-500";
+                div.className = "flex justify-start gap-2 w-full mb-3 chat-msg-ai transition-all duration-500 msg-animate";
                 div.innerHTML = `
                 <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-md mt-1">AI</div>
                 <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 px-4 py-4 rounded-2xl rounded-tl-sm max-w-[90%] shadow-md w-full overflow-hidden relative group">
