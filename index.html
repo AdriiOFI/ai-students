@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
@@ -705,7 +705,7 @@
             const welcomeNameEl = document.getElementById('welcome-user-name');
             if(welcomeNameEl) welcomeNameEl.innerText = displayName;
         }
-        // --- SISTEMA DE SESSIONS AL NÚVOL (NOU) ---
+// --- SISTEMA DE SESSIONS AL NÚVOL (NOU) ---
         async function syncCloudSessions() {
             try {
                 const res = await fetch('/api/sessions/get', {
