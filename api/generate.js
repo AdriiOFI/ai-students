@@ -125,7 +125,6 @@ module.exports = async function handler(req, res) {
             jocTriat + "\n";
             
            let safeHistory = formatSafeHistory(chatHistory);
-            }
 
             const messagesToSend = [ { role: "system", content: systemPromptChat }, ...safeHistory ];
 
@@ -152,7 +151,6 @@ module.exports = async function handler(req, res) {
         // ACCIÓ 3: XATBOT (Xat Lliure Segur amb TAVILY / Accés a Internet)
         if (action === 'free_chat') {
             let safeHistory = formatSafeHistory(chatHistory);
-            }
 
             let searchContext = "";
             const lastUserMessage = safeHistory.length > 0 ? safeHistory[safeHistory.length - 1].content : "";
