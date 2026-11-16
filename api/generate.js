@@ -1,3 +1,16 @@
+function formatSafeHistory(chatHistory) {
+    let safeHistory = [];
+    let lastRole = "";
+    for (let msg of chatHistory) {
+        if (msg.role !== lastRole) {
+            safeHistory.push({ role: msg.role, content: msg.content });
+            lastRole = msg.role;
+        } else if (safeHistory.length > 0) {
+            safeHistory[safeHistory.length - 1].content += "\n\n" + msg.content;
+        }
+    }
+    return safeHistory.slice(-12); // Inclou el límit de memòria aquí directament
+}
 module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -86,6 +99,12 @@ module.exports = async function handler(req, res) {
 
         // ACCIÓ 2: XAT CONTINU I JOCS INTERACTIUS (Pla d'estudi)
         if (action === 'chat') {
+            const jocsDisponibles = [
+            'OPCIÓ 1 (Kahoot - 4 Opcions):\n```kahoot\n{"pregunta": "...", "opcions": ["A", "B", "C", "D"], "correcta": 0}\n```',
+            'OPCIÓ 2 (Veritat o Fals):\n```tf\n{"pregunta": "L\'afirmació X és correcta?", "resposta": true}\n```',
+            'OPCIÓ 3 (Troba l\'Intrús - 1 Incorrecte):\n```intrus\n{"pregunta": "Quin concepte és INCORRECTE?", "opcions": ["Bé", "Bé", "Malament", "Bé"], "correcta": 2}\n```',
+            'OPCIÓ 4 (Esquema buit - IMPORTANT: La "resposta" ha de ser UNA SOLA PARAULA clau exacta, mai una frase):\n```schema\n{"titol": "Completa", "buits": [ { "context": "Pista breu", "resposta": "paraula" } ]}\n```'];
+            const jocTriat = jocsDisponibles[Math.floor(Math.random() * jocsDisponibles.length)];
             const systemPromptChat = "Ets Aliat Intel·ligent, un tutor d'estudi avançat.\n\n" + safetyRules + "\n\n" +
             "MEMÒRIA ACTUAL DE L'ALUMNE:\n" + studentContext + "\n\n" +
             "APUNTS/TEMARI:\n" + (pdfText ? pdfText.substring(0, 3000) : "Sense apunts.") + "\n\n" +
@@ -102,27 +121,10 @@ module.exports = async function handler(req, res) {
             "Després de les flashcards, pots fer un Esquema Visual compacte dins d'un bloc ```html ... ``` (textos color `text-slate-900`). Acaba amb [BOTON_MNEMOTECNIA].\n\n" +
             "▶ FASE 3 (Mnemotècnia): Explica un truc de memòria. Acaba el missatge amb [BOTON_ENTENDIDO].\n\n" +
             "ACTIVACIÓ DEL JOC:\n" +
-            "Quan l'alumne demani 'Posar-me a prova', tria ALEATÒRIAMENT un d'aquests 4 minijocs i RESPON NOMÉS AMB AQUELL BLOC:\n\n" +
-            "OPCIÓ 1 (Kahoot - 4 Opcions):\n" +
-            "```kahoot\n{\"pregunta\": \"...\", \"opcions\": [\"A\", \"B\", \"C\", \"D\"], \"correcta\": 0}\n```\n\n" +
-            "OPCIÓ 2 (Veritat o Fals):\n" +
-            "```tf\n{\"pregunta\": \"L'afirmació X és correcta?\", \"resposta\": true}\n```\n\n" +
-            "OPCIÓ 3 (Troba l'Intrús - 1 Incorrecte):\n" +
-            "```intrus\n{\"pregunta\": \"Quin concepte és INCORRECTE?\", \"opcions\": [\"Bé\", \"Bé\", \"Malament\", \"Bé\"], \"correcta\": 2}\n```\n\n" +
-            "OPCIÓ 4 (Esquema buit):\n" +
-            "```schema\n{\"titol\": \"Completa\", \"buits\": [ { \"context\": \"Pista\", \"resposta\": \"paraula\" } ]}\n```\n";
+            "Quan l'alumne demani 'Posar-me a prova', RESPON ÚNICAMENT AMB AQUEST BLOC EXACTAMENT (sense text abans ni després):\n\n" +
+            jocTriat + "\n";
             
-            let safeHistory = [];
-            let lastRole = "";
-            for (let msg of chatHistory) {
-                if (msg.role !== lastRole) {
-                    safeHistory.push({ role: msg.role, content: msg.content });
-                    lastRole = msg.role;
-                } else {
-                    if (safeHistory.length > 0) {
-                        safeHistory[safeHistory.length - 1].content += "\n\n" + msg.content;
-                    }
-                }
+           let safeHistory = formatSafeHistory(chatHistory);
             }
 
             const messagesToSend = [ { role: "system", content: systemPromptChat }, ...safeHistory ];
@@ -149,24 +151,14 @@ module.exports = async function handler(req, res) {
 
         // ACCIÓ 3: XATBOT (Xat Lliure Segur amb TAVILY / Accés a Internet)
         if (action === 'free_chat') {
-            let safeHistory = [];
-            let lastRole = "";
-            for (let msg of chatHistory) {
-                if (msg.role !== lastRole) {
-                    safeHistory.push({ role: msg.role, content: msg.content });
-                    lastRole = msg.role;
-                } else {
-                    if (safeHistory.length > 0) {
-                        safeHistory[safeHistory.length - 1].content += "\n\n" + msg.content;
-                    }
-                }
+            let safeHistory = formatSafeHistory(chatHistory);
             }
 
             let searchContext = "";
             const lastUserMessage = safeHistory.length > 0 ? safeHistory[safeHistory.length - 1].content : "";
             
-            // Connexió amb l'API de Tavily per obtenir dades actualitzades
-            if (process.env.TAVILY_API_KEY && lastUserMessage) {
+            // Només busca a internet si el missatge té més de 12 caràcters (evita buscar "hola", "gràcies", etc.)
+            if (process.env.TAVILY_API_KEY && lastUserMessage && lastUserMessage.length > 12) {
                 try {
                     const searchReq = await fetch('https://api.tavily.com/search', {
                         method: 'POST',
